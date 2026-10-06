@@ -16,13 +16,12 @@ Notation: `d = gcd(A, r) ≥ 2`, `chr r A` the Christoffel word (partial sums `�
 * **T2** `no_cycle_few_sites_noncoprime`: if `(r 2^{2h+1})^{d-1} < 2^{A/d}`, every word (entries
   `≥ 1`, `psum v r = A`) whose partial sums differ from chr's at between `1` and `d - 1` indices,
   each by at most `h`, has `q ∤ B(v)` (free cyclic gap by double counting + T1).
-* Cycle forms `cycle_arc_noncoprime`, `cycle_few_sites_noncoprime`; numerical non-vacuity
-  certificates `witness_d3`, `witness_d4` (kernel `decide`).
+* Cycle forms `cycle_arc_noncoprime`, `cycle_few_sites_noncoprime`.
 
 Scope: word-level statements, `gcd(A, r) ≥ 2` only; For actual cycles the
 Christoffel entries are in `{1, 2}` (`L < 2r`), which caps realisable heights; for `d = 3` two
-sites are already covered by `NormCofactor.no_cycle_two_site_noncoprime`, so T2 is new for
-cycles when `d ≥ 4` (three or more sites), and T1 is new for wrapping arcs with `≥ 3` sites.
+sites are already covered by `NormCofactor.no_cycle_two_site_noncoprime`, so T2 adds to it for
+cycles when `d ≥ 4` (three or more sites), and T1 for wrapping arcs with `≥ 3` sites.
 Brute force (all words deviating at `≤ K` indices by `≤ h`): `(r,A,K,h) = (12,40,3,1)`: 1562
 words, `(12,40,3,2)`: 10596, `(12,20,3,2)`: 609, `(8,20,3,2)`: 1140, `(9,24,2,2)`: 336 —
 no `q ∣ B(v)` (beyond the theorem's hypotheses too). Prior art: Knight, Lebel, Mghirbi, Solomon.
@@ -498,11 +497,7 @@ open CollatzProof
 
 /-- **Cycle form of T1.** No positive `T`-cycle with `r ≥ 2` odd steps and period `L`,
 `gcd(L, r) ≥ 2`, has a valuation word `v` whose partial sums leave those of `chr r L` only inside
-a cyclic arc `[k, k+w)` mod `r`, by at most `h`, when `(w 2^{2h+1})^r 2^{(w-1)L} < 2^{(L - L/d) r}`.
-Non-vacuity (hypotheses jointly satisfiable by a valid word): `r = 122703`, `L = 194484`
-(`gcd = 3`, `3^r + 1 < 2^L`, `witness_d3`), `v = chr r L` with right flips at sites `1, 3, r - 2`
-(`chr` starts `1,2,1,2` and ends `1,2,2`), arc `k = r - 2`, `w = 6`, `h = 1`; this wraps, has three
-sites, and is covered neither by the linear window of `NormWindow` nor by its two-site theorem. -/
+a cyclic arc `[k, k+w)` mod `r`, by at most `h`, when `(w 2^{2h+1})^r 2^{(w-1)L} < 2^{(L - L/d) r}`. -/
 theorem cycle_arc_noncoprime {m L r : ℕ} {v : ℕ → ℕ} (hr : 2 ≤ r) (hd : 2 ≤ Nat.gcd L r)
     (hv1 : ∀ i < r, 1 ≤ v i) (hL : psum v r = L)
     (hodd : ∀ j < L, (T^[j] m % 2 = 1 ↔ ∃ i < r, psum v i = j)) (hcyc : T^[L] m = m)
@@ -517,11 +512,7 @@ theorem cycle_arc_noncoprime {m L r : ℕ} {v : ℕ → ℕ} (hr : 2 ≤ r) (hd 
 
 /-- **Cycle form of T2.** No positive `T`-cycle with `r ≥ 2` odd steps and period `L`,
 `d = gcd(L, r) ≥ 2`, `(r 2^{2h+1})^{d-1} < 2^{L/d}`, has a valuation word whose partial sums
-differ from those of `chr r L` at between `1` and `d - 1` indices, each by at most `h`.
-Non-vacuity: `r = 122704`, `L = 194484` (`gcd = 4`, `h ≤ 8094`; `witness_d4`), `v = chr r L`
-with right flips at three separated up-sites (three deviating indices, height 1) — not covered by
-`NormCofactor`'s two-site theorem. At `r = 122703`, `L = 194484` (`d = 3`) the hypothesis holds for
-`h ≤ 16198` (`witness_d3`), but there two sites are already `NormCofactor`. -/
+differ from those of `chr r L` at between `1` and `d - 1` indices, each by at most `h`. -/
 theorem cycle_few_sites_noncoprime {m L r : ℕ} {v : ℕ → ℕ} (hr : 2 ≤ r) (hd : 2 ≤ Nat.gcd L r)
     (hv1 : ∀ i < r, 1 ≤ v i) (hL : psum v r = L)
     (hodd : ∀ j < L, (T^[j] m % 2 = 1 ↔ ∃ i < r, psum v i = j)) (hcyc : T^[L] m = m) (h : ℕ)
@@ -536,18 +527,6 @@ theorem cycle_few_sites_noncoprime {m L r : ℕ} {v : ℕ → ℕ} (hr : 2 ≤ r
 
 end Cycle
 
-/-- Numerical non-vacuity certificate (`d = 3`): `gcd(194484, 122703) = 3`,
-`3^122703 + 1 < 2^194484`, and T2's height hypothesis holds with `h = 16198`. -/
-theorem witness_d3 : Nat.gcd 194484 122703 = 3 ∧ 3 ^ 122703 + 1 < 2 ^ 194484 ∧
-    (122703 * 2 ^ (2 * 16198 + 1)) ^ (Nat.gcd 194484 122703 - 1) <
-      2 ^ (194484 / Nat.gcd 194484 122703) := by decide +kernel
-
-/-- Numerical non-vacuity certificate (`d = 4`): `gcd(194484, 122704) = 4`,
-`3^122704 + 1 < 2^194484`, and T2's height hypothesis holds with `h = 8094`. -/
-theorem witness_d4 : Nat.gcd 194484 122704 = 4 ∧ 3 ^ 122704 + 1 < 2 ^ 194484 ∧
-    (122704 * 2 ^ (2 * 8094 + 1)) ^ (Nat.gcd 194484 122704 - 1) <
-      2 ^ (194484 / Nat.gcd 194484 122704) := by decide +kernel
-
 end Collatz.NormArc
 
 #print axioms Collatz.NormArc.seq_inj
@@ -556,5 +535,3 @@ end Collatz.NormArc
 #print axioms Collatz.NormArc.cycle_arc_noncoprime
 #print axioms Collatz.NormArc.no_cycle_few_sites_noncoprime
 #print axioms Collatz.NormArc.cycle_few_sites_noncoprime
-#print axioms Collatz.NormArc.witness_d3
-#print axioms Collatz.NormArc.witness_d4

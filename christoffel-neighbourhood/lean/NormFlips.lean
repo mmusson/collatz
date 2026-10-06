@@ -1,33 +1,33 @@
 import NormFilter
 
 /-!
-# all two right flips, and `k` right flips (DIRECTIVES 2(b))
+# all two right flips, and `k` right flips
 
 Setting as in `NormTwo`: `r ≥ 2325`, `gcd(A, r) = 1`, `3^r + 1 < 2^A`, `A < 2r`,
 `q = 2^A - 3^r`, `g^r = 2`, `θ = 2^{1/r}`, `X = θ^{2(A-r)}`, `p_k = r - 1 - (k A mod r)`.
 A right flip at an up-site `k` raises the partial sum `A_k` by one.
 
-* `no_cycle_two_right_flips_all` (T2): two right flips anywhere. Removes the corner hypothesis
-  of `NormTwo.no_cycle_two_right_flips` (`NormTwo`). Off the corner (`3a ≤ r`) it uses `NormTwo`'s
+* `no_cycle_two_right_flips_all` (T2): two right flips anywhere, with no corner hypothesis.
+  Off the corner (`3a ≤ r`) it uses `NormTwo`'s
   `core_right`. In the corner it uses the filtered engine (`NormFilter.flips_engine`, Gram
   bound `Q_eff ≤ 1.2578 + 3.0022 X`). The wrap case `b = r - 2` (`A = 2r - 1`) uses
   `wrap_engine`.
-* `no_cycle_k_right_flips` (T3): any set `K` of at least two up-sites with
-  `Σ_{k∈K} 4^{p_k/r} ≤ 4.9`. Reduction to `1 + (g-1)Σ_{p∈P} g^p = 0`. Every `p ≤ r-3` because
-  `|K| ≥ 2`. Strong induction on `|P|` shifts away `p = 0`, since `g` is a unit. Then
-  `Q_eff ≤ 8.61 < 8.76`. Examples: three flips with all `p ≤ 0.354 r`, or four flips with all
-  `p ≤ 0.146 r`. These are the first exclusions beyond two moves.
-* `cycle_two_right_flips_all`, `cycle_k_right_flips`: the same statements for actual positive
-  `T`-cycles, via `NormTwo.cycle_q`.
+* `core_k` (T3 engine): any set `K` of at least two sites with `Σ_{k∈K} 4^{p_k/r} ≤ 4.9`
+  (the theorem is `NormCycleAll.no_cycle_k_right_flips'`). Reduction to
+  `1 + (g-1)Σ_{p∈P} g^p = 0`. Every `p ≤ r-3` because `|K| ≥ 2`. Strong induction on
+  `|P|` shifts away `p = 0`, since `g` is a unit. Then `Q_eff ≤ 8.61 < 8.76`.
+  Examples: three flips with all `p ≤ 0.354 r`, or four flips with all `p ≤ 0.146 r`. These are the first exclusions beyond two moves.
+* `cycle_two_right_flips_all`: the T2 statement for actual positive `T`-cycles, via
+  `NormTwo.cycle_q`.
 
-Novelty, which still needs an adversarial check: the defect area of a right flip is `E = p`.
-Mghirbi's coprime bound covers only `E ≤ 1.536 r^{2/3}`, so these results are plausibly new
-only in the large-`E` regime. Solomon and Mghirbi do not treat right flips. Knight, Lebel,
-Mghirbi and Solomon are credited for the norm framework and for the left-flip/E-small cases.
+The defect area of a right flip is `E = p`; Mghirbi's coprime bound covers only
+`E ≤ 1.536 r^{2/3}`, so these results go beyond it only in the large-`E` regime. Solomon and
+Mghirbi do not treat right flips. Knight, Lebel, Mghirbi and Solomon are credited
+for the norm framework and for the left-flip/E-small cases.
 
 Limits: these are word-level results only, for coprime `(r, A)`, `r ≥ 2325` and `A < 2r`.
-They are Mixed up/down pairs, stacked moves and three down moves remain
-open; the one-tap and Szegő filters fail there.
+Stacked moves and three down moves are not covered (mixed up/down pairs: `NormMixed`); the
+one-tap and Szegő filters fail there.
 -/
 
 namespace Collatz.NormFlips
@@ -224,9 +224,8 @@ section Main
 `r ≥ 2325`, `gcd(A, r) = 1`, `3^r + 1 < 2^A`, `A < 2r`. If the partial sums of `v` equal those
 of the Christoffel word `chr r A` plus one at two distinct up-sites `k₁ ≠ k₂` in `(0, r)`
 (`r ≤ k A mod r + A mod r`) and agree elsewhere below `r`, then `(2^A - 3^r) ∤ B(v)`.
-No corner hypothesis: subsumes `NormTwo.no_cycle_two_right_flips`. The up-site hypotheses
-`_hs1`, `_hs2` ARE used, implicitly, by the `omega` calls supplying `b + 1 ≤ A - r` (the underscore
-names hid this; see `NormCycleAll.up_site_of_valid`). For
+No corner hypothesis. The up-site hypotheses `_hs1`, `_hs2` ARE used, implicitly, by the `omega`
+calls supplying `b + 1 ≤ A - r` (the underscore names hide this). For
 `gcd(A, r) ≥ 2` see `NormCofactor.no_cycle_two_right_flips_allRA`. -/
 theorem no_cycle_two_right_flips_all (r A : ℕ) (hr : 2325 ≤ r) (hcop : Nat.Coprime A r)
     (hq : 3 ^ r + 1 < 2 ^ A) (hA : A < 2 * r) (k₁ k₂ : ℕ) (_h1 : 0 < k₁) (h1r : k₁ < r)
@@ -282,99 +281,11 @@ theorem no_cycle_two_right_flips_all (r A : ℕ) (hr : 2325 ≤ r) (hcop : Nat.C
   · exact core_right_all hr hq hA h2 hGu hlt (by omega) heq
   · exact core_right_all hr hq hA h2 hGu hgt (by omega) (by rw [← heq]; ring)
 
-/-- **`k` right flips with small total weight (first exclusions beyond two
-moves).** Let `r ≥ 2325`, `gcd(A, r) = 1`, `3^r + 1 < 2^A`, `A < 2r`, and let `K` be a set of
-at least two up-sites `k ∈ (0, r)` (`r ≤ k A mod r + A mod r`) with
-`Σ_{k∈K} 4^{p_k/r} ≤ 4.9`, where `p_k = r - 1 - (k A mod r)`. If the partial sums of `v` equal
-those of `chr r A` plus one on `K` and agree elsewhere below `r`, then `(2^A - 3^r) ∤ B(v)`.
-(E.g. three flips with all `p_k ≤ 0.354 r`, or four with all `p_k ≤ 0.146 r`.) The up-site
-hypothesis `_hs` is unused (any set `K` of sites in `(0, r)` works). -/
-theorem no_cycle_k_right_flips (r A : ℕ) (hr : 2325 ≤ r) (hcop : Nat.Coprime A r)
-    (hq : 3 ^ r + 1 < 2 ^ A) (hA : A < 2 * r) (K : Finset ℕ) (hK2 : 2 ≤ K.card)
-    (hKr : ∀ k ∈ K, 0 < k ∧ k < r) (_hs : ∀ k ∈ K, r ≤ k * A % r + A % r)
-    (hS : ∑ k ∈ K, (4:ℝ) ^ (((r - 1 - k * A % r : ℕ) : ℝ) / r) ≤ 49 / 10)
-    (v : ℕ → ℕ) (hv : ∀ i < r, psum v i = psum (NormGoal.chr r A) i + (if i ∈ K then 1 else 0)) :
-    ¬ (2 ^ A - 3 ^ r) ∣ Bnum r v := by
-  intro hdiv
-  have hnt := nontrivial_q hq
-  have hr2 : 2 ≤ r := by omega
-  have hr0 : 0 < r := by omega
-  obtain ⟨g, h2, h3⟩ := exists_g (by omega) hcop hq
-  have hAr := r_lt_A hq
-  have hA1 : 1 ≤ A := by omega
-  have hK := knight_identity hr2 hcop hq h2 h3
-  set G := g ^ ((A - 1) * (r - 1)) with hG
-  have hGu : IsUnit G := (isUnit_g (by omega) hq h2).pow _
-  have hBv : (Bnum r v : ZMod (2 ^ A - 3 ^ r)) = 0 := (ZMod.natCast_eq_zero_iff _ _).mpr hdiv
-  have hBw := cast_Bnum (R := ZMod (2 ^ A - 3 ^ r)) r (NormGoal.chr r A)
-  set Fw : ℕ → ZMod (2 ^ A - 3 ^ r) := fun i => 3 ^ (r - 1 - i) * 2 ^ psum (NormGoal.chr r A) i with hFw
-  have hpt : ∀ i ∈ range r, (3 : ZMod (2 ^ A - 3 ^ r)) ^ (r - 1 - i) * 2 ^ psum v i =
-      Fw i + (if i ∈ K then Fw i else 0) := by
-    intro i hi
-    have hvi := hv i (mem_range.mp hi)
-    by_cases e : i ∈ K
-    · rw [if_pos e] at hvi ⊢; simp only [hFw]; rw [hvi, pow_succ]; ring
-    · rw [if_neg e] at hvi ⊢; simp only [hFw]; rw [hvi]; ring
-  have hKsub : K ⊆ range r := fun k hk => mem_range.mpr (hKr k hk).2
-  have hsum : (Bnum r v : ZMod (2 ^ A - 3 ^ r)) =
-      (Bnum r (NormGoal.chr r A) : ZMod (2 ^ A - 3 ^ r)) + ∑ k ∈ K, Fw k := by
-    rw [cast_Bnum, sum_congr rfl hpt, sum_add_distrib, sum_ite_mem, inter_eq_right.mpr hKsub, hBw]
-  set pk : ℕ → ℕ := fun k => r - 1 - k * A % r with hpk
-  have hF : ∑ k ∈ K, Fw k = G * ∑ k ∈ K, g ^ pk k := by
-    rw [Finset.mul_sum]; exact sum_congr rfl fun k hk => term_chr h2 h3 hA1 (hKr k hk).2
-  rw [hBv, hF] at hsum
-  have hβ : 1 + (g - 1) * ∑ k ∈ K, g ^ pk k = 0 := by
-    apply hGu.mul_right_eq_zero.mp
-    linear_combination -hK - (g - 1) * hsum
-  have hinj : Set.InjOn pk (K : Set ℕ) := by
-    intro x hx y hy hxy
-    have hx' := hKr x hx; have hy' := hKr y hy
-    have m1 := Nat.mod_lt (x * A) hr0; have m2 := Nat.mod_lt (y * A) hr0
-    simp only [hpk] at hxy
-    exact mod_inj hcop hx'.2 hy'.2 (by omega)
-  set P := K.image pk with hP
-  set θ : ℝ := (2:ℝ) ^ ((r:ℝ)⁻¹) with hθdef
-  have hθ : 0 < θ := by positivity
-  have hθr : θ ^ r = 2 := Real.rpow_inv_natCast_pow (by norm_num) (by omega)
-  have hSP : ∑ p ∈ P, θ ^ (2 * p) ≤ 49 / 10 := by
-    rw [hP, sum_image hinj]
-    calc ∑ k ∈ K, θ ^ (2 * pk k) = ∑ k ∈ K, (4:ℝ) ^ (((r - 1 - k * A % r : ℕ) : ℝ) / r) :=
-          sum_congr rfl fun k _ => theta_pow_eq hr0
-      _ ≤ 49 / 10 := hS
-  have hrelP : 1 + (g - 1) * ∑ p ∈ P, g ^ p = 0 := by rw [hP, sum_image hinj]; exact hβ
-  have hcardP : 2 ≤ P.card := by rw [hP, card_image_of_injOn hinj]; exact hK2
-  have hθ1 := theta_ge_one hr0 hθ hθr
-  have ht := t_le hr hθ hθr
-  have hP3 : ∀ p ∈ P, p + 3 ≤ r := by
-    intro p hp
-    have hplt : p < r := by
-      rw [hP, mem_image] at hp; obtain ⟨k, _, rfl⟩ := hp; simp only [hpk]; omega
-    by_contra hcon
-    obtain ⟨p', hp', hne⟩ := exists_mem_ne (s := P) (by omega) p
-    have hsub : ({p, p'} : Finset ℕ) ⊆ P := by
-      intro x hx; simp only [mem_insert, mem_singleton] at hx; rcases hx with rfl | rfl <;> assumption
-    have hle := sum_le_sum_of_subset_of_nonneg hsub (f := fun p => θ ^ (2 * p))
-      (fun _ _ _ => by positivity)
-    rw [sum_pair hne.symm] at hle
-    have h1 : (1:ℝ) ≤ θ ^ (2 * p') := one_le_pow₀ hθ1
-    have hY := theta_pow_mono hr0 hθ hθr (show r - 2 ≤ p by omega)
-    have h4r : θ ^ (2 * (r - 2)) * (θ ^ 2) ^ 2 = 4 := by
-      rw [← pow_mul, ← pow_add, show 4 = (θ ^ r) ^ 2 by rw [hθr]; norm_num, ← pow_mul]
-      congr 1; omega
-    have ht1 : (1:ℝ) ≤ θ ^ 2 := one_le_pow₀ hθ1
-    have : (θ ^ 2) ^ 2 ≤ (1 + 3 / 2325) ^ 2 := pow_le_pow_left₀ (by positivity) ht 2
-    nlinarith [pow_nonneg hθ.le (2 * (r - 2))]
-  exact core_k hr hq h2 hθ hθr P.card P rfl hP3 hSP hrelP
-
 end Main
 
 section Cycle
 open CollatzProof
 
-/-- **Cycle form of T2.** No positive `T`-cycle (period `L`, `r ≥ 2325` odd steps,
-`gcd(L, r) = 1`, `L < 2r`) has a valuation word that is two right flips (at up-sites,
-anywhere) from the Christoffel word `chr r L`. (`hs1`, `hs2` are needed; see the word-level
-theorem.) -/
 theorem cycle_two_right_flips_all {m L r : ℕ} {v : ℕ → ℕ} (hr : 2325 ≤ r) (hcop : Nat.Coprime L r)
     (hL2 : L < 2 * r) (hv1 : ∀ i < r, 1 ≤ v i) (hL : psum v r = L)
     (hodd : ∀ j < L, (T^[j] m % 2 = 1 ↔ ∃ i < r, psum v i = j)) (hcyc : T^[L] m = m)
@@ -384,19 +295,6 @@ theorem cycle_two_right_flips_all {m L r : ℕ} {v : ℕ → ℕ} (hr : 2325 ≤
   obtain ⟨hq, hdiv⟩ := cycle_q (by omega) hv1 hL hodd hcyc
   exact no_cycle_two_right_flips_all r L hr hcop hq hL2 k₁ k₂ h1 h1r h2 h2r hne hs1 hs2 v hv hdiv
 
-/-- **Cycle form of T3.** No positive `T`-cycle (period `L`, `r ≥ 2325` odd steps,
-`gcd(L, r) = 1`, `L < 2r`) has a valuation word obtained from `chr r L` by right flips at a
-set `K` of at least two up-sites with `Σ_{k∈K} 4^{p_k/r} ≤ 4.9`. -/
-theorem cycle_k_right_flips {m L r : ℕ} {v : ℕ → ℕ} (hr : 2325 ≤ r) (hcop : Nat.Coprime L r)
-    (hL2 : L < 2 * r) (hv1 : ∀ i < r, 1 ≤ v i) (hL : psum v r = L)
-    (hodd : ∀ j < L, (T^[j] m % 2 = 1 ↔ ∃ i < r, psum v i = j)) (hcyc : T^[L] m = m)
-    (K : Finset ℕ) (hK2 : 2 ≤ K.card) (hKr : ∀ k ∈ K, 0 < k ∧ k < r)
-    (hs : ∀ k ∈ K, r ≤ k * L % r + L % r)
-    (hS : ∑ k ∈ K, (4:ℝ) ^ (((r - 1 - k * L % r : ℕ) : ℝ) / r) ≤ 49 / 10)
-    (hv : ∀ i < r, psum v i = psum (NormGoal.chr r L) i + (if i ∈ K then 1 else 0)) : False := by
-  obtain ⟨hq, hdiv⟩ := cycle_q (by omega) hv1 hL hodd hcyc
-  exact no_cycle_k_right_flips r L hr hcop hq hL2 K hK2 hKr hs hS v hv hdiv
-
 end Cycle
 
 end Collatz.NormFlips
@@ -404,6 +302,4 @@ end Collatz.NormFlips
 #print axioms Collatz.NormFlips.core_right_all
 #print axioms Collatz.NormFlips.core_k
 #print axioms Collatz.NormFlips.no_cycle_two_right_flips_all
-#print axioms Collatz.NormFlips.no_cycle_k_right_flips
 #print axioms Collatz.NormFlips.cycle_two_right_flips_all
-#print axioms Collatz.NormFlips.cycle_k_right_flips

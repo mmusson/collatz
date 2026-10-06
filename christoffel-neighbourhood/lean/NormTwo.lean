@@ -5,7 +5,7 @@ import CycleLenPoly59
 import NormBridge
 
 /-!
-# two flips from the Christoffel word (DIRECTIVES 2(b))
+# two flips from the Christoffel word
 
 Setting: `r ≥ 2325`, `gcd(A, r) = 1`, `3^r + 1 < 2^A`, `A < 2r` (so `chr r A` has letters 1, 2
 and `ρ := A mod r = A - r`); `q = 2^A - 3^r`, `g ∈ ZMod q` the unique element with `g^r = 2`,
@@ -16,17 +16,16 @@ and `ρ := A mod r = A - r`); `q = 2^A - 3^r`, `g ∈ ZMod q` the unique element
   down-sites). Reduction: `β = 1 - g + g^d - g^{d+1} + g^{e₁} = 0` (`e_i = ρ_i + 1`,
   `d = e₁ - e₂`; trinomial `1 - g^2 + g^{e₁}` when `d = 1`). This is the word-level, formal
   form of **Mghirbi's `E = 2`** case (known for actual cycles; credit Mghirbi).
-* `no_cycle_two_right_flips` (T3): two up moves (partial sums raised by one at two distinct
-  up-sites), provided one of them is off the "corner" (`3 p₁ ≤ r`, `p_i = r - 1 - ρ_i`).
-  Reduction: `β' = 1 + (g-1)(g^{p₁} + g^{p₂}) = 0`. Plausibly new only in the large-defect-area
-  regime: a right flip has Mghirbi defect area `E = p` exactly (checked at r = 401), and
-  Mghirbi's coprime bound already covers `E ≤ 1.536 r^{2/3}`; Solomon does not treat right flips.
-  The corner (both `p_i > r/3`) was left open here (`Q` can exceed 9) and is closed in `NormFlips`
-  by `NormFlips.no_cycle_two_right_flips_all` (filtered engine).
+* `core_right`: the core of two up moves (partial sums raised by one at two distinct up-sites),
+  provided one of them is off the "corner" (`3 p₁ ≤ r`, `p_i = r - 1 - ρ_i`).
+  Reduction: `β' = 1 + (g-1)(g^{p₁} + g^{p₂}) = 0`. A right flip has Mghirbi defect area
+  `E = p` exactly (checked at r = 401), and Mghirbi's coprime bound covers `E ≤ 1.536 r^{2/3}`;
+  Solomon does not treat right flips. The corner (both `p_i > r/3`, where `Q` can exceed 9) is
+  handled in `NormFlips` by `NormFlips.no_cycle_two_right_flips_all` (filtered engine).
 * Both via `NormSparse.engine3/engine5` (`q^2 ≤ Q^r`, `Q = Σ θ^{2n}` over the support) and the
   size contradiction `size_contra` (`Q ≤ 219/25` when `2^A ≤ 2·3^r`, using the Farey gaps
   `gapBelow_225644606` / `gap_all59`; `Q ≤ (292/75) X` when `2^A > 2·3^r`).
-* `cycle_two_left_flips`, `cycle_two_right_flips`: the same for actual positive `T`-cycles
+* `cycle_two_left_flips`: the same for actual positive `T`-cycles
   (via `NormBridge.cycle_word_eq`).
 
 Limits (from numerics): no norm argument proves all of radius 2
@@ -442,69 +441,6 @@ theorem no_cycle_two_left_flips (r A : ℕ) (hr : 2325 ≤ r) (hcop : Nat.Coprim
   · exact core_left hr hq hA h2 hGu hlt (hpos k₁ h1 h1r) (by omega) (by rw [heq]; ring)
   · exact core_left hr hq hA h2 hGu hgt (hpos k₂ h2' h2r) (by omega) heq
 
-/-- **Two right flips off the corner (plausibly new only for large defect area
-`E = p`, beyond Mghirbi's `E ≤ 1.536 r^{2/3}`; superseded by
-`NormFlips.no_cycle_two_right_flips_all`).** Let `r ≥ 2325`,
-`gcd(A, r) = 1`, `3^r + 1 < 2^A`, `A < 2r`. If the partial sums of `v` equal those of
-`chr r A` plus one at two distinct up-sites `k₁ ≠ k₂` in `(0, r)` (`r ≤ k A mod r + A mod r`,
-i.e. `chr k = 2`; raising `A_k` by one = moving one unit from position `k` to `k-1`), agree
-elsewhere below `r`, and the flip at `k₁` is off the corner (`3 (r - 1 - k₁ A mod r) ≤ r`),
-then `(2^A - 3^r) ∤ B(v)`. -/
-theorem no_cycle_two_right_flips (r A : ℕ) (hr : 2325 ≤ r) (hcop : Nat.Coprime A r)
-    (hq : 3 ^ r + 1 < 2 ^ A) (hA : A < 2 * r) (k₁ k₂ : ℕ) (_h1 : 0 < k₁) (h1r : k₁ < r)
-    (_h2' : 0 < k₂) (h2r : k₂ < r) (hne : k₁ ≠ k₂)
-    (hs1 : r ≤ k₁ * A % r + A % r) (hs2 : r ≤ k₂ * A % r + A % r)
-    (hcorner : 3 * (r - 1 - k₁ * A % r) ≤ r)
-    (v : ℕ → ℕ) (hv : ∀ i < r, psum v i = psum (NormGoal.chr r A) i + (if i = k₁ ∨ i = k₂ then 1 else 0)) :
-    ¬ (2 ^ A - 3 ^ r) ∣ Bnum r v := by
-  intro hdiv
-  have hnt := nontrivial_q hq
-  have hr2 : 2 ≤ r := by omega
-  obtain ⟨g, h2, h3⟩ := exists_g (by omega) hcop hq
-  have hAr := r_lt_A hq
-  have hA1 : 1 ≤ A := by omega
-  have hmod := modA hAr hA
-  have hK := knight_identity hr2 hcop hq h2 h3
-  set G := g ^ ((A - 1) * (r - 1)) with hG
-  have hGu : IsUnit G := (isUnit_g (by omega) hq h2).pow _
-  have hBv : (Bnum r v : ZMod (2 ^ A - 3 ^ r)) = 0 := (ZMod.natCast_eq_zero_iff _ _).mpr hdiv
-  rw [cast_Bnum] at hBv
-  have hBw := cast_Bnum (R := ZMod (2 ^ A - 3 ^ r)) r (NormGoal.chr r A)
-  set Fv : ℕ → ZMod (2 ^ A - 3 ^ r) := fun i => 3 ^ (r - 1 - i) * 2 ^ psum v i with hFv
-  set Fw : ℕ → ZMod (2 ^ A - 3 ^ r) := fun i => 3 ^ (r - 1 - i) * 2 ^ psum (NormGoal.chr r A) i with hFw
-  have hpt : ∀ i ∈ range r, Fv i = Fw i + (if i = k₁ then Fw i else 0) +
-      (if i = k₂ then Fw i else 0) := by
-    intro i hi
-    have hi' := mem_range.mp hi
-    have hvi := hv i hi'
-    by_cases e1 : i = k₁
-    · have e2 : ¬ i = k₂ := by omega
-      rw [if_pos (Or.inl e1)] at hvi
-      have hp : psum v i = psum (NormGoal.chr r A) i + 1 := by omega
-      simp only [hFv, hFw]; rw [hp, if_pos e1, if_neg e2, pow_succ]; ring
-    · by_cases e2 : i = k₂
-      · rw [if_pos (Or.inr e2)] at hvi
-        have hp : psum v i = psum (NormGoal.chr r A) i + 1 := by omega
-        simp only [hFv, hFw]; rw [hp, if_neg e1, if_pos e2, pow_succ]; ring
-      · rw [if_neg (by tauto)] at hvi
-        have hp : psum v i = psum (NormGoal.chr r A) i := by omega
-        simp only [hFv, hFw]; rw [hp, if_neg e1, if_neg e2]; ring
-  have hsum : (Bnum r v : ZMod (2 ^ A - 3 ^ r)) = ∑ i ∈ range r, Fw i + Fw k₁ + Fw k₂ := by
-    rw [cast_Bnum, ← sum_two_pt Fw (mem_range.mpr h1r) (mem_range.mpr h2r)]
-    exact sum_congr rfl hpt
-  have hF : ∀ k, k < r → Fw k = G * g ^ (r - 1 - k * A % r) :=
-    fun k hk => term_chr h2 h3 hA1 hk
-  have hsw : ∑ i ∈ range r, Fw i = (Bnum r (NormGoal.chr r A) : ZMod (2 ^ A - 3 ^ r)) := hBw.symm
-  rw [hsw, cast_Bnum, hBv, hF k₁ h1r, hF k₂ h2r] at hsum
-  have heq : G + (g - 1) * (G * g ^ (r - 1 - k₁ * A % r) + G * g ^ (r - 1 - k₂ * A % r)) = 0 := by
-    linear_combination -hK - (g - 1) * hsum
-  have hρne : k₁ * A % r ≠ k₂ * A % r := fun h => hne (mod_inj hcop h1r h2r h)
-  have hm1 := Nat.mod_lt (k₁ * A) (show 0 < r by omega)
-  have hm2 := Nat.mod_lt (k₂ * A) (show 0 < r by omega)
-  rcases Nat.lt_or_gt_of_ne (show r - 1 - k₁ * A % r ≠ r - 1 - k₂ * A % r by omega) with hlt | hgt
-  · exact core_right hr hq hA h2 hGu hlt hcorner (by omega) heq
-  · exact core_right hr hq hA h2 hGu hgt (by omega) (by omega) (by rw [← heq]; ring)
-
 end Main
 
 section Cycle
@@ -537,25 +473,10 @@ theorem cycle_two_left_flips {m L r : ℕ} {v : ℕ → ℕ} (hr : 2325 ≤ r) (
   obtain ⟨hq, hdiv⟩ := cycle_q (by omega) hv1 hL hodd hcyc
   exact no_cycle_two_left_flips r L hr hcop hq hL2 k₁ k₂ h1 h1r h2 h2r hne hs1 hs2 v hv hdiv
 
-/-- **Cycle form of T3.** No positive `T`-cycle (period `L`, `r ≥ 2325` odd steps,
-`gcd(L, r) = 1`, `L < 2r`) has a valuation word that is two right flips (at up-sites, one of
-them off the corner) from the Christoffel word `chr r L`. -/
-theorem cycle_two_right_flips {m L r : ℕ} {v : ℕ → ℕ} (hr : 2325 ≤ r) (hcop : Nat.Coprime L r)
-    (hL2 : L < 2 * r) (hv1 : ∀ i < r, 1 ≤ v i) (hL : psum v r = L)
-    (hodd : ∀ j < L, (T^[j] m % 2 = 1 ↔ ∃ i < r, psum v i = j)) (hcyc : T^[L] m = m)
-    (k₁ k₂ : ℕ) (h1 : 0 < k₁) (h1r : k₁ < r) (h2 : 0 < k₂) (h2r : k₂ < r) (hne : k₁ ≠ k₂)
-    (hs1 : r ≤ k₁ * L % r + L % r) (hs2 : r ≤ k₂ * L % r + L % r)
-    (hcorner : 3 * (r - 1 - k₁ * L % r) ≤ r)
-    (hv : ∀ i < r, psum v i = psum (NormGoal.chr r L) i + (if i = k₁ ∨ i = k₂ then 1 else 0)) : False := by
-  obtain ⟨hq, hdiv⟩ := cycle_q (by omega) hv1 hL hodd hcyc
-  exact no_cycle_two_right_flips r L hr hcop hq hL2 k₁ k₂ h1 h1r h2 h2r hne hs1 hs2 hcorner v hv hdiv
-
 end Cycle
 
 end Collatz.NormTwo
 
 #print axioms Collatz.NormTwo.size_contra
 #print axioms Collatz.NormTwo.no_cycle_two_left_flips
-#print axioms Collatz.NormTwo.no_cycle_two_right_flips
 #print axioms Collatz.NormTwo.cycle_two_left_flips
-#print axioms Collatz.NormTwo.cycle_two_right_flips

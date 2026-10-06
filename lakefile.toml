@@ -16,7 +16,7 @@ rev = "v4.34.0-rc2"
 [[lean_lib]]
 name = "ChristoffelNeighbourhood"
 srcDir = "christoffel-neighbourhood/lean"
-roots = ["NormAll", "NormArc", "NormBig", "NormBridge", "NormCofactor", "NormCycleAll", "NormDet", "NormFactor", "NormFilter", "NormFinite", "NormFlips", "NormFold", "NormGeom", "NormGoal", "NormGoalAll", "NormLebel", "NormLevels", "NormMain", "NormMixed", "NormMixedRev", "NormPlateau", "NormPlateauLift", "NormPoly", "NormRatio", "NormReduce", "NormShift", "NormShiftSlide", "NormSparse", "NormTwo", "NormWindow"]
+roots = ["NormAll", "NormArc", "NormBig", "NormBridge", "NormCofactor", "NormCycleAll", "NormDet", "NormFilter", "NormFinite", "NormFlips", "NormFold", "NormGeom", "NormGoal", "NormGoalAll", "NormLebel", "NormMain", "NormMixed", "NormPlateau", "NormPlateauLift", "NormPoly", "NormReduce", "NormShift", "NormShiftSlide", "NormSparse", "NormTwo", "NormWindow"]
 
 [[lean_lib]]
 name = "SharedLean"

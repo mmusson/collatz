@@ -5,7 +5,7 @@ import Mathlib.Dynamics.PeriodicPts.Defs
 # Window-free (every period, hence per-lap) versions of the m-run bounds
 
 **CLASSICAL** (Simons–de Weger 2005 m-cycle method, finite-range instance at verified range
-`2^24`).  **NOT progress on `no_nontrivial_cycles`**.
+`2^24`).
 
 `state_of_the_art_runs` (MRuns.lean) bounds `oddRuns L m` only for an existentially chosen
 window `L`.  Here the bounds are proved for **every** `L > 0` with `T^[L] m = m`

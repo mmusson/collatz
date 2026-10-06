@@ -2,36 +2,33 @@ import NormShift
 import NormPlateau
 
 /-!
-# DIRECTIVES 2(c) for every `(r, A)` and every actual `T`-cycle
+# one-unit slides for every `(r, A)` and every actual `T`-cycle
 
 One unit of valuation slid ANY distance in the Christoffel word, `v = slide (chr r A) a b`
 (`a ≠ b < r`, `chr a ≥ 2`), never satisfies the cycle divisibility `(2^A - 3^r) ∣ B(v)` for
 `r ≥ 40901`, whatever `gcd(A, r)` is:
 
-* `no_cycle_slide_coprime` (T2): `gcd(A, r) = 1` (the case left open by `NormPlateau`; the norm route is
-  dead there by `NormTwo`) — via `NormShift.slide_word_coprime`.
+* `no_cycle_slide_coprime` (T2): `gcd(A, r) = 1` (not reached by `NormPlateau`'s cofactor method,
+  nor by the norm route of `NormTwo`) — via `NormShift.slide_word_coprime`.
 * `no_cycle_slide_gcd` / `no_cycle_slide_gcd2` (T3): any `d = gcd ≥ 2` under
-  `2^176 r^59 < 3^{⌊(r - r/d)/(d+2)⌋+1}`; for `d = 2` this is automatic and closes `NormPlateau`'s
-  middle band of ~20 distances.
+  `2^176 r^59 < 3^{⌊(r - r/d)/(d+2)⌋+1}`; for `d = 2` this is automatic (`r ≥ 40901`).
 * `no_cycle_slide_allRA`: all `(r, A)` (`gcd ≥ 3` via `NormPlateau` `NormPlateau.no_cycle_slide_noncoprime3`).
 * `cycle_slide_all` (T4): no nontrivial positive `T`-cycle has as valuation word (read from the
   chosen start `m`) a slide of `chr r L`, for any `gcd(L, r)` and any distance.
 * `no_cycle_few_levels_coprime`, `cycle_few_levels_coprime` (T5): coprime words of height `H₀`
-  with `J` cyclic level changes, `2^{2H₀+174} r^59 < 3^{⌊r/(6J+3)⌋+1}` (`witness_levels`:
+  with `J` cyclic level changes, `2^{2H₀+174} r^59 < 3^{⌊r/(6J+3)⌋+1}` (e.g.
   `J ≤ 9` at `r = 40903`, `H₀ = 1`). T5 is a run-count / level-change variant of Mghirbi's
   support-height criterion (`2s+1` vs `6J+3`, `p^{13.3}` vs `r^59`): it wins for plateaus and
   loses for isolated defects, so it is not a uniform strengthening.
-* `witness_gcd1`, `witness_gcd2`: the word-level hypotheses are satisfiable (non-vacuity).
-  Cycle-level non-vacuity cannot be shown (no nontrivial cycle is known).
 
 Prior art: Mghirbi (Zenodo 21734655) Thm 1.3 covers height-one interval bridges only for area
 `D ≲ 0.038 r / log r`, via his Thm 6.3/6.4/Lemma 7.2 lift (coprime, `t = 1`); `NormMain`:
-`D = 1`; `NormPlateau`: `gcd ≥ 3`, and `gcd = 2` outside a middle band; Solomon (Zenodo 22220730, Prop. 6.3)
+`D = 1`; `NormPlateau`: `gcd ≥ 3`; Solomon (Zenodo 22220730, Prop. 6.3)
 cofactor; Knight, Lebel. Here: every `D`, every `(r, A)`, `r ≥ 40901`.
 
 Scope: word-level / cycle-equation exclusions. Rotations: `cycle_slide_all` reads the
-word from the chosen start; the start-free form (any rotation of a slide of `chr r L`) is proved
-in `NormLebel.cycle_slide_rot_all` (via `NormLebel.dvd_Bnum_rot`).
+word from the chosen start; start-free forms (any rotation of a slide of `chr r L`) are not
+treated here.
 -/
 
 namespace Collatz.NormShiftSlide
@@ -63,8 +60,7 @@ theorem no_cycle_slide_gcd (r A a b d : ℕ) (hd2 : 2 ≤ d) (hd : Nat.gcd A r =
     (gap_all59 hr0 (by omega)) hbig
 
 /-- **T3, `d = 2`.** For `r ≥ 40901`, `gcd(A, r) = 2`, every slide of `chr r A`
-is excluded. This closes `NormPlateau`'s middle band (`NormPlateau.no_cycle_slide_noncoprime` left about
-20 middle distances open for `d = 2`). -/
+is excluded. -/
 theorem no_cycle_slide_gcd2 (r A a b : ℕ) (hr : 40901 ≤ r) (hd : Nat.gcd A r = 2)
     (hq : 3 ^ r + 1 < 2 ^ A) (ha : a < r) (hb : b < r) (hab : a ≠ b)
     (h2 : 2 ≤ NormGoal.chr r A a) :
@@ -73,7 +69,7 @@ theorem no_cycle_slide_gcd2 (r A a b : ℕ) (hr : 40901 ≤ r) (hd : Nat.gcd A r
   calc 2 ^ 176 * r ^ 59 < 3 ^ (r / 10 + 1) := NormShift.big_r10 hr
     _ ≤ 3 ^ ((r - r / 2) / (2 + 2) + 1) := Nat.pow_le_pow_right (by norm_num) (by omega)
 
-/-- **DIRECTIVES 2(c) at word level, all `(r, A)`.** For `r ≥ 40901` and
+/-- **One-unit slides at word level, all `(r, A)`.** For `r ≥ 40901` and
 `3^r + 1 < 2^A` (no hypothesis on `gcd(A, r)`), no word obtained from `chr r A` by moving one
 unit from a position `a` (with `chr a ≥ 2`) to any other position `b` satisfies
 `(2^A - 3^r) ∣ B`. Cases: `gcd = 1` T2; `gcd = 2` T3; `gcd ≥ 3` `NormPlateau`
@@ -95,7 +91,7 @@ theorem no_cycle_slide_allRA (r A a b : ℕ) (hr : 40901 ≤ r) (hq : 3 ^ r + 1 
 section Cycle
 open CollatzProof
 
-/-- **T4: DIRECTIVES 2(c) for every actual `T`-cycle.** No nontrivial (`m ≠ 1`)
+/-- **T4: one-unit slides for every actual `T`-cycle.** No nontrivial (`m ≠ 1`)
 positive `T`-cycle with `r ≥ 2` odd steps and period `L` has as valuation word (read from the
 chosen start `m`) a slide of `chr r L` — one unit moved from any position `a` (`chr a ≥ 2`) to
 any other position `b`. No hypothesis on `gcd(L, r)` and none on the distance `|a - b|`.
@@ -113,23 +109,12 @@ theorem cycle_slide_all {m L r : ℕ} {v : ℕ → ℕ} (hr : 2 ≤ r) (hm : m �
 
 end Cycle
 
-/-- Non-vacuity (word level, `gcd = 1`): `r = 40903`, `A = 64830` satisfy every hypothesis of
-`no_cycle_slide_coprime` with `a = 1` (`chr 1 = 2`) and any `b ≠ 1`. -/
-theorem witness_gcd1 : Nat.Coprime 64830 40903 ∧ 3 ^ 40903 + 1 < 2 ^ 64830 ∧
-    2 ≤ NormGoal.chr 40903 64830 1 := by
-  refine ⟨by decide +kernel, by decide +kernel, by decide +kernel⟩
-
-/-- Non-vacuity (word level, `gcd = 2`): `r = 40902`, `A = 64832`, `a = 1` (`chr 1 = 2`). -/
-theorem witness_gcd2 : Nat.gcd 64832 40902 = 2 ∧ 3 ^ 40902 + 1 < 2 ^ 64832 ∧
-    2 ≤ NormGoal.chr 40902 64832 1 := by
-  refine ⟨by decide +kernel, by decide +kernel, by decide +kernel⟩
-
 /-- **T5, unconditional word form.** For coprime `(A, r)`, `3^r + 1 < 2^A`, any word
 (letters `≥ 1`, `psum v r = A`) whose deviation `ε_j = psum v j - ⌊jA/r⌋` satisfies `|ε| ≤ H₀`
 and changes level (cyclically) only at the `J = |P|` points of `P`, with
 `2^{2H₀+174} r^59 < 3^{⌊r/(6J+3)⌋+1}`, has `(2^A - 3^r) ∤ B(v)`. So a cycle word of bounded
 height must change level at least about `r / (6 log₃(2^{2H₀+174} r^59))` times; e.g. at
-`r = 40903`, `H₀ = 1`, every word with at most 9 level changes is excluded (`witness_levels`).
+`r = 40903`, `H₀ = 1`, every word with at most 9 level changes is excluded.
 This is a run-count / level-change variant of Mghirbi's support-height criterion (Zenodo
 21734655): his `3^{p/(2s+1)}` vs `2^{14.3}(8s+2)^{2H} p^{13.3}` (in the number `s` of defect
 points) against our `3^{r/(6J+3)}` vs `2^{2H₀+174} r^59` (in the number `J` of level changes).
@@ -163,11 +148,6 @@ theorem cycle_few_levels_coprime {m L r H₀ : ℕ} {v : ℕ → ℕ} (hr : 2 �
 
 end Cycle2
 
-/-- Numerical instance of T5's hypothesis: `r = 40903`, `H₀ = 1`, `J = 9`
-(`⌊40903/57⌋ = 717`). -/
-theorem witness_levels : 2 ^ (2 * 1 + 174) * 40903 ^ 59 < 3 ^ (40903 / (6 * 9 + 3) + 1) := by
-  decide +kernel
-
 end Collatz.NormShiftSlide
 
 #print axioms Collatz.NormShiftSlide.no_cycle_slide_coprime
@@ -175,8 +155,5 @@ end Collatz.NormShiftSlide
 #print axioms Collatz.NormShiftSlide.no_cycle_slide_gcd2
 #print axioms Collatz.NormShiftSlide.no_cycle_slide_allRA
 #print axioms Collatz.NormShiftSlide.cycle_slide_all
-#print axioms Collatz.NormShiftSlide.witness_gcd1
-#print axioms Collatz.NormShiftSlide.witness_gcd2
 #print axioms Collatz.NormShiftSlide.no_cycle_few_levels_coprime
 #print axioms Collatz.NormShiftSlide.cycle_few_levels_coprime
-#print axioms Collatz.NormShiftSlide.witness_levels

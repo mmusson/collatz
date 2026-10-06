@@ -12,8 +12,7 @@ import Mathlib.Logic.Function.Iterate
 This file sets up the problem and nothing more.  The conjecture below is stated
 precisely and is currently proved by `sorry`, so Lean reports it as open: the
 build succeeds, the open goal raises `declaration uses 'sorry'`, and
-`#print axioms` exposes `sorryAx`.  That is the honest state of affairs, and it
-is what any future progress has to remove.
+`#print axioms` exposes `sorryAx`.
 
 ## Main definitions
 

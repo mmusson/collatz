@@ -238,7 +238,7 @@ theorem few_runs_cycle_trivial_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : 
 
 /-- **CONDITIONAL on `LMNHyp`** (unverified transcription of LMN 1995 / Laurent 2008; vacuous if
 false): the conclusion of `state_of_the_art` with the final disjunction strengthened to
-`≥ 3` odd runs.  Classical; NOT progress on `no_nontrivial_cycles`. -/
+`≥ 3` odd runs.  Classical. -/
 theorem state_of_the_art_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2)
     (hc0 : c0 ≤ 1) (hm0 : 0 ≤ m0) (hm1 : m0 ≤ 21) (H : LMNHyp Cst c0 m0)
     (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)

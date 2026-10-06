@@ -8,17 +8,13 @@ import CollatzProof.Basic
 /-!
 # The classical, accelerated and Syracuse formulations agree
 
-The two maps `C` and `T` reach `1` from exactly the same starting points.  This
-is proved here, with no `sorry`: it is bookkeeping about interleaving the forced
-halving steps, not progress on the conjecture itself.
+The two maps `C` and `T` reach `1` from exactly the same starting points.
 
 The main result `reaches_one_iff` is stated pointwise and with no positivity
 hypothesis.  Positivity is not needed: in the odd case `n % 2 = 1` already
 forces `n ≥ 1`, and for `n = 0` both sides are false, since `C 0 = T 0 = 0`.
 
-`terras_conjecture` is then a corollary of `collatz_conjecture` rather than an
-independent open problem, which is the honest accounting — there is only one
-hole in this development.
+`terras_conjecture` is then a corollary of `collatz_conjecture`.
 
 ## Main results
 

@@ -13,7 +13,7 @@ import NormCofactor
   `< U^{d-1}` in absolute value. Max window (exact check): `(r,A) = (60,96)`, `d = 12`: `w ≤ 50`
   (`h = 1`), `48` (`h = 3`); `(106,170)`, `d = 2`: `48` (`h = 1`),
   `46` (`h = 3`); `(2326,3688)`, `d = 2`: `1155` (`h = 1`), `1153` (`h = 3`). Exponentially many words
-  in `w`; covers DIRECTIVES 2(c) height-one interval bridges up to that length when `d ≥ 2`.
+  in `w`; covers height-one interval bridges up to that length when `d ≥ 2`.
 * `cycle_window_noncoprime`: cycle form.
 
 Word-level, needs `d ≥ 2`; credit Solomon Prop. 6.3 (one-move cofactor argument).
@@ -115,7 +115,7 @@ Proof: `B` is 2-adically injective on strictly increasing partial sums (`Bnum_in
 `Δ = B(v) - B(chr) ≠ 0`; Solomon's cofactor `S_d` divides `Δ = 3^{r-k-w} 2^m X`, hence `X`;
 but `|X| ≤ w 2^{2h+1} max_s 3^{w-1-s} 2^{⌊sA/r⌋} < 2^{A - A/d} = U^{d-1} ≤ S_d`.
 The window can be as long as about `(1 - 1/d) r`: e.g. `w ≤ 1155` at `(r, A) = (2326, 3688)`,
-`h = 1`. Corollary (DIRECTIVES 2(c) for `d ≥ 2`): height-one interval bridges of length up to
+`h = 1`. Corollary (`d ≥ 2`): height-one interval bridges of length up to
 the same bound are excluded. -/
 theorem no_cycle_window_noncoprime (r A : ℕ) (hd : 2 ≤ Nat.gcd A r) (hq : 3 ^ r + 1 < 2 ^ A)
     (k w h : ℕ) (hkw : k + w ≤ r)

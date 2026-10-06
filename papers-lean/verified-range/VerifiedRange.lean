@@ -11,7 +11,7 @@ from the kernel-certified sieve `descRange_24`.  Larger instances (`2^68`, `2^71
 only from computation in the literature (Oliveira e Silva 2010; Barina 2020, 2025), not
 formalized here; theorems taking `VerifiedRangeHyp X0` as a hypothesis are CONDITIONAL on it.
 
-Classical; NOT progress on `no_nontrivial_cycles`.
+Classical.
 -/
 
 namespace Collatz

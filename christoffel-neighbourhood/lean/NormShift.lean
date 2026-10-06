@@ -21,7 +21,7 @@ and the 2-adic valuations force `κ_a = 0`, a contradiction. The support is neve
 Prior art: for `σ = A^{-1} mod r` (`t = 1`) and `gcd(A, r) = 1` this is Mghirbi's
 rotation-numerator lift (Mghirbi, Zenodo 21734655, Thm 6.3, Thm 6.4 (2-adic nonvanishing via odd
 rotation numerators), Lemma 7.2 (maximal cyclic gap)), which works through `ξ ∈ ℤ/q` and needs
-coprimality. New here: no `ξ` (we only use `q ∣ G a`), arbitrary `t ≥ 1` (several specials),
+coprimality. Here: no `ξ` (we only use `q ∣ G a`), arbitrary `t ≥ 1` (several specials),
 any `gcd(A, r)`, and a free window obtained from *arcs* (runs) rather than from a point count.
 
 **Slides (T2/T3 cores).** For `v = slide (chr r A) a b` the deviation is `ε = [b<ρ] - [a<ρ]`
@@ -971,7 +971,7 @@ criterion (Zenodo 21734655), not a uniform strengthening. Mghirbi compares
 `3^{p/(2s+1)}` with `2^{14.3}(8s+2)^{2H} p^{13.3}` in the number `s` of defect points; ours
 compares `3^{r/(6J+3)}` with `2^{2H₀+174} r^59` in the number `J` of level changes (`2s+1` vs
 `6J+3`, `p^{13.3}` vs `r^59`). Ours wins for plateau / run-structured deviations (`J ≪ s`) and
-loses for isolated defects (`J ≈ 2s`). Single-divisor version: `NormLebel.few_levels_coprime_dvd`. -/
+loses for isolated defects (`J ≈ 2s`). -/
 theorem few_levels_coprime {r A H₀ : ℕ} {v : ℕ → ℕ} (hr : 0 < r) (hcop : Nat.Coprime A r)
     (hq : 3 ^ r + 1 < 2 ^ A) (hv1 : ∀ i < r, 1 ≤ v i) (hA : psum v r = A)
     (P : Finset ℕ) (hP : ∀ c ∈ P, c < r)

@@ -6,8 +6,7 @@ import Mathlib.Analysis.Complex.ExponentialBounds
 /-!
 # A polynomial irrationality measure of `log 3/log 2` excludes ≤ 2-run cycles (all `k`)
 
-**CONDITIONAL on `IrrMeasHyp μ Q0` (unproved; definition, not axiom). NOT progress on
-`no_nontrivial_cycles`.**
+**CONDITIONAL on `IrrMeasHyp μ Q0` (unproved; definition, not axiom).**
 
 * `IrrMeasHyp μ Q0`: the standard literature form of an irrationality measure,
   `|log 3/log 2 − p/q| ≥ q^{−μ}` for all `p` and all `q ≥ max(Q0,1)`.

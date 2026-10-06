@@ -9,7 +9,7 @@ Notation: `psum v j = P_j`, `B(v) = Σ_{j<r} 3^{r-1-j} 2^{P_j}` (Böhm–Sontacc
 is Solomon's cofactor `S_d` (Solomon 2026, Zenodo 22220730, Prop. 6.3); for `p = 2`,
 `Φ = 2^{A/2} + 3^{r/2}`.
 
-New idea (`NormFold`): compare `B(v)` with **its own `r'`-shift** modulo `Φ`, instead of with
+Idea: compare `B(v)` with **its own `r'`-shift** modulo `Φ`, instead of with
 `B(chr)`. Modulo `Φ`, `U^{p-1} B(v)` folds into a sum over the non-pivot indices of
 `3^{·}(2^{α_i} - 2^{β_i})`, where `β_i` is the partial sum at the pivot index of the same
 column `i mod r'`, shifted by a multiple of `A'`; the term vanishes when `v` is `r'`-periodic at
@@ -22,26 +22,23 @@ free-gap lemma provides as soon as `|bad columns| · g < r'`.
 * **T1** `no_cycle_half_fold` (`p = 2`): bad columns in one cyclic arc of `ℤ/r'`.
 * **T3** `no_cycle_half_fold_count`: fewer than `r'/g` bad columns, anywhere;
   `no_cycle_sites_even`: a word within `e` of `chr r A` (`r, A` even), not `r'`-periodic,
-  deviating from chr at fewer than `r'/g` indices (arbitrary positions); cycle forms
-  `cycle_half_fold_count`, `cycle_sites_even`; non-vacuity `witness_fold` (`r = 40902`,
-  `L = 64830`, `e = 1`, `g = 14`: up to 1460 deviating indices), `witness_fold2` (`L = 64832`,
-  `gcd = 2`).
+  deviating from chr at fewer than `r'/g` indices (arbitrary positions); cycle form
+  `cycle_sites_even` (e.g. `r = 40902`, `L = 64830` or `64832`, `e = 1`, `g = 14`: up to 1460
+  deviating indices).
 * **T2** (any common factor `p = n + 1 ≥ 2` of `r` and `A`): `fold_top` (top-pivot fold
   identity, pure algebra), `rot_fold` (rotation modulo `q`), `fold_core` (window theorem in
   rotated coordinates; needs the start column good), `no_cycle_fold_count` (between `1` and
   fewer than `r'/g` bad columns, anywhere, `(n r' 2^{2h+1})^2 < 2^{3(g+1)}`),
-  `no_cycle_sites_fold` (any `p`: few deviating sites from chr, any positions), cycle forms
-  `cycle_fold_count`, `cycle_sites_fold`, witnesses `witness_fold3` (`r = 122703`,
-  `L = 194484`, `p = 3`: `|D| ≤ 2726`) and `witness_fold4` (`r = 122704`, `p = 4`: `|D| ≤ 2045`).
-  Compare `NormArc` (`NormArc`): at most `d - 1` sites.
+  `no_cycle_sites_fold` (any `p`: few deviating sites from chr, any positions), cycle form
+  `cycle_sites_fold` (e.g. `r = 122703`, `L = 194484`, `p = 3`: `|D| ≤ 2726`; `r = 122704`,
+  `p = 4`: `|D| ≤ 2045`). Compare `NormArc`: at most `d - 1` sites.
 
 Scope: word-level statements (and their `T`-cycle forms) for `r` and `A` with a common
 factor `p ≥ 2` (T1/T3: both even);
 height of the deviation bounded; `r'`-periodic words are not excluded (they reduce to `(r', A')`,
 possibly coprime). It does not touch coprime `(r, A)` (the generic case) or the
-`d = 2` middle band of `NormPlateau` slides (there every column is bad). Prior art: Solomon (cofactor
-`S_d`), Knight, Lebel, Mghirbi, Fernández–Ibáñez (arXiv 2607.24844); novelty of the self-fold
-is provisional.
+`d = 2` slides of `NormShiftSlide` (there every column is bad). Prior art: Solomon (cofactor
+`S_d`), Knight, Lebel, Mghirbi, Fernández–Ibáñez (arXiv 2607.24844).
 -/
 
 namespace Collatz.NormFold
@@ -559,26 +556,11 @@ theorem no_cycle_sites_even (r' A' e g : ℕ) (hr' : 0 < r')
 section Cycle
 open CollatzProof
 
-/-- **Cycle form of T3c.** No positive `T`-cycle with `r = 2r'` odd steps and period `L = 2A'`
-has an `h`-balanced valuation word (`h ≤ A'`) with between `1` and `< r'/g` bad columns,
-when `(r' 2^{2h+1})^2 < 2^{3(g+1)}`. -/
-theorem cycle_half_fold_count {m r' A' : ℕ} {v : ℕ → ℕ} (hr' : 1 ≤ r')
-    (hv1 : ∀ i < 2 * r', 1 ≤ v i) (hL : psum v (2 * r') = 2 * A')
-    (hodd : ∀ j < 2 * A', (T^[j] m % 2 = 1 ↔ ∃ i < 2 * r', psum v i = j))
-    (hcyc : T^[2 * A'] m = m) (h g : ℕ) (hhA : h ≤ A')
-    (hbal : ∀ i j, i ≤ j → j ≤ 2 * r' →
-        (j - i) * A' ≤ r' * (psum v j - psum v i) + r' * h ∧
-        r' * (psum v j - psum v i) ≤ (j - i) * A' + r' * h)
-    (hx : (r' * 2 ^ (2 * h + 1)) ^ 2 < 2 ^ (3 * (g + 1)))
-    (hC0 : 0 < (badCols r' A' v).card) (hCg : (badCols r' A' v).card * g < r') : False := by
-  obtain ⟨hq, hdiv⟩ := NormTwo.cycle_q (by omega) hv1 hL hodd hcyc
-  exact no_cycle_half_fold_count r' A' h g hr' hq hhA v hv1 hL hbal hx hC0 hCg hdiv
-
 /-- **Cycle form of T3e.** No positive `T`-cycle with `r = 2r'` odd steps and period `L = 2A'`
 has a valuation word that is not `r'`-periodic, stays within `e` of `chr r L` (`2e+1 ≤ A'`), and
 deviates from it at a set `D` of indices with `|D|·g < r'`, where
-`(r' 2^{2(2e+1)+1})^2 < 2^{3(g+1)}`. Non-vacuity: `r = 40902`, `L = 64830` (or `64832`), `e = 1`,
-`g = 14`, so up to `|D| = 1460` deviating indices at arbitrary positions (`witness_fold`); e.g.
+`(r' 2^{2(2e+1)+1})^2 < 2^{3(g+1)}`. Example: `r = 40902`, `L = 64830` (or `64832`), `e = 1`,
+`g = 14`, so up to `|D| = 1460` deviating indices at arbitrary positions; e.g.
 `v = chr r L` with height-one moves (e.g. right flips) at up to `1460` separated sites, not all
 repeated `r'` indices later (so `v` is not `r'`-periodic). -/
 theorem cycle_sites_even {m r' A' : ℕ} {v : ℕ → ℕ} (hr' : 1 ≤ r')
@@ -595,18 +577,6 @@ theorem cycle_sites_even {m r' A' : ℕ} {v : ℕ → ℕ} (hr' : 1 ≤ r')
   exact no_cycle_sites_even r' A' e g hr' hq he hx v hv1 hL D hDg hout hup hdn hne hdiv
 
 end Cycle
-
-/-- Non-vacuity certificate: at `r = 40902 = 2·20451`, `L = 64830 = 2·32415`,
-`3^r + 1 < 2^L`, and with `e = 1`, `g = 14` the height hypothesis of `no_cycle_sites_even`
-holds, so `|D| ≤ 1460` (`1460·14 < 20451`). -/
-theorem witness_fold : 3 ^ (2 * 20451) + 1 < 2 ^ (2 * 32415) ∧
-    (20451 * 2 ^ (2 * (2 * 1 + 1) + 1)) ^ 2 < 2 ^ (3 * (14 + 1)) ∧ 1460 * 14 < 20451 := by
-  decide +kernel
-
-/-- The same at `L = 64832 = 2·32416`, where `gcd(L, r) = 2` exactly. -/
-theorem witness_fold2 : Nat.gcd 64832 40902 = 2 ∧ 3 ^ (2 * 20451) + 1 < 2 ^ (2 * 32416) ∧
-    (20451 * 2 ^ (2 * (2 * 1 + 1) + 1)) ^ 2 < 2 ^ (3 * (14 + 1)) := by
-  decide +kernel
 
 /-! ## General `p = n + 1 ≥ 2` (T2) -/
 
@@ -1202,29 +1172,10 @@ theorem no_cycle_sites_fold (n r' A' e g : ℕ) (hn : 1 ≤ n) (hr' : 0 < r')
 section CycleP
 open CollatzProof
 
-/-- **Cycle form of T2.** No positive `T`-cycle with `r = (n+1) r'` odd steps and period
-`L = (n+1) A'` (`n ≥ 1`) has an `h`-balanced valuation word (`h ≤ A'`) with between `1` and
-fewer than `r'/g` bad columns (`g ≥ 1`), when `(n r' 2^{2h+1})^2 < 2^{3(g+1)}`. -/
-theorem cycle_fold_count {m n r' A' : ℕ} {v : ℕ → ℕ} (hn : 1 ≤ n) (hr' : 1 ≤ r')
-    (hv1 : ∀ i < (n + 1) * r', 1 ≤ v i) (hL : psum v ((n + 1) * r') = (n + 1) * A')
-    (hodd : ∀ j < (n + 1) * A', (T^[j] m % 2 = 1 ↔ ∃ i < (n + 1) * r', psum v i = j))
-    (hcyc : T^[(n + 1) * A'] m = m) (h g : ℕ) (hhA : h ≤ A')
-    (hbal : ∀ i j, i ≤ j → j ≤ (n + 1) * r' →
-        (j - i) * A' ≤ r' * (psum v j - psum v i) + r' * h ∧
-        r' * (psum v j - psum v i) ≤ (j - i) * A' + r' * h)
-    (hg : 0 < g) (hx : (n * r' * 2 ^ (2 * h + 1)) ^ 2 < 2 ^ (3 * (g + 1)))
-    (hC0 : 0 < (badColsP n r' A' v).card) (hCg : (badColsP n r' A' v).card * g < r') : False := by
-  have h2 : 2 ≤ (n + 1) * r' := by
-    have := Nat.mul_le_mul hn hr'; rw [add_mul, one_mul]; omega
-  obtain ⟨hq, hdiv⟩ := NormTwo.cycle_q h2 hv1 hL hodd hcyc
-  exact no_cycle_fold_count n r' A' h g hn hr' hq hhA v hv1 hL hbal hg hx hC0 hCg hdiv
-
 /-- **Cycle form of T3 (any `p = n + 1 ≥ 2`).** No positive `T`-cycle with `r = (n+1) r'` odd
 steps and period `L = (n+1) A'` has a valuation word that is not `r'`-periodic, stays within `e`
 of `chr r L` (`2e + 1 ≤ A'`), and deviates from it at a set `D` of indices with `|D|·g < r'`,
-where `(n r' 2^{2(2e+1)+1})^2 < 2^{3(g+1)}`, `g ≥ 1`. Non-vacuity (`witness_fold3`,
-`witness_fold4`): `r = 122703`, `L = 194484` (`p = 3`, `e = 1`, `g = 15`, `|D| ≤ 2726`) and
-`r = 122704`, `L = 194484` (`p = 4`, `|D| ≤ 2045`). -/
+where `(n r' 2^{2(2e+1)+1})^2 < 2^{3(g+1)}`, `g ≥ 1`. -/
 theorem cycle_sites_fold {m n r' A' : ℕ} {v : ℕ → ℕ} (hn : 1 ≤ n) (hr' : 1 ≤ r')
     (hv1 : ∀ i < (n + 1) * r', 1 ≤ v i) (hL : psum v ((n + 1) * r') = (n + 1) * A')
     (hodd : ∀ j < (n + 1) * A', (T^[j] m % 2 = 1 ↔ ∃ i < (n + 1) * r', psum v i = j))
@@ -1243,18 +1194,6 @@ theorem cycle_sites_fold {m n r' A' : ℕ} {v : ℕ → ℕ} (hn : 1 ≤ n) (hr'
 
 end CycleP
 
-/-- Non-vacuity, `p = 3`: `r = 122703 = 3·40901`, `L = 194484 = 3·64828`, `3^r + 1 < 2^L`,
-and with `e = 1`, `g = 15` the hypothesis of `no_cycle_sites_fold` holds; `|D| ≤ 2726`. -/
-theorem witness_fold3 : 3 ^ ((2 + 1) * 40901) + 1 < 2 ^ ((2 + 1) * 64828) ∧
-    (2 * 40901 * 2 ^ (2 * (2 * 1 + 1) + 1)) ^ 2 < 2 ^ (3 * (15 + 1)) ∧ 2726 * 15 < 40901 := by
-  decide +kernel
-
-/-- Non-vacuity, `p = 4`: `r = 122704 = 4·30676`, `L = 194484 = 4·48621`; `e = 1`, `g = 15`,
-`|D| ≤ 2045`. -/
-theorem witness_fold4 : 3 ^ ((3 + 1) * 30676) + 1 < 2 ^ ((3 + 1) * 48621) ∧
-    (3 * 30676 * 2 ^ (2 * (2 * 1 + 1) + 1)) ^ 2 < 2 ^ (3 * (15 + 1)) ∧ 2045 * 15 < 30676 := by
-  decide +kernel
-
 end Collatz.NormFold
 
 #print axioms Collatz.NormFold.window_pair
@@ -1264,16 +1203,10 @@ end Collatz.NormFold
 #print axioms Collatz.NormFold.no_cycle_half_fold_count
 #print axioms Collatz.NormFold.bal_of_chr
 #print axioms Collatz.NormFold.no_cycle_sites_even
-#print axioms Collatz.NormFold.cycle_half_fold_count
 #print axioms Collatz.NormFold.cycle_sites_even
-#print axioms Collatz.NormFold.witness_fold
-#print axioms Collatz.NormFold.witness_fold2
 #print axioms Collatz.NormFold.fold_top
 #print axioms Collatz.NormFold.rot_fold
 #print axioms Collatz.NormFold.fold_core
 #print axioms Collatz.NormFold.no_cycle_fold_count
 #print axioms Collatz.NormFold.no_cycle_sites_fold
-#print axioms Collatz.NormFold.cycle_fold_count
 #print axioms Collatz.NormFold.cycle_sites_fold
-#print axioms Collatz.NormFold.witness_fold3
-#print axioms Collatz.NormFold.witness_fold4

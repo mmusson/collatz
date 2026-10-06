@@ -68,8 +68,6 @@ theorem coprime_three {r A : ℕ} (hr : 0 < r) (hq : 3 ^ r + 1 < 2 ^ A) :
   have := Nat.Prime.dvd_of_dvd_pow Nat.prime_three this
   omega
 
-theorem one_lt_q {r A : ℕ} (hq : 3 ^ r + 1 < 2 ^ A) : 1 < 2 ^ A - 3 ^ r := by omega
-
 /-- In `ZMod q`, `2^A = 3^r`. -/
 theorem two_pow_eq {r A : ℕ} (hq : 3 ^ r + 1 < 2 ^ A) :
     (2 : ZMod (2 ^ A - 3 ^ r)) ^ A = 3 ^ r := by

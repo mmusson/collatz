@@ -8,29 +8,25 @@ import Collatz.CycleMax
 
 
 /-!
-# hypothesis-free cycle forms (DIRECTIVES 2(a), "all (r, A)")
+# hypothesis-free cycle forms (all `(r, A)`)
 
 Every nontrivial positive `T`-cycle automatically satisfies `L < 2r` (Crandall sandwich at the
 orbit minimum, which is `≥ 2`) and `L + r ≥ 122703` (our `cycleLengthAtLeast_122703`), hence
 `r ≥ 40901 > 2325` (`cycle_params`). So the side hypotheses `r ≥ 2325` and `L < 2r` of the
-the earlier files cycle forms are automatic, and are removed here:
+earlier cycle forms are automatic, and are removed here:
 
-* `cycle_two_right_flips_uncond`: two right flips at up-sites, all `gcd(L, r)`;
-  `cycle_two_right_flips_nonadj`: any two non-adjacent sites (up-site conditions derived from
-  validity by `up_site_of_valid`).
+* `cycle_two_right_flips_uncond`: two right flips at up-sites, all `gcd(L, r)`.
 * `cycle_two_left_flips_uncond`: two left flips, all `gcd(L, r)` (the down-site conditions are
-  used only when `gcd(L, r) = 1`, via `NormTwo`; `gcd ≥ 2` is `NormCofactor`'s two-site theorem with `ε = -1`);
-  `cycle_two_left_flips_nonadj`: any two non-adjacent sites (down-site conditions derived from
-  validity by `down_site_of_valid`).
+  used only when `gcd(L, r) = 1`, via `NormTwo`; `gcd ≥ 2` is `NormCofactor`'s two-site
+  theorem with `ε = -1`).
 * `cycle_k_right_flips_uncond`: `k` right flips with `Σ 4^{p_k/r} ≤ 4.9`, coprime, no site
   conditions.
 * `cycle_mixed_flips_uncond`: `NormMixed` mixed pairs, coprime.
 * `exists_odd_point`: every positive cycle has an odd point, so the corollaries (stated for any
   odd point `m`, with `m ≠ 1`) cover every nontrivial positive cycle.
-* `no_cycle_k_right_flips'`: `NormFlips`' `k`-flip theorem without its (truly unused) up-site
-  hypothesis and without `A < 2r`. NOTE: the `NormFlips`/`NormCofactor` two-right-flip docstrings claim
-  `hs1`, `hs2` are unused; that is false (`NormFlips`' `omega` calls use them from the context, for
-  `b + 1 ≤ A - r`), so the two-right-flip forms keep them or derive them.
+* `no_cycle_k_right_flips'`: the `k`-right-flip theorem (via `NormFlips.core_k`), with no
+  up-site hypothesis and without `A < 2r`. The two-right-flip forms keep their up-site
+  hypotheses: `NormFlips`' `omega` calls use them, for `b + 1 ≤ A - r`.
 
 All results are about valuation words close to Christoffel words.
 -/
@@ -79,7 +75,7 @@ theorem oddSteps_psum {m L r : ℕ} {v : ℕ → ℕ} (hv1 : ∀ i < r, 1 ≤ v 
 /-- **Every positive `T`-cycle has an odd point.** If `n > 0`, `L > 0` and `T^L n = n`, some
 `T^j n` with `j < L` is odd (otherwise `n = T^L n = n / 2^L < n`). So the cycle corollaries
 below, which quantify over every odd point `m` of a cycle, apply to every positive cycle: the
-"orbit starts at an odd time" caveat of the the earlier files bridges is no restriction. -/
+"orbit starts at an odd time" caveat of the earlier bridges is no restriction. -/
 theorem exists_odd_point {n L : ℕ} (hn : 0 < n) (hL : 0 < L) (h : T^[L] n = n) :
     ∃ j < L, T^[j] n % 2 = 1 := by
   by_contra hne
@@ -156,9 +152,8 @@ section Word
 open Collatz.NormReduce Collatz.NormSparse Collatz.NormTwo
   Collatz.NormFilter Collatz.NormFlips
 
-/-- `NormFlips`' `NormFlips.no_cycle_k_right_flips` without its unused up-site hypothesis and
-without `A < 2r` (both checked unused by recompiling `NormFlips`' proof without them): any set `K`
-of at least two sites in `(0, r)` with `Σ_{k∈K} 4^{p_k/r} ≤ 4.9`. -/
+/-- **`k` right flips** (via `NormFlips.core_k`), with no up-site hypothesis and without
+`A < 2r`: any set `K` of at least two sites in `(0, r)` with `Σ_{k∈K} 4^{p_k/r} ≤ 4.9`. -/
 theorem no_cycle_k_right_flips' (r A : ℕ) (hr : 2325 ≤ r) (hcop : Nat.Coprime A r)
     (hq : 3 ^ r + 1 < 2 ^ A) (K : Finset ℕ) (hK2 : 2 ≤ K.card)
     (hKr : ∀ k ∈ K, 0 < k ∧ k < r)
@@ -245,37 +240,11 @@ theorem coprime_of_gcd_lt_two {L r : ℕ} (hr : 0 < r) (h : Nat.gcd L r < 2) : N
   have := Nat.gcd_pos_of_pos_right L hr
   unfold Nat.Coprime; omega
 
-/-- **Up-site from validity.** If `r < A < 2r`, all entries of `v` below `r` are `≥ 1`,
-`psum v r = A`, and the partial sums of `v` are those of `chr r A` plus `[S i]`, then every
-flip site `k < r` whose successor `k + 1` is not a flip site is an up-site
-(`r ≤ kA mod r + A mod r`, i.e. `chr k = 2`): indeed `v k = chr k - 1 ≥ 1`. -/
-theorem up_site_of_valid {r A : ℕ} {v : ℕ → ℕ} (hrA : r < A) (hA : A < 2 * r)
-    (hv1 : ∀ i < r, 1 ≤ v i) (hL : psum v r = A) (S : ℕ → Prop) [DecidablePred S]
-    (hv : ∀ i < r, psum v i = psum (NormGoal.chr r A) i + (if S i then 1 else 0))
-    {k : ℕ} (hk : k < r) (hSk : S k) (hSk1 : ¬ S (k + 1)) : r ≤ k * A % r + A % r := by
-  have hr0 : 0 < r := by omega
-  have hdiv : A / r = 1 := Nat.div_eq_of_lt_le (by omega) (by omega)
-  have hc := NormReduce.chr_eq (A := A) hr0 k
-  have hvk := hv1 k hk
-  have e1 := hv k hk
-  rw [if_pos hSk] at e1
-  have e2 : psum v (k + 1) = psum (NormGoal.chr r A) (k + 1) := by
-    rcases Nat.lt_or_ge (k + 1) r with h | h
-    · have := hv (k + 1) h; rw [if_neg hSk1] at this; exact this
-    · have hk1 : k + 1 = r := by omega
-      rw [hk1, hL, NormReduce.psum_chr, Nat.mul_div_cancel_left A hr0]
-  rw [psum_succ, psum_succ] at e2
-  rw [hdiv] at hc
-  split_ifs at hc with h
-  · exact h
-  · omega
-
 /-- **Two right flips, unconditional cycle form.** `NormCofactor`'s
 `NormCofactor.cycle_two_right_flips_allRA` with `r ≥ 2325` and `L < 2r` removed (replaced by
 `m ≠ 1`): no positive `T`-cycle point `m ≠ 1` (any `gcd(L, r)`) has a valuation word whose
 partial sums are those of `chr r L` plus one at two distinct up-sites in `(0, r)`. (The
-up-site hypotheses ARE used, by `omega` inside `NormFlips`' proof, contrary to the `NormFlips`/`NormCofactor`
-docstrings; see `cycle_two_right_flips_nonadj` for a version without them.) -/
+up-site hypotheses are used, by `omega` inside `NormFlips`' proof.) -/
 theorem cycle_two_right_flips_uncond {m L r : ℕ} {v : ℕ → ℕ}
     (hv1 : ∀ i < r, 1 ≤ v i) (hL : psum v r = L)
     (hodd : ∀ j < L, (T^[j] m % 2 = 1 ↔ ∃ i < r, psum v i = j)) (hcyc : T^[L] m = m)
@@ -287,28 +256,6 @@ theorem cycle_two_right_flips_uncond {m L r : ℕ} {v : ℕ → ℕ}
   obtain ⟨hL2, hrb⟩ := cycle_params (by omega) hv1 hL hodd hcyc hm
   exact NormCofactor.cycle_two_right_flips_allRA (by omega) hL2 hv1 hL hodd hcyc k₁ k₂ h1 h1r
     h2 h2r hne hs1 hs2 hv
-
-/-- **Two non-adjacent right flips, unconditional cycle form, no site conditions (round
-124).** No positive `T`-cycle point `m ≠ 1` (any `gcd(L, r)`, no size hypothesis) has a
-valuation word whose partial sums are those of `chr r L` plus one at two distinct,
-non-adjacent sites in `(0, r)`: the up-site conditions follow from validity
-(`up_site_of_valid`). -/
-theorem cycle_two_right_flips_nonadj {m L r : ℕ} {v : ℕ → ℕ}
-    (hv1 : ∀ i < r, 1 ≤ v i) (hL : psum v r = L)
-    (hodd : ∀ j < L, (T^[j] m % 2 = 1 ↔ ∃ i < r, psum v i = j)) (hcyc : T^[L] m = m)
-    (hm : m ≠ 1)
-    (k₁ k₂ : ℕ) (h1 : 0 < k₁) (h1r : k₁ < r) (h2 : 0 < k₂) (h2r : k₂ < r) (hne : k₁ ≠ k₂)
-    (hadj1 : k₁ + 1 ≠ k₂) (hadj2 : k₂ + 1 ≠ k₁)
-    (hv : ∀ i < r, psum v i = psum (NormGoal.chr r L) i + (if i = k₁ ∨ i = k₂ then 1 else 0)) :
-    False := by
-  obtain ⟨hL2, hrb⟩ := cycle_params (by omega) hv1 hL hodd hcyc hm
-  obtain ⟨hq, _⟩ := NormTwo.cycle_q (by omega) hv1 hL hodd hcyc
-  have hrL := NormReduce.r_lt_A hq
-  have hs1 := up_site_of_valid (S := fun i => i = k₁ ∨ i = k₂) hrL hL2 hv1 hL hv h1r
-    (Or.inl rfl) (by omega)
-  have hs2 := up_site_of_valid (S := fun i => i = k₁ ∨ i = k₂) hrL hL2 hv1 hL hv h2r
-    (Or.inr rfl) (by omega)
-  exact cycle_two_right_flips_uncond hv1 hL hodd hcyc hm k₁ k₂ h1 h1r h2 h2r hne hs1 hs2 hv
 
 /-- **Two left flips, unconditional cycle form.** No positive `T`-cycle point
 `m ≠ 1` (any `gcd(L, r)`, no size hypothesis) has a valuation word whose partial sums are
@@ -342,55 +289,6 @@ theorem cycle_two_left_flips_uncond {m L r : ℕ} {v : ℕ → ℕ}
     · exact key k₁ k₂ h1 h h2r hv
     · exact key k₂ k₁ h2 h h1r (fun i hi => by
         rw [← hv i hi]; exact congrArg _ (if_congr or_comm rfl rfl))
-
-/-- **Down-site from validity.** If `r < A < 2r`, entries of `v` below `r` are `≥ 1`, and the
-partial sums of `v` are those of `chr r A` minus `[S i]`, then every flip site `0 < k < r`
-whose predecessor `k - 1` is not a flip site is a down-site (`kA mod r < A mod r`, i.e.
-`chr (k-1) = 2`): indeed `v (k-1) = chr (k-1) - 1 ≥ 1`. -/
-theorem down_site_of_valid {r A : ℕ} {v : ℕ → ℕ} (hrA : r < A) (hA : A < 2 * r)
-    (hv1 : ∀ i < r, 1 ≤ v i) (S : ℕ → Prop) [DecidablePred S]
-    (hv : ∀ i < r, psum v i + (if S i then 1 else 0) = psum (NormGoal.chr r A) i)
-    {k : ℕ} (hk0 : 0 < k) (hk : k < r) (hSk : S k) (hSk1 : ¬ S (k - 1)) :
-    k * A % r < A % r := by
-  have hr0 : 0 < r := by omega
-  have hdiv : A / r = 1 := Nat.div_eq_of_lt_le (by omega) (by omega)
-  have hc := NormReduce.chr_eq (A := A) hr0 (k - 1)
-  have hvk := hv1 (k - 1) (by omega)
-  have e1 := hv k hk
-  rw [if_pos hSk] at e1
-  have e2 := hv (k - 1) (by omega)
-  rw [if_neg hSk1] at e2
-  have e3 := psum_succ v (k - 1)
-  have e4 := psum_succ (NormGoal.chr r A) (k - 1)
-  rw [Nat.sub_add_cancel hk0] at e3 e4
-  rw [hdiv] at hc
-  have hms := NormReduce.mod_succ (A := A) hr0 (k - 1)
-  rw [Nat.sub_add_cancel hk0] at hms
-  have := Nat.mod_lt ((k - 1) * A) hr0
-  split_ifs at hc with h
-  · rw [if_pos h] at hms; omega
-  · omega
-
-/-- **Two non-adjacent left flips, unconditional cycle form, no site conditions.**
-No positive `T`-cycle point `m ≠ 1` (any `gcd(L, r)`, no size hypothesis) has a valuation word
-whose partial sums are those of `chr r L` minus one at two distinct, non-adjacent sites in
-`(0, r)`: the down-site conditions follow from validity (`down_site_of_valid`). -/
-theorem cycle_two_left_flips_nonadj {m L r : ℕ} {v : ℕ → ℕ}
-    (hv1 : ∀ i < r, 1 ≤ v i) (hL : psum v r = L)
-    (hodd : ∀ j < L, (T^[j] m % 2 = 1 ↔ ∃ i < r, psum v i = j)) (hcyc : T^[L] m = m)
-    (hm : m ≠ 1)
-    (k₁ k₂ : ℕ) (h1 : 0 < k₁) (h1r : k₁ < r) (h2 : 0 < k₂) (h2r : k₂ < r) (hne : k₁ ≠ k₂)
-    (hadj1 : k₁ + 1 ≠ k₂) (hadj2 : k₂ + 1 ≠ k₁)
-    (hv : ∀ i < r, psum v i + (if i = k₁ ∨ i = k₂ then 1 else 0) = psum (NormGoal.chr r L) i) :
-    False := by
-  obtain ⟨hL2, hrb⟩ := cycle_params (by omega) hv1 hL hodd hcyc hm
-  obtain ⟨hq, _⟩ := NormTwo.cycle_q (by omega) hv1 hL hodd hcyc
-  have hrL := NormReduce.r_lt_A hq
-  have hs1 := down_site_of_valid (S := fun i => i = k₁ ∨ i = k₂) hrL hL2 hv1 hv h1 h1r
-    (Or.inl rfl) (by omega)
-  have hs2 := down_site_of_valid (S := fun i => i = k₁ ∨ i = k₂) hrL hL2 hv1 hv h2 h2r
-    (Or.inr rfl) (by omega)
-  exact cycle_two_left_flips_uncond hv1 hL hodd hcyc hm k₁ k₂ h1 h1r h2 h2r hne hs1 hs2 hv
 
 /-- **`k` right flips, unconditional cycle form (coprime).** No positive `T`-cycle
 point `m ≠ 1` with `gcd(L, r) = 1` has a valuation word obtained from `chr r L` by `+1`
@@ -433,12 +331,8 @@ end Collatz.NormCycleAll
 #print axioms Collatz.NormCycleAll.oddSteps_psum
 #print axioms Collatz.NormCycleAll.exists_odd_point
 #print axioms Collatz.NormCycleAll.cycle_params
-#print axioms Collatz.NormCycleAll.up_site_of_valid
 #print axioms Collatz.NormCycleAll.no_cycle_k_right_flips'
 #print axioms Collatz.NormCycleAll.cycle_two_right_flips_uncond
-#print axioms Collatz.NormCycleAll.cycle_two_right_flips_nonadj
 #print axioms Collatz.NormCycleAll.cycle_two_left_flips_uncond
-#print axioms Collatz.NormCycleAll.down_site_of_valid
-#print axioms Collatz.NormCycleAll.cycle_two_left_flips_nonadj
 #print axioms Collatz.NormCycleAll.cycle_k_right_flips_uncond
 #print axioms Collatz.NormCycleAll.cycle_mixed_flips_uncond

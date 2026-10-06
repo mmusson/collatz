@@ -1,7 +1,7 @@
 import NormFlips
 
 /-!
-# coprime mixed up/down two-site words (DIRECTIVES 2(b))
+# coprime mixed up/down two-site words
 
 Setting as in `NormFlips`: `r ≥ 2325`, `gcd(A, r) = 1`, `3^r + 1 < 2^A`, `q = 2^A - 3^r`,
 `g ∈ ZMod q` with `g^r = 2`, `g^A = 3`, `θ = 2^{1/r}`, `ρ_k = kA mod r`.
@@ -16,15 +16,14 @@ A *mixed pair* raises the partial sum `A_k` by one (up flip at `k`) and lowers `
   `E = 4+t+t²+(4+t)Y+(4+t+t²)X`, `Q = 1+t+Y+(1+t)X` (`t = θ²`, `Y = θ^{2s}`, `X = θ^{2m}`).
 * `cycle_mixed_flips`: the cycle form, via `NormTwo.cycle_q`.
 
-New ingredient: the normalisation by `g^{r-p'}` (`p' = r-1-ρ'`), which turns the relation
+Key step: the normalisation by `g^{r-p'}` (`p' = r-1-ρ'`), which turns the relation
 `2 + 2(g-1)g^p - (g-1)g^{p'} = 0` into a ±1 pentanomial with odd constant term
 (`2` is a unit, `q` odd). The other region (`ρ < ρ'`) is open: the analogous normalisation
 produces a coefficient-2 cluster and `E/4 ≥ 8.75` leaves no margin (consistent with the `NormTwo`
 finding that adjacent opposite-sign pairs have true norm `≥ q`).
 
 Credit: Knight, Lebel, Mghirbi, Solomon (norm framework; Mghirbi's `E ≤ 1.536 r^{2/3}` covers
-small-defect words for actual cycles). Novelty only plausible for large defect area and at the
-word/rational-cycle level;
+small-defect words for actual cycles).
 -/
 
 namespace Collatz.NormMixed

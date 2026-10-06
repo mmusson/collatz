@@ -2,7 +2,7 @@ import NormAll
 import ChristoffelMin
 
 /-!
-# bridge from the one-move theorems to actual `T`-cycles (DIRECTIVES 2(a))
+# bridge from the one-move theorems to actual `T`-cycles
 
 * `cycle_word_eq`: if the odd steps of the `T`-orbit of `m` in its first `L` steps are exactly at
   the partial sums `psum v i` (`i < r`, all `v i ≥ 1`, `psum v r = L`) and `T^L m = m`, then
@@ -11,8 +11,7 @@ import ChristoffelMin
   from it is the trivial cycle (`L = 2r`, `v = (2,…,2)`, `m = 1`). Uses `NormAll` (all `(r, L)`).
 
 Prior art to credit: Knight (Christoffel words), Lebel, Mghirbi (E = 1), Solomon (left-flip
-one-swaps and the non-coprime factor). The one-move statement for all moves incl. wraps and all
-`(r, L)` is (as far as we know) new; see experiments/NORM_CRITERION.md.
+one-swaps and the non-coprime factor).
 -/
 
 namespace Collatz.NormBridge

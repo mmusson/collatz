@@ -29,8 +29,7 @@ theorem three_W_add (r : ℕ) : 3 * W r + 5^r = 8^r := by
   | zero => simp [W]
   | succ r ih => simp only [W, pow_succ]; nlinarith [ih]
 
-/-- **Unconditional, CLASSICAL (finite-range instance of Simons–de Weger 2005; NOT progress on
-`no_nontrivial_cycles`).** Let `m` be odd and minimal on its `T`-orbit, `L > 0`, `T^[L] m = m`,
+/-- **Unconditional, CLASSICAL (finite-range instance of Simons–de Weger 2005).** Let `m` be odd and minimal on its `T`-orbit, `L > 0`, `T^[L] m = m`,
 `k = S_L(m) < K1big`, `r = oddRuns L m`. Then `r ≥ 256` or `3·5^r·k < 890·8^r`, i.e.
 `r > log_{8/5}(3k/890)`. (From `runs_bound_of_min` with `s = 170` (`gapBelow_big`), `t = 8`,
 and `3W(r) + 5^r = 8^r`.) Strictly strengthens the fixed rung of `runs_bounds_big`: at
@@ -127,8 +126,7 @@ theorem runs_ge_233 {m L : ℕ} (hodd : m % 2 = 1) (hmin : ∀ j, m ≤ T^[j] m)
     233 ≤ oddRuns L m :=
   runs_ge_of_threshold hodd hmin hL hc (a := 232) (K := 10^50) (by norm_num) (by norm_num) h hK
 
-/-- **Unconditional, per lap, CLASSICAL (Simons–de Weger-type finite-range instance; NOT
-progress on `no_nontrivial_cycles`).** A positive `C`-cycle point `n ∉ {1,2,4}` yields the odd
+/-- **Unconditional, per lap, CLASSICAL (Simons–de Weger-type finite-range instance).** A positive `C`-cycle point `n ∉ {1,2,4}` yields the odd
 `T`-orbit minimum `m`, `2^24 ≤ m ≤ n`, `P = minimalPeriod T m`, with the conjuncts of
 `state_of_the_art_runs_minimalPeriod_big` and in addition
 (`S_P(m) ≥ K1big` or `oddRuns P m ≥ 256` or `3·5^r·S_P(m) < 890·8^r`, `r = oddRuns P m`). -/
@@ -233,7 +231,7 @@ theorem twoCircHyp_of_tail_gap_fun {K1 s : ℕ} (sf : ℕ → ℕ) (hG : GapBelo
 
 /-! ## explicit subsumption of the fixed rung of `runs_bounds_big` -/
 
-/-- **Unconditional, classical (; `Summary`).** For the odd orbit-minimum `m` of a
+/-- **Unconditional, classical (see `Summary`).** For the odd orbit-minimum `m` of a
 `T`-cycle (`L > 0`): `oddRuns L m ≥ 29` or `S_L(m) < 225644606` or `S_L(m) ≥ K1big`. This is the
 first conjunct of `runs_bounds_big`, obtained from `runs_ge_of_threshold` (`a = 28`,
 `K = 225644606`), with no lower bound `2^24 ≤ m` needed. This makes the `RunsLog` docstring claim

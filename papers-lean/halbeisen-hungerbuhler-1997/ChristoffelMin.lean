@@ -122,7 +122,7 @@ theorem exists_linear_rotation {x L : ℕ} (hL : 0 < L) (h : T^[L] x = x) :
 
 /-- **Halbeisen–Hungerbühler 1997, Thm 3 (upper bound); first formalization.** If `m > 0` is the
 minimum of a `T`-cycle of length `L > 0` with `k` odd steps, then
-`m·(2^L − 3^k) ≤ Σ_{i<k} 3^{k−1−i} 2^{⌊iL/k⌋}`. Known; -/
+`m·(2^L − 3^k) ≤ Σ_{i<k} 3^{k−1−i} 2^{⌊iL/k⌋}`. Known. -/
 theorem cycle_min_le_chr {m L : ℕ} (hm : 0 < m) (hL : 0 < L) (h : T^[L] m = m)
     (hmin : ∀ i, m ≤ T^[i] m) :
     m * (2 ^ L - 3 ^ oddSteps L m) ≤ chr L (oddSteps L m) := by

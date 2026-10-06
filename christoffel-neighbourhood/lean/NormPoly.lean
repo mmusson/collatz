@@ -18,14 +18,10 @@ import Mathlib.Algebra.Order.Chebyshev
   (engine value `≤ 8.87`).
 * `no_cycle_k_right_flips_sep` (T3, word level, coprime, `r ≥ 40901`): any set of separated
   right flips with `Σ 4^{p/r} ≤ 5.8` (`NormFlips`: `≤ 4.9`, unseparated). Reaches five flips.
-  `no_cycle_two_right_flips_sep` (two flips) and `cycle_k_right_flips_sep` (cycle form).
-* `cycle_two_right_flips_adjacent` (T2e, any `gcd(L, r)`): adjacent right flips at `k, k+1`
-  in a cycle word, closing `NormCycleAll`'s open "lower site not an up-site" case except when
-  `ρ_k ∈ {1,…,4}` or `ρ_{k+1} ∈ [r-5, r-1]` (at most 9 sites per `(r, L)`).
+  `cycle_k_right_flips_sep`: the cycle form.
 
 All results are word-level exclusions near Christoffel words (density zero). The filter idea is a
-discrete Szegő / prediction-filter preconditioning of Hadamard's inequality (standard in spirit);
-its use here is plausibly new.
+discrete Szegő / prediction-filter preconditioning of Hadamard's inequality.
 -/
 
 namespace Collatz.NormPoly
@@ -571,34 +567,6 @@ theorem no_cycle_k_right_flips_sep (r A : ℕ) (hr : 40901 ≤ r) (hcop : Nat.Co
     exact hsep k hk k' hk' (fun e => hne (by rw [e]))
   exact core_sep hr hq h2 hθ hθr P hPp hPsep hSP hrelP
 
-/-- **Two separated right flips (word level).** The case `K = {k₁, k₂}` of
-`no_cycle_k_right_flips_sep`, with no up-site conditions: `p_i ≥ 5`, `p_i + 6 ≤ r`,
-`|p₁ - p₂| ≥ 6`, `4^{p₁/r} + 4^{p₂/r} ≤ 29/5`. -/
-theorem no_cycle_two_right_flips_sep (r A : ℕ) (hr : 40901 ≤ r) (hcop : Nat.Coprime A r)
-    (hq : 3 ^ r + 1 < 2 ^ A) (k₁ k₂ : ℕ) (h1 : 0 < k₁) (h1r : k₁ < r) (h2 : 0 < k₂) (h2r : k₂ < r)
-    (hne : k₁ ≠ k₂)
-    (hp1 : 5 ≤ r - 1 - k₁ * A % r ∧ r - 1 - k₁ * A % r + 6 ≤ r)
-    (hp2 : 5 ≤ r - 1 - k₂ * A % r ∧ r - 1 - k₂ * A % r + 6 ≤ r)
-    (hsep : r - 1 - k₁ * A % r + 6 ≤ r - 1 - k₂ * A % r ∨
-      r - 1 - k₂ * A % r + 6 ≤ r - 1 - k₁ * A % r)
-    (hS : (4:ℝ) ^ (((r - 1 - k₁ * A % r : ℕ) : ℝ) / r) +
-      (4:ℝ) ^ (((r - 1 - k₂ * A % r : ℕ) : ℝ) / r) ≤ 29 / 5)
-    (v : ℕ → ℕ)
-    (hv : ∀ i < r, psum v i = psum (NormGoal.chr r A) i + (if i = k₁ ∨ i = k₂ then 1 else 0)) :
-    ¬ (2 ^ A - 3 ^ r) ∣ Bnum r v := by
-  apply no_cycle_k_right_flips_sep r A hr hcop hq {k₁, k₂}
-  · intro k hk; simp only [mem_insert, mem_singleton] at hk; rcases hk with rfl | rfl <;> omega
-  · intro k hk; simp only [mem_insert, mem_singleton] at hk; rcases hk with rfl | rfl <;> assumption
-  · intro k hk k' hk' hkk
-    simp only [mem_insert, mem_singleton] at hk hk'
-    rcases hk with rfl | rfl <;> rcases hk' with rfl | rfl
-    · exact absurd rfl hkk
-    · exact hsep
-    · exact hsep.symm
-    · exact absurd rfl hkk
-  · rw [sum_pair hne]; exact hS
-  · intro i hi; rw [hv i hi]; congr 1; simp only [mem_insert, mem_singleton]
-
 end Word
 
 section Cycle
@@ -624,88 +592,6 @@ theorem cycle_k_right_flips_sep {m L r : ℕ} {v : ℕ → ℕ} (hcop : Nat.Copr
   exact no_cycle_k_right_flips_sep r L hrb hcop hq K hKr hpos hsep hS
     v hv hdiv
 
-/-- `L ≥ r + 6` whenever `3^r < 2^L` and `r ≥ 9`. -/
-theorem L_ge_r6 {r L : ℕ} (hr : 9 ≤ r) (h : 3 ^ r < 2 ^ L) : r + 6 ≤ L := by
-  by_contra hc
-  have h1 : 2 ^ L ≤ 2 ^ (r + 5) := Nat.pow_le_pow_right (by norm_num) (by omega)
-  have h2 : 2 ^ (r - 9) ≤ 3 ^ (r - 9) := Nat.pow_le_pow_left (by norm_num) _
-  have h3 : 3 ^ r = 3 ^ (r - 9) * 3 ^ 9 := by rw [← pow_add]; congr 1; omega
-  have h4 : 2 ^ (r + 5) = 2 ^ (r - 9) * 2 ^ 14 := by rw [← pow_add]; congr 1; omega
-  have : 2 ^ (r - 9) * 2 ^ 14 < 3 ^ (r - 9) * 3 ^ 9 := by
-    calc 2 ^ (r - 9) * 2 ^ 14 ≤ 3 ^ (r - 9) * 2 ^ 14 := Nat.mul_le_mul_right _ h2
-      _ < 3 ^ (r - 9) * 3 ^ 9 := by
-        apply Nat.mul_lt_mul_of_pos_left (by norm_num) (by positivity)
-  omega
-
-/-- **Adjacent two right flips for cycles (any `gcd(L, r)`).** No positive
-`T`-cycle point `m ≠ 1` (period `L`, `r` odd steps) has a valuation word whose partial sums are
-those of `chr r L` plus one at two adjacent sites `k, k+1` (`0 < k`, `k + 1 < r`), unless
-the lower site is not an up-site (`ρ + a < r`, `ρ = kL mod r`, `a = L mod r`) and
-`ρ ∈ {1,…,4}` or `ρ + a ∈ [r-5, r-1]` (the open residues). Proof: if `k` is an up-site this
-is `cycle_two_right_flips_uncond`; if `gcd(L, r) ≥ 2` it is `NormCofactor`'s
-`cycle_two_site_noncoprime`; otherwise the exponents are `b = r-1-ρ` and `b - a` with
-`4^{b/r} + 4^{(b-a)/r} < 4(1 + 4/9) = 52/9 ≤ 29/5` (as `4^{a/r} > 9/4`), and
-`no_cycle_two_right_flips_sep` (degree-4 filter) applies. -/
-theorem cycle_two_right_flips_adjacent {m L r : ℕ} {v : ℕ → ℕ}
-    (hv1 : ∀ i < r, 1 ≤ v i) (hL : psum v r = L)
-    (hodd : ∀ j < L, (T^[j] m % 2 = 1 ↔ ∃ i < r, psum v i = j)) (hcyc : T^[L] m = m)
-    (hm : m ≠ 1) (k : ℕ) (hk0 : 0 < k) (hk : k + 1 < r)
-    (hv : ∀ i < r, psum v i = psum (NormGoal.chr r L) i + (if i = k ∨ i = k + 1 then 1 else 0))
-    (h : r ≤ k * L % r + L % r ∨ (5 ≤ k * L % r ∧ k * L % r + L % r + 6 ≤ r)) : False := by
-  obtain ⟨hL2, hrb⟩ := cycle_params (by omega) hv1 hL hodd hcyc hm
-  obtain ⟨hq, hdiv⟩ := NormTwo.cycle_q (by omega) hv1 hL hodd hcyc
-  have hrL := NormReduce.r_lt_A hq
-  have hr0 : 0 < r := by omega
-  rcases h with hs1 | ⟨h5, h6⟩
-  · have hs2 := up_site_of_valid (S := fun i => i = k ∨ i = k + 1) hrL hL2 hv1 hL hv hk
-      (Or.inr rfl) (by omega)
-    exact cycle_two_right_flips_uncond hv1 hL hodd hcyc hm k (k + 1) hk0 (by omega) (by omega) hk
-      (by omega) hs1 hs2 hv
-  rcases Nat.lt_or_ge (Nat.gcd L r) 2 with hd | hd
-  swap
-  · apply NormCofactor.cycle_two_site_noncoprime (by omega) hd hv1 hL hodd hcyc k (k + 1) hk0
-      (by omega) hk 1 1 (Or.inl rfl) (Or.inl rfl)
-    intro i hi
-    rw [hv i hi]
-    push_cast
-    by_cases e1 : i = k
-    · rw [if_pos (Or.inl e1), if_pos e1, if_neg (by omega)]; ring
-    · by_cases e2 : i = k + 1
-      · rw [if_pos (Or.inr e2), if_neg e1, if_pos e2]; ring
-      · rw [if_neg (by tauto), if_neg e1, if_neg e2]; ring
-  have hcop := coprime_of_gcd_lt_two hr0 hd
-  set ρ := k * L % r with hρ
-  set a := L % r with ha
-  have hmod : (k + 1) * L % r = ρ + a := by
-    rw [NormReduce.mod_succ hr0 k, if_neg (by omega)]
-  have ha_eq : a = L - r := by
-    rw [ha, Nat.mod_eq_sub_mod hrL.le, Nat.mod_eq_of_lt (by omega)]
-  have ha6 : 6 ≤ a := by have := L_ge_r6 (by omega) (show 3 ^ r < 2 ^ L by omega); omega
-  apply no_cycle_two_right_flips_sep r L hrb hcop hq k (k + 1) hk0 (by omega) (by omega) hk
-    (by omega)
-  · omega
-  · rw [hmod]; omega
-  · rw [hmod]; omega
-  · -- the sum bound
-    rw [hmod]
-    set θ : ℝ := (2:ℝ) ^ ((r:ℝ)⁻¹) with hθdef
-    have hθ : 0 < θ := by positivity
-    have hθr : θ ^ r = 2 := Real.rpow_inv_natCast_pow (by norm_num) (by omega)
-    rw [← NormFlips.theta_pow_eq hr0, ← NormFlips.theta_pow_eq hr0]
-    have hX := X_gt hθ hθr hrL.le (show 3 ^ r < 2 ^ L by omega)
-    rw [← ha_eq] at hX
-    have hb4 : θ ^ (2 * (r - 1 - ρ)) ≤ 4 := by
-      have h1 := NormTwo.theta_pow_mono hr0 hθ hθr (show r - 1 - ρ ≤ r by omega)
-      have h2 : θ ^ (2 * r) = 4 := by rw [mul_comm, pow_mul, hθr]; norm_num
-      linarith
-    have hsplit : θ ^ (2 * (r - 1 - (ρ + a))) * θ ^ (2 * a) = θ ^ (2 * (r - 1 - ρ)) := by
-      rw [← pow_add]; congr 1; omega
-    have hp0 : 0 ≤ θ ^ (2 * (r - 1 - (ρ + a))) := by positivity
-    show θ ^ (2 * (r - 1 - ρ)) + θ ^ (2 * (r - 1 - (ρ + a))) ≤ 29 / 5
-    nlinarith
-  · intro i hi; rw [hv i hi]
-  · exact hdiv
-
 end Cycle
 
 end Collatz.NormPoly
@@ -719,7 +605,4 @@ end Collatz.NormPoly
 #print axioms Collatz.NormPoly.X_gt
 #print axioms Collatz.NormPoly.core_sep
 #print axioms Collatz.NormPoly.no_cycle_k_right_flips_sep
-#print axioms Collatz.NormPoly.no_cycle_two_right_flips_sep
 #print axioms Collatz.NormPoly.cycle_k_right_flips_sep
-#print axioms Collatz.NormPoly.L_ge_r6
-#print axioms Collatz.NormPoly.cycle_two_right_flips_adjacent

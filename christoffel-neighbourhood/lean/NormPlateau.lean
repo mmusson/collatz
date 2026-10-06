@@ -22,31 +22,26 @@ indices where `ε` differs from a constant `κ = e₂ - e₁` matter, not where 
   positions (a set `P`) and `|ε| ≤ H`, with `(r 2^{4H+1})^{|P|} < 2^{(d-|P|)A/d}`, then
   `q ∤ B(v)` (pigeonhole: a constant run of length `≥ r/|P|`; its complement is an arc; T1).
   This covers `K` simultaneous slides at arbitrary distances when `2K ≤ d - 1`.
-* **T3** (DIRECTIVES 2(c), one unit slid any distance, non-coprime case):
-  `no_cycle_slide_noncoprime3` — for `gcd(A, r) ≥ 3` and `(32r)^6 < 2^A`, NO word
-  `slide (chr r A) a b` (any `a ≠ b < r`, `chr a ≥ 2`) has `q ∣ B`;
-  `no_cycle_slide_noncoprime` — any `d ≥ 2`, if the arc condition (h = 1) holds at `D = |a-b|`
-  or at `r - D` (the deviation is `∓1` exactly on the `D` indices between `a` and `b`, and
-  constant on the other `r - D`). For `d = 2` this leaves a band of middle distances only:
-  `r = 40902, A = 64832`: `D ∈ [20442, 20460]` (19 values); `r = 122704, A = 194482`: 21 values;
-  `r = 10^6, A = 1584966`: 25 values.
-* Cycle forms `cycle_offset_arc_noncoprime`, `cycle_few_levels_noncoprime`,
-  `cycle_slide_noncoprime3` (only `gcd(L, r) ≥ 3` and `m ≠ 1`; `r ≥ 40901` from
-  `NormCycleAll.cycle_params` gives `(32r)^6 < 2^L` via `pow6`), `cycle_slide_noncoprime`.
+* **T3** (one unit slid any distance, non-coprime case): `no_cycle_slide_noncoprime3` — for
+  `gcd(A, r) ≥ 3` and `(32r)^6 < 2^A`, NO word `slide (chr r A) a b` (any `a ≠ b < r`,
+  `chr a ≥ 2`) has `q ∣ B`. The deviation is `∓1` exactly on the `D = |a-b|` indices between
+  `a` and `b`, and constant on the other `r - D`.
+* Cycle form `cycle_slide_noncoprime3` (only `gcd(L, r) ≥ 3` and `m ≠ 1`; `r ≥ 40901` from
+  `NormCycleAll.cycle_params` gives `(32r)^6 < 2^L` via `pow6`).
 
 Scope: word-level / cycle-equation exclusions for NON-coprime `(r, A)` only. The coprime
-case of 2(c) — the generic case — is not covered (S_d methods are empty there). The `d = 2` band
-is a method gap, not a counterexample (all 402 tested `d = 2` pairs, `r < 900`: no slide at any
-distance even has `S_2 ∣ Δ`). Numerics: 1.8·10^6 small words with `≤ d - 1`
-level changes, no `q ∣ B`. Prior art: Knight, Lebel, Mghirbi, Solomon,
-Fernández–Ibáñez (arXiv 2607.24844).
+case — the generic case — is not covered (S_d methods are empty there). For `d = 2` the
+cofactor method leaves middle distances open; this is a method gap, not a counterexample (all
+402 tested `d = 2` pairs, `r < 900`: no slide at any distance even has `S_2 ∣ Δ`).
+Numerics: 1.8·10^6 small words with `≤ d - 1` level changes, no `q ∣ B`.
+Prior art: Knight, Lebel, Mghirbi, Solomon, Fernández–Ibáñez (arXiv 2607.24844).
 
 Scope wording: the slide theorems exclude a cycle whose valuation word, read from
 the chosen start `m`, is *a slide of `chr r L`*; they do not say "any perturbation of a balanced
 cycle". Slides of rotations of chr are covered by choosing another start on the cycle
-(`rot^k(slide(chr, a, b)) = slide(rot^k chr, a-k, b-k)`): a remark, not a proved statement here.
-The `d = 2` case is NOT settled: about 20 middle distances remain open, and `NormFold`
-does not close them either (every column is bad there).
+(a rotation of a slide is a slide of the rotated word, at shifted positions): a remark, not a
+proved statement here. Slides with `d = 2` (and coprime slides) are handled in `NormShiftSlide`;
+`NormFold` does not reach them (every column is bad there).
 -/
 
 namespace Collatz.NormPlateau
@@ -627,60 +622,6 @@ theorem no_cycle_slide_noncoprime3 (r A : ℕ) (hd : 3 ≤ Nat.gcd A r) (hq : 3 
     have := hps (max a b); rw [hc]
     split_ifs at this <;> omega
 
-/-- **T3b: one unit slid any distance, `gcd(A, r) ≥ 2`, explicit condition.**
-Same conclusion as T3a for any `d ≥ 2`, provided the arc condition with `h = 1` holds at
-`w = D = |a - b|` or at `w = r - D`. (The deviation is `∓1` on the `D` partial-sum indices
-between `a` and `b` and `0` elsewhere: T1 on the first set with offset `0`, or on the second set
-with offset `1`.) For `d = 2` the excluded distances leave a middle band of about 20 values
-(19 at `r = 40902, A = 64832`). -/
-theorem no_cycle_slide_noncoprime (r A : ℕ) (hd : 2 ≤ Nat.gcd A r) (hq : 3 ^ r + 1 < 2 ^ A)
-    (a b : ℕ) (ha : a < r) (hb : b < r) (hab : a ≠ b) (h2 : 2 ≤ NormGoal.chr r A a)
-    (hW : ((if a < b then b - a else a - b) * 2 ^ 3) ^ r *
-            2 ^ (((if a < b then b - a else a - b) - 1) * A) <
-          2 ^ ((A - A / Nat.gcd A r) * r) ∨
-          ((r - (if a < b then b - a else a - b)) * 2 ^ 3) ^ r *
-            2 ^ ((r - (if a < b then b - a else a - b) - 1) * A) <
-          2 ^ ((A - A / Nat.gcd A r) * r)) :
-    ¬ (2 ^ A - 3 ^ r) ∣ Bnum r (NormGoal.slide (NormGoal.chr r A) a b) := by
-  obtain ⟨hv1, hsum, hps⟩ := slide_facts hq ha hb hab h2
-  have hr0 : 0 < r := by omega
-  have hc : ∀ j, psum (NormGoal.chr r A) j = j * A / r := fun j => psum_chr j
-  have hc0 : (0 : ℕ) * A / r = 0 := by simp
-  have hp0 : psum (NormGoal.slide (NormGoal.chr r A) a b) 0 = 0 := by simp [psum]
-  rcases lt_or_gt_of_ne hab with hlt | hgt
-  · simp only [hlt, ite_true] at hW
-    rcases hW with hW | hW
-    · refine no_cycle_offset_arc_noncoprime r A hd hq (a + 1) (b - a) 1 0 0 (by omega) (by omega)
-        hW _ hv1 hsum ?_ ?_ ?_ ?_
-      · intro j hj hj'; unfold inArc at hj'; have := hps j; rw [hc]
-        split_ifs at this <;> omega
-      · intro j _; have := hps j; rw [hc]; split_ifs at this <;> omega
-      · intro j _; have := hps j; rw [hc]; split_ifs at this <;> omega
-      · refine ⟨b, hb, ?_⟩; have := hps b; rw [hc]; split_ifs at this <;> omega
-    · refine no_cycle_offset_arc_noncoprime r A hd hq (if b + 1 < r then b + 1 else 0)
-        (r - (b - a)) 1 1 0 (by split_ifs <;> omega) (by omega) hW _ hv1 hsum ?_ ?_ ?_ ?_
-      · intro j hj hj'; unfold inArc at hj'; have := hps j; rw [hc]
-        split_ifs at this hj' <;> omega
-      · intro j _; have := hps j; rw [hc]; split_ifs at this <;> omega
-      · intro j _; have := hps j; rw [hc]; split_ifs at this <;> omega
-      · refine ⟨0, hr0, ?_⟩; rw [hc, hc0, hp0]; omega
-  · simp only [show ¬ a < b by omega, ite_false] at hW
-    rcases hW with hW | hW
-    · refine no_cycle_offset_arc_noncoprime r A hd hq (b + 1) (a - b) 1 0 0 (by omega) (by omega)
-        hW _ hv1 hsum ?_ ?_ ?_ ?_
-      · intro j hj hj'; unfold inArc at hj'; have := hps j; rw [hc]
-        split_ifs at this <;> omega
-      · intro j _; have := hps j; rw [hc]; split_ifs at this <;> omega
-      · intro j _; have := hps j; rw [hc]; split_ifs at this <;> omega
-      · refine ⟨a, ha, ?_⟩; have := hps a; rw [hc]; split_ifs at this <;> omega
-    · refine no_cycle_offset_arc_noncoprime r A hd hq (if a + 1 < r then a + 1 else 0)
-        (r - (a - b)) 1 0 1 (by split_ifs <;> omega) (by omega) hW _ hv1 hsum ?_ ?_ ?_ ?_
-      · intro j hj hj'; unfold inArc at hj'; have := hps j; rw [hc]
-        split_ifs at this hj' <;> omega
-      · intro j _; have := hps j; rw [hc]; split_ifs at this <;> omega
-      · intro j _; have := hps j; rw [hc]; split_ifs at this <;> omega
-      · refine ⟨0, hr0, ?_⟩; rw [hc, hc0, hp0]; omega
-
 /-- `2^30 n^6 < 2^n` for `n ≥ 128`. -/
 theorem pow6 : ∀ n, 128 ≤ n → 2 ^ 30 * n ^ 6 < 2 ^ n := by
   intro n hn
@@ -712,45 +653,12 @@ theorem Bnum_congr {v u : ℕ → ℕ} {r : ℕ} (h : ∀ i < r, v i = u i) : Bn
 section Cycle
 open CollatzProof
 
-/-- **Cycle form of T1.** No positive `T`-cycle with `r ≥ 2` odd steps, period `L`,
-`gcd(L, r) ≥ 2`, has a valuation word whose partial sums equal `⌊jL/r⌋ + e₂ - e₁` outside a cyclic
-arc `[k, k+w)` and stay within `h` of it, when the arc condition holds. -/
-theorem cycle_offset_arc_noncoprime {m L r : ℕ} {v : ℕ → ℕ} (hr : 2 ≤ r)
-    (hd : 2 ≤ Nat.gcd L r) (hv1 : ∀ i < r, 1 ≤ v i) (hL : psum v r = L)
-    (hodd : ∀ j < L, (T^[j] m % 2 = 1 ↔ ∃ i < r, psum v i = j)) (hcyc : T^[L] m = m)
-    (k w h e₁ e₂ : ℕ) (hk : k < r) (hwr : w ≤ r)
-    (hW : (w * 2 ^ (2 * h + 1)) ^ r * 2 ^ ((w - 1) * L) < 2 ^ ((L - L / Nat.gcd L r) * r))
-    (hout : ∀ j < r, ¬ inArc r k w j → psum v j + e₁ = psum (NormGoal.chr r L) j + e₂)
-    (hup : ∀ j < r, psum v j + e₁ ≤ psum (NormGoal.chr r L) j + e₂ + h)
-    (hdn : ∀ j < r, psum (NormGoal.chr r L) j + e₂ ≤ psum v j + e₁ + h)
-    (hne : ∃ j < r, psum v j + e₁ ≠ psum (NormGoal.chr r L) j + e₂) : False := by
-  obtain ⟨hq, hdiv⟩ := NormTwo.cycle_q hr hv1 hL hodd hcyc
-  exact no_cycle_offset_arc_noncoprime r L hd hq k w h e₁ e₂ hk hwr hW v hv1 hL hout hup hdn
-    hne hdiv
-
-/-- **Cycle form of T2.** No positive `T`-cycle with `r ≥ 2` odd steps, period `L`,
-`gcd(L, r) ≥ 2`, has a valuation word whose deviation from `chr r L` is bounded by `H`, nonzero,
-and changes level at fewer than `gcd(L, r)` positions `P` with
-`(r 2^{4H+1})^{|P|} < 2^{(d-|P|)L/d}`. -/
-theorem cycle_few_levels_noncoprime {m L r : ℕ} {v : ℕ → ℕ} (hr : 2 ≤ r)
-    (hd : 2 ≤ Nat.gcd L r) (hv1 : ∀ i < r, 1 ≤ v i) (hL : psum v r = L)
-    (hodd : ∀ j < L, (T^[j] m % 2 = 1 ↔ ∃ i < r, psum v i = j)) (hcyc : T^[L] m = m) (H : ℕ)
-    (P : Finset ℕ) (hPd : P.card < Nat.gcd L r)
-    (hJ : (r * 2 ^ (4 * H + 1)) ^ P.card < 2 ^ ((Nat.gcd L r - P.card) * (L / Nat.gcd L r)))
-    (hjump : ∀ m < r, ((psum v (m + 1) : ℤ) - psum (NormGoal.chr r L) (m + 1)) ≠
-        ((psum v m : ℤ) - psum (NormGoal.chr r L) m) → m ∈ P)
-    (hup : ∀ j < r, psum v j ≤ psum (NormGoal.chr r L) j + H)
-    (hdn : ∀ j < r, psum (NormGoal.chr r L) j ≤ psum v j + H)
-    (hne : ∃ j < r, psum v j ≠ psum (NormGoal.chr r L) j) : False := by
-  obtain ⟨hq, hdiv⟩ := NormTwo.cycle_q hr hv1 hL hodd hcyc
-  exact no_cycle_few_levels_noncoprime r L H hd hq v hv1 hL P hPd hJ hjump hup hdn hne hdiv
-
-/-- **Cycle form of T3a (DIRECTIVES 2(c), non-coprime, d ≥ 3).** No nontrivial (`m ≠ 1`)
+/-- **Cycle form of T3a (non-coprime, d ≥ 3).** No nontrivial (`m ≠ 1`)
 positive `T`-cycle with `r ≥ 2` odd steps and period `L`, `gcd(L, r) ≥ 3`, has as valuation word
 (read from the chosen start `m`) a slide of `chr r L`: one unit moved from any position `a` to
-any other position `b`. (Slides of rotations of chr: choose another start; remark only.) No size hypothesis: `r ≥ 40901` (`cycle_params`) gives `(32r)^6 < 2^L`. Non-vacuity of the
-word hypotheses: `r = 122703`, `L = 194484` (`gcd = 3`, `NormArc.witness_d3`), `chr 1 = 2`,
-`a = 1`, any `b`. -/
+any other position `b`. (Slides of rotations of chr: choose another start; remark only.)
+No size hypothesis:
+`r ≥ 40901` (`cycle_params`) gives `(32r)^6 < 2^L`. -/
 theorem cycle_slide_noncoprime3 {m L r : ℕ} {v : ℕ → ℕ} (hr : 2 ≤ r) (hd : 3 ≤ Nat.gcd L r)
     (hm : m ≠ 1) (hv1 : ∀ i < r, 1 ≤ v i) (hL : psum v r = L)
     (hodd : ∀ j < L, (T^[j] m % 2 = 1 ↔ ∃ i < r, psum v i = j)) (hcyc : T^[L] m = m)
@@ -766,23 +674,6 @@ theorem cycle_slide_noncoprime3 {m L r : ℕ} {v : ℕ → ℕ} (hr : 2 ≤ r) (
   rw [Bnum_congr hv] at hdiv
   exact no_cycle_slide_noncoprime3 r L hd hq h6 a b ha hb hab h2 hdiv
 
-/-- **Cycle form of T3b.** As T3a for `gcd(L, r) ≥ 2`, under the arc condition at `|a - b|`
-or `r - |a - b|`. -/
-theorem cycle_slide_noncoprime {m L r : ℕ} {v : ℕ → ℕ} (hr : 2 ≤ r) (hd : 2 ≤ Nat.gcd L r)
-    (hv1 : ∀ i < r, 1 ≤ v i) (hL : psum v r = L)
-    (hodd : ∀ j < L, (T^[j] m % 2 = 1 ↔ ∃ i < r, psum v i = j)) (hcyc : T^[L] m = m)
-    (a b : ℕ) (ha : a < r) (hb : b < r) (hab : a ≠ b) (h2 : 2 ≤ NormGoal.chr r L a)
-    (hW : ((if a < b then b - a else a - b) * 2 ^ 3) ^ r *
-            2 ^ (((if a < b then b - a else a - b) - 1) * L) <
-          2 ^ ((L - L / Nat.gcd L r) * r) ∨
-          ((r - (if a < b then b - a else a - b)) * 2 ^ 3) ^ r *
-            2 ^ ((r - (if a < b then b - a else a - b) - 1) * L) <
-          2 ^ ((L - L / Nat.gcd L r) * r))
-    (hv : ∀ i < r, v i = NormGoal.slide (NormGoal.chr r L) a b i) : False := by
-  obtain ⟨hq, hdiv⟩ := NormTwo.cycle_q hr hv1 hL hodd hcyc
-  rw [Bnum_congr hv] at hdiv
-  exact no_cycle_slide_noncoprime r L hd hq a b ha hb hab h2 hW hdiv
-
 end Cycle
 
 end Collatz.NormPlateau
@@ -793,9 +684,5 @@ end Collatz.NormPlateau
 #print axioms Collatz.NormPlateau.no_cycle_few_levels_noncoprime
 #print axioms Collatz.NormPlateau.psum_slide
 #print axioms Collatz.NormPlateau.no_cycle_slide_noncoprime3
-#print axioms Collatz.NormPlateau.no_cycle_slide_noncoprime
 #print axioms Collatz.NormPlateau.pow6
-#print axioms Collatz.NormPlateau.cycle_offset_arc_noncoprime
-#print axioms Collatz.NormPlateau.cycle_few_levels_noncoprime
 #print axioms Collatz.NormPlateau.cycle_slide_noncoprime3
-#print axioms Collatz.NormPlateau.cycle_slide_noncoprime

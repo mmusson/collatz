@@ -22,8 +22,8 @@ one-move case of the argument below is his; `NormAll.solomon_factor`: `S_d > 1`,
 * **T1** `no_cycle_two_site_noncoprime`, **T2** `no_cycle_two_right_flips_allRA` (`NormFlips`' two-right-flip
   theorem without coprimality), and cycle forms.
 
-Corrects the `NormFlips` survey dead end "the two-move monomial difference can vanish mod `S_d`": it
-vanishes only in the periodic `d = 2`, equal-sign, distance-`r/2` case, which reduces to `NormAll`.
+The two-move monomial difference can vanish mod `S_d` only in the periodic `d = 2`, equal-sign,
+distance-`r/2` case, which reduces to `NormAll`.
 Word-level results; Prior art: Knight, Lebel, Mghirbi, Solomon.
 -/
 
@@ -560,8 +560,7 @@ theorem no_cycle_two_site_noncoprime (r A : ℕ) (hd : 2 ≤ Nat.gcd A r) (hq : 
 `3^r + 1 < 2^A`, `A < 2r`, entries `≥ 1`): if the partial sums of `v` are those of `chr r A`
 plus one at two distinct sites `k₁ ≠ k₂` in `(0, r)` and agree elsewhere below `r`, then
 `(2^A - 3^r) ∤ B(v)`. The up-site hypotheses `hs1`, `hs2` are needed in the coprime branch
-(`NormFlips`' proof uses them via `omega`; correction recorded in `NormCycleAll`, see
-`NormCycleAll.cycle_two_right_flips_nonadj` for a cycle form deriving them from validity). -/
+(`NormFlips`' proof uses them via `omega`). -/
 theorem no_cycle_two_right_flips_allRA (r A : ℕ) (hr : 2325 ≤ r)
     (hq : 3 ^ r + 1 < 2 ^ A) (hA : A < 2 * r) (k₁ k₂ : ℕ) (h1 : 0 < k₁) (h1r : k₁ < r)
     (h2' : 0 < k₂) (h2r : k₂ < r) (hne : k₁ ≠ k₂)

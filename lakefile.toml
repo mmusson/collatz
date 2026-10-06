@@ -1,0 +1,84 @@
+name = "collatz-github"
+version = "0.1.0"
+keywords = ["math", "collatz"]
+defaultTargets = ["ChristoffelNeighbourhood"]
+
+[leanOptions]
+pp.unicode.fun = true
+relaxedAutoImplicit = false
+maxSynthPendingDepth = 3
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.34.0-rc2"
+
+[[lean_lib]]
+name = "ChristoffelNeighbourhood"
+srcDir = "christoffel-neighbourhood/lean"
+roots = ["NormAll", "NormArc", "NormBig", "NormBridge", "NormCofactor", "NormCycleAll", "NormDet", "NormFactor", "NormFilter", "NormFinite", "NormFlips", "NormFold", "NormGeom", "NormGoal", "NormGoalAll", "NormLebel", "NormLevels", "NormMain", "NormMixed", "NormMixedRev", "NormPlateau", "NormPlateauLift", "NormPoly", "NormRatio", "NormReduce", "NormShift", "NormShiftSlide", "NormSparse", "NormTwo", "NormWindow"]
+
+[[lean_lib]]
+name = "SharedLean"
+srcDir = "shared-lean"
+roots = ["CollatzProof.Statement", "CollatzProof.Basic", "CollatzProof.Equivalence", "CollatzProof.Syracuse", "CollatzSearch.CycleBasic", "CollatzSearch.Affine", "CollatzSearch.CycleInvariance", "CollatzSearch.ProductBound", "CollatzSearch.Diophantine", "CollatzSearch.RhoBound", "CollatzSearch.Sanity", "CollatzSearch.CycleMin", "CollatzSearch.CycleMax", "CollatzSearch.GoodRotation", "CollatzSearch.MaxProduct", "CollatzSearch.Milestones", "CollatzSearch.MilestoneInstances", "CollatzSearch.StateOfArt", "CollatzSearch.SwapCore", "CollatzSearch.SwapExclusion"]
+
+[[lean_lib]]
+name = "Terras1976"
+srcDir = "papers-lean/terras-1976"
+roots = ["CollatzSearch.StoppingTime", "CollatzSearch.BackCong"]
+
+[[lean_lib]]
+name = "BohmSontacchi1978"
+srcDir = "papers-lean/bohm-sontacchi-1978"
+roots = ["CollatzSearch.CycleWord", "CollatzSearch.WordAlgebra"]
+
+[[lean_lib]]
+name = "Crandall1978"
+srcDir = "papers-lean/crandall-1978"
+roots = ["CollatzSearch.OddStepBound", "CollatzSearch.Crandall"]
+
+[[lean_lib]]
+name = "VerifiedRange"
+srcDir = "papers-lean/verified-range"
+roots = ["CollatzSearch.Descent", "CollatzSearch.Sieve", "CollatzSearch.VerifiedRange", "CollatzSearch.PublishedBounds", "CollatzSearch.Sieve24", "CollatzSearch.Sieve25", "CollatzSearch.Sieve29", "CollatzSearch.Sieve24Part0", "CollatzSearch.Sieve24Part1", "CollatzSearch.Sieve24Part2", "CollatzSearch.Sieve24Part3", "CollatzSearch.Sieve24Part4", "CollatzSearch.Sieve24Part5", "CollatzSearch.Sieve24Part6", "CollatzSearch.Sieve24Part7", "CollatzSearch.Sieve25Part0", "CollatzSearch.Sieve25Part1", "CollatzSearch.Sieve25Part2", "CollatzSearch.Sieve25Part3", "CollatzSearch.Sieve25Part4", "CollatzSearch.Sieve25Part5", "CollatzSearch.Sieve25Part6", "CollatzSearch.Sieve25Part7", "CollatzSearch.Sieve29Part0", "CollatzSearch.Sieve29Part1", "CollatzSearch.Sieve29Part2", "CollatzSearch.Sieve29Part3", "CollatzSearch.Sieve29Part4", "CollatzSearch.Sieve29Part5", "CollatzSearch.Sieve29Part6", "CollatzSearch.Sieve29Part7", "CollatzSearch.Sieve29Part8", "CollatzSearch.Sieve29Part9", "CollatzSearch.Sieve29Part10", "CollatzSearch.Sieve29Part11", "CollatzSearch.Sieve29Part12", "CollatzSearch.Sieve29Part13", "CollatzSearch.Sieve29Part14", "CollatzSearch.Sieve29Part15", "CollatzSearch.Sieve29Part16", "CollatzSearch.Sieve29Part17", "CollatzSearch.Sieve29Part18", "CollatzSearch.Sieve29Part19", "CollatzSearch.Sieve29Part20", "CollatzSearch.Sieve29Part21", "CollatzSearch.Sieve29Part22", "CollatzSearch.Sieve29Part23", "CollatzSearch.Sieve29Part24", "CollatzSearch.Sieve29Part25", "CollatzSearch.Sieve29Part26", "CollatzSearch.Sieve29Part27", "CollatzSearch.Sieve29Part28", "CollatzSearch.Sieve29Part29", "CollatzSearch.Sieve29Part30", "CollatzSearch.Sieve29Part31", "CollatzSearch.Sieve29Part32", "CollatzSearch.Sieve29Part33", "CollatzSearch.Sieve29Part34", "CollatzSearch.Sieve29Part35", "CollatzSearch.Sieve29Part36", "CollatzSearch.Sieve29Part37", "CollatzSearch.Sieve29Part38", "CollatzSearch.Sieve29Part39", "CollatzSearch.Sieve29Part40", "CollatzSearch.Sieve29Part41", "CollatzSearch.Sieve29Part42", "CollatzSearch.Sieve29Part43", "CollatzSearch.Sieve29Part44", "CollatzSearch.Sieve29Part45", "CollatzSearch.Sieve29Part46", "CollatzSearch.Sieve29Part47", "CollatzSearch.Sieve29Part48", "CollatzSearch.Sieve29Part49", "CollatzSearch.Sieve29Part50", "CollatzSearch.Sieve29Part51", "CollatzSearch.Sieve29Part52", "CollatzSearch.Sieve29Part53", "CollatzSearch.Sieve29Part54", "CollatzSearch.Sieve29Part55", "CollatzSearch.Sieve29Part56", "CollatzSearch.Sieve29Part57", "CollatzSearch.Sieve29Part58", "CollatzSearch.Sieve29Part59", "CollatzSearch.Sieve29Part60", "CollatzSearch.Sieve29Part61", "CollatzSearch.Sieve29Part62", "CollatzSearch.Sieve29Part63"]
+
+[[lean_lib]]
+name = "Steiner1977"
+srcDir = "papers-lean/steiner-1977"
+roots = ["CollatzSearch.OneCircuit"]
+
+[[lean_lib]]
+name = "Simons2005"
+srcDir = "papers-lean/simons-2005"
+roots = ["CollatzSearch.TwoCircuit"]
+
+[[lean_lib]]
+name = "SimonsDeWeger2005"
+srcDir = "papers-lean/simons-de-weger-2005"
+roots = ["CollatzSearch.Runs", "CollatzSearch.RunsCert", "CollatzSearch.RunsRotate", "CollatzSearch.RunsBridge", "CollatzSearch.RunGrowth", "CollatzSearch.MRuns", "CollatzSearch.RunsWindow", "CollatzSearch.RunsLog", "CollatzSearch.RunsTail", "CollatzSearch.CRuns", "CollatzSearch.FiniteRuns", "CollatzSearch.FewRunsUncond"]
+
+[[lean_lib]]
+name = "Eliahou1993"
+srcDir = "papers-lean/eliahou-1993"
+roots = ["CollatzSearch.Farey", "CollatzSearch.FareyStretch", "CollatzSearch.FareyDecomp", "CollatzSearch.Farey24", "CollatzSearch.Farey25", "CollatzSearch.FareyBridge", "CollatzSearch.FareyBigCore", "CollatzSearch.FareyBigChain", "CollatzSearch.FareyBig", "CollatzSearch.FareyBigCond"]
+
+[[lean_lib]]
+name = "Hercher2023"
+srcDir = "papers-lean/hercher-2023"
+roots = ["CollatzSearch.Merge"]
+
+[[lean_lib]]
+name = "HalbeisenHungerbuhler1997"
+srcDir = "papers-lean/halbeisen-hungerbuhler-1997"
+roots = ["CollatzSearch.ChristoffelMin"]
+
+[[lean_lib]]
+name = "IrrationalityMeasureLog23"
+srcDir = "papers-lean/irrationality-measure-log2-3"
+roots = ["CollatzSearch.PadeArith", "CollatzSearch.PadeArithQ", "CollatzSearch.PadeBounds", "CollatzSearch.PadeSign", "CollatzSearch.PadeAssembly", "CollatzSearch.PadeBox", "CollatzSearch.PadeLower", "CollatzSearch.PadeSup", "CollatzSearch.PadeCheb", "CollatzSearch.LcmBound", "CollatzSearch.LcmCheb", "CollatzSearch.SignSplit", "CollatzSearch.SignSplitR", "CollatzSearch.TypeIITransfer", "CollatzSearch.Transfer", "CollatzSearch.IrrMeasure", "CollatzSearch.CycleLenPoly", "CollatzSearch.CycleLenPoly59"]
+
+[[lean_lib]]
+name = "LaurentMignotteNesterenko1995"
+srcDir = "papers-lean/laurent-mignotte-nesterenko-1995"
+roots = ["CollatzSearch.LMN", "CollatzSearch.LinForm", "CollatzSearch.SchemeBridge"]

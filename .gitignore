@@ -1,0 +1,11 @@
+.lake/
+build/
+*.olean
+*.ilean
+.DS_Store
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz

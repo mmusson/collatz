@@ -1,0 +1,407 @@
+% ---------------------------------------------------------------
+%  Christoffel neighbourhoods and the Collatz cycle equation.
+%  Write-up of the claude-search Christoffel-neighbourhood results (October 2026).
+%  Every numbered result is machine-checked in Lean 4 + Mathlib;
+%  the Lean name and file are given with each statement.
+%  Library: claude-search/lean/CollatzSearch/, index lean/LIBRARY.md.
+% ---------------------------------------------------------------
+
+\documentclass[11pt]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{needspace}
+\usepackage[margin=1.15in]{geometry}
+\usepackage{xurl}
+\usepackage[hidelinks]{hyperref}
+\setlength{\emergencystretch}{3em}  % avoid overfull lines at long names
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\chr}{\mathrm{chr}}
+% Lean identifiers: typewriter, with line breaks allowed after "_" and "."
+\DeclareRobustCommand{\lean}[1]{\textnormal{\ttfamily\def\_{\textunderscore\allowbreak}\leandots#1\relax}}
+\makeatletter
+\def\leandots#1\relax{\lean@scan#1.\@nil}
+\def\lean@scan#1.#2\@nil{#1\ifx\relax#2\relax\else.\allowbreak\lean@scan#2\@nil\fi}
+\makeatother
+
+\title{The neighbourhood of a Christoffel word\\ contains no Collatz cycle words}
+\author{Working notes}
+\date{October 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+A nontrivial positive cycle of the accelerated Collatz map with $r$ odd steps and $A$ halvings
+has a valuation word $v$ whose Böhm--Sontacchi numerator $B(v)$ is divisible by $q=2^A-3^r$.
+Knight proved that the balanced word, the Christoffel word $\chr(r,A)$, is not the word of a
+nontrivial cycle. We prove that, for every pair $(r,A)$ with $r\ge2$ and $2^A-3^r>1$, no word
+obtained from $\chr(r,A)$ by one local move (an adjacent swap or a unit slide to a neighbour)
+satisfies $q\mid B(v)$, apart from the trivial-cycle word at $A=2r$. The proof uses no
+Baker-type bounds; its only Diophantine input is a formally verified effective irrationality
+measure for $\log_23$. We also exclude a unit slid any distance (for $r\ge40901$, which every
+nontrivial cycle satisfies), several two- and few-move families, and large classes of words when
+$\gcd(A,r)\ge2$. Each result also holds for actual cycles. All statements have been formally
+verified in Lean~4. These are results about restricted cycle words. They do not exclude
+nontrivial cycles in general.
+\end{abstract}
+
+\section{Setting}
+
+We use the accelerated map on odd integers, $x\mapsto(3x+1)/2^{v_2(3x+1)}$. A cycle through odd
+$x_0,\dots,x_{r-1}$ has valuations $a_j=v_2(3x_j+1)\ge1$, partial sums $A_j=a_0+\dots+a_{j-1}$
+(with $A_0=0$) and $A=A_r$. The same cycle, run under the Terras map $T(n)=n/2$ ($n$ even),
+$(3n+1)/2$ ($n$ odd), has length $L=A$ with $r$ odd steps. Under the classical map
+$C(n)=n/2$ or $3n+1$, it has length $L+r$; we call this a $C$-cycle.
+
+\begin{definition}
+For a word $v=(v_0,\dots,v_{r-1})$ of positive integers with partial sums $A_j$, put
+\[
+  B(v)=\sum_{j=0}^{r-1}3^{\,r-1-j}\,2^{A_j},\qquad q=2^{A}-3^{r}.
+\]
+The \emph{(lower) Christoffel word} of slope $A/r$ is
+$\chr(r,A)_j=\lfloor (j+1)A/r\rfloor-\lfloor jA/r\rfloor$, so that its partial sums are
+$\lfloor jA/r\rfloor$. Other papers use upper Christoffel words of binary parity words; these
+agree with ours up to rotation and convention. A word is \emph{one move} from $w$ if it arises
+from $w$ by swapping two cyclically adjacent entries, or by moving one unit from an entry
+$\ge2$ to a cyclic neighbour (\lean{NormGoal.OneMove}). The words one move from $\chr$ form its
+\emph{radius-1 neighbourhood}.
+\end{definition}
+
+Since the entries of $\chr$ differ by at most one, every nontrivial swap of $\chr$ is also a unit
+slide. A move of $\chr$ away from the wrap-around position changes exactly one partial sum by
+$\pm1$. We call it a \emph{left flip} if that partial sum is lowered and a \emph{right flip} if
+it is raised. In Mghirbi's language, the \emph{defect area} $E$ of a word is the total amount by
+which its partial sums lie below the Christoffel line, at a suitable rotation. Left flips have
+$E=1$, whereas right flips can have $E$ of order $r$.
+
+The cycle equation (Böhm--Sontacchi) reads $q\,x_0=B(v)$. A cycle word therefore satisfies
+$q\mid B(v)$, and this divisibility is invariant under rotation of $v$.
+
+\paragraph{Prior work.}
+\begin{itemize}
+  \item \emph{The Christoffel word is extremal.} Halbeisen--Hungerbühler proved this~\cite{HH},
+        and Fernández--Ibáñez revisited it~\cite{FI}.
+  \item \emph{The Christoffel word is not a nontrivial cycle word.} This is Knight, ``Collatz
+        high cycles do not exist''~\cite{Knight}, in the coprime setting.
+  \item \emph{Lebel}~\cite{Lebel} proved $\gcd(B(\chr),D)=1$ at radius~0 using a resultant
+        (Theorem~4.2). He gave the local flip identity (Lemma~5.1), reduced radius~1 to the
+        trinomials $X^s-X+1$ prime by prime (Theorem~6.3), closed the canal $s=2$, and
+        conjectured radius-1 exclusion in a single-prime form (Conjecture~13.1). Here and
+        below, theorem numbers refer to the v3 preprint.
+  \item \emph{Mghirbi}~\cite{Mghirbi} used a distinguished unit $\xi$ modulo $D=q$ with
+        $\xi^p=\tfrac12$, $\xi^K=\tfrac13$, which is our $g^{-1}$, together with a
+        rotation-numerator lift. He noted that the case $E=0$ gives a three-line proof of
+        Knight's theorem. For actual cycles he excluded the coprime range
+        $E\le(1.5359\ldots-o(1))\,p^{2/3}$ (with $p=r$), and the non-coprime cases $E=1,2$
+        (Props.~9.1, 9.2). This covers the left flips.
+  \item \emph{Solomon}~\cite{Solomon}, for actual cycles, excluded the one-swap words of left-flip
+        type ($01\mapsto10$). He used Laurent and Eliahou in the coprime case and a
+        geometric-cofactor argument when $\gcd>1$ (Prop.~6.3). His Prop.~6.2 also excludes the
+        mechanical (Christoffel) word when $\gcd>1$, by reducing to its primitive block.
+  \item \emph{A Collatz World forum post}~\cite{CW} proves the prefix identity
+        $B(01A)-B(10A)=3^{|A|_1}$ for binary parity words and relates it to Christoffel words.
+\end{itemize}
+The other half of the radius-1 neighbourhood, the right flips, has large defect area. As far as
+we know, it is excluded neither by Mghirbi nor by Solomon. Lebel's closure of the canal $s=2$
+covers some right flips.
+
+\section{The main theorem}
+
+\begin{theorem}[\lean{NormAll.no\_cycle\_one\_move\_christoffel\_all}]\label{thm:main}
+Let $r\ge2$ and $3^r+1<2^A$. If $v$ is one move from $\chr(r,A)$ and $v\ne\chr(r,A)$, then
+$(2^A-3^r)\nmid B(v)$.
+\end{theorem}
+
+The hypothesis $v\neq\chr$ is needed only for $A=2r$. There an identity ``swap'' of equal
+entries returns the word $(2,\dots,2)$ of the trivial cycle $x=1$.
+
+\begin{theorem}[Classification, \lean{NormAll.knight\_all}, \lean{one\_move\_classification}]
+For $r\ge2$ and $3^r+1<2^A$: $q\mid B(\chr(r,A))$ if and only if $A=2r$. More generally, for $v$
+equal to $\chr(r,A)$ or one move from it, $q\mid B(v)$ holds exactly when $A=2r$ and
+$v=\chr(r,A)$.
+\end{theorem}
+
+\begin{corollary}[Bridge, \lean{NormBridge.cycle\_one\_move\_christoffel}]
+Suppose a positive $T$-cycle, read from an odd point $m$, has length $L$ and valuation word $v$
+with $r\ge2$ odd steps. If $v$ equals $\chr(r,L)$ or is one move from it, then $m=1$.
+\end{corollary}
+
+\subsection{Proof in the coprime case}
+
+Assume $\gcd(A,r)=1$, and write $\rho_j=jA\bmod r$.
+
+\paragraph{Step 1: a distinguished unit (\lean{NormReduce.exists\_g}).}
+Choose $u,k$ with $ru-Ak=1$ and set $g=2^u3^{-k}\in\Z/q$. Then $g^r=2$ and $g^A=3$, and $g$ is
+unique with these properties. Each term of $B(\chr)$ is a power of $g$:
+$3^{r-1-j}2^{\lfloor jA/r\rfloor}=G\,g^{\,r-1-\rho_j}$ with $G=g^{(A-1)(r-1)}$. Since
+$j\mapsto\rho_j$ is a permutation, summing gives the identity
+\[
+  (g-1)\,B(\chr(r,A))=g^{(A-1)(r-1)}\quad\text{in }\Z/q\qquad(\lean{knight\_identity}).
+\]
+The right-hand side is a unit, so $B(\chr)$ is a unit modulo $q$, i.e.\
+$\gcd(B(\chr),q)=1$. This recovers Knight's theorem. The device is not new: Mghirbi's $\xi$ is
+$g^{-1}$ and he gives the same three-line argument. Lebel's radius-0 theorem uses the same
+permutation and geometric sum, prime by prime. The only difference here is that we work modulo
+the full, possibly composite, $q$.
+
+\paragraph{Step 2: two trinomials (\lean{NormReduce.reduce}).}
+A move of $\chr$ away from the wrap-around position changes exactly one partial sum by $\pm1$,
+and hence changes $B$ by a single term. This local identity is Lebel's Flip Lemma~5.1; the prefix
+case also appears in~\cite{CW}. A wrap-around move shifts all of $A_1,\dots,A_{r-1}$ at once.
+For these, the identities $B(v)+3^{r-1}=2B(w)$ or $2B(v)=B(w)+3^{r-1}$ again express $B(v)$
+through $B(w)$ by a single term. In every case, combined with Step~1, $(g-1)B(v)$ is a unit times
+a trinomial in $g$. So $q\mid B(v)$ forces $g$ to be a root of
+\[
+  \text{Type I: } g^{p+1}-g^{p}+1=0\ \ (1\le p\le r-1),\qquad
+  \text{Type II: } g^{e}-g+1=0\ \ (2\le e\le r).
+\]
+(The values $p=0$ and $e=1$ give a nonzero unit and are excluded.) When $A<2r$ the exponents
+satisfy $p+1,\ e\le A-r$. Type~II corresponds to left flips and Type~I to right flips. The
+reduction is Lebel's Theorem~6.3, carried out modulo $q$ rather than modulo a prime factor.
+
+\paragraph{Step 3: from a modular root to an integer (\lean{NormDet}).}
+Write the trinomial as $g^\alpha-g^\beta+1$, so $(\alpha,\beta)=(p+1,p)$ for Type~I and
+$(e,1)$ for Type~II. Let $S_n$ be the $r\times r$ ``shift with weight 2 on wrap-around'' matrix,
+so that $(1,g,\dots,g^{r-1})\,S_n=g^n(1,g,\dots,g^{r-1})$ because $g^r=2$. For
+$1\le\alpha\ne\beta<r$, a trinomial root gives a row vector annihilated by
+$M=S_\alpha-S_\beta+I$ modulo $q$ whose first entry is $1$. The adjugate then gives
+$q\mid\det M$ (\lean{dvd\_det\_of\_vecMul}). Since $M$ is unitriangular modulo $2$, $\det M$ is
+odd (\lean{det\_three\_odd}). Hence $\det M\ne0$, so $q\le|\det M|$. AM--GM on the eigenvalues of
+$M^{T}M$ gives $\det(M)^2r^r\le\|M\|_F^{2r}$ (\lean{det\_sq\_mul\_le}), and
+$\|M\|_F^2=3r+3\alpha+3\beta$ (\lean{frob\_three}). Hence
+\[
+  q^2\,r^r\le(3r+3\alpha+3\beta)^r .
+\]
+The restriction $\alpha,\beta<r$ is why the two edge exponents are treated separately below.
+
+\paragraph{Step 4: assembly (\lean{NormMain.main}).}
+\begin{itemize}
+  \item \emph{Case $2^A>2\cdot3^r$.} Then $q>3^r$. On the other hand $\alpha,\beta<r$ gives
+        $(3r+3\alpha+3\beta)/r<9$, so Step~3 gives $q<3^r$, a contradiction. The two edge
+        exponents, $p=r-1$ and $e=r$, are handled directly: they give $q\mid2^{A+1-r}-1$,
+        respectively $q\mid3^r-2$, which is impossible.
+  \item \emph{Case $2^A\le2\cdot3^r$.} This case does not occur for $r=2$. Here
+        $A=\lceil r\log_23\rceil$ and $A<2r$, so the exponents are at most
+        $A-r\approx0.585r$, and Step~3 gives $q\lesssim\sqrt{3+6\cdot0.585}^{\,r}\approx2.55^r$.
+        \begin{itemize}
+          \item For $r\ge150$ this contradicts the gap lemmas of the library: $2^A\le2^{30}q$
+                for $r<2.26\cdot10^8$ (\lean{gapBelow\_225644606}, from the continued fraction
+                of $\log_23$), and $2^A\le2^{172}r^{58}q$ beyond (\lean{gap\_all59}, from a
+                formally verified effective irrationality measure).
+          \item For $3\le r<150$, a kernel-checked table finds no trinomial root at the unique
+                $g$ (\lean{NormFinite.finite\_check}).
+        \end{itemize}
+\end{itemize}
+
+\subsection{\texorpdfstring{The case $\gcd(A,r)=d\ge2$}{The case gcd(A,r) = d >= 2}}
+
+Following Solomon (Prop.~6.3), write $r=dr'$, $A=dA'$, $U=2^{A'}$, $V=3^{r'}$ and
+$S=\sum_{s<d}U^sV^{d-1-s}$. Then:
+\begin{itemize}
+  \item $q=(U-V)\,S$, with $S>1$ and $\gcd(S,6)=1$;
+  \item $\chr(r,A)$ is the $d$-fold repetition of $\chr(r',A')$, so $B(\chr)=S\cdot
+        B(\chr(r',A'))$ (\lean{solomon\_factor});
+  \item since the entries of $\chr$ differ by at most one, a move changes $B$ by a single
+        monomial $\pm2^{x}3^{y}$, and $S$ cannot divide a monomial (\lean{one\_move\_not\_dvd}).
+\end{itemize}
+Wrap-around moves are handled by the identities $B(v)+3^{r-1}=2B(w)$ or $2B(v)=B(w)+3^{r-1}$,
+so no rotation argument is needed.
+
+\section{Extensions}
+
+All statements below are unconditional and Lean-verified. They are stated at word level,
+$q\nmid B(v)$, and, where indicated, in cycle form.
+
+\begin{proposition}[Parameters of actual cycles, \lean{NormCycleAll}]
+Every nontrivial positive $T$-cycle has $L<2r$ and $r\ge40901$ (\lean{cycle\_params}), and in
+fact $200L<317r$ (\lean{NormGeom}). It also has an odd point (\lean{exists\_odd\_point}).
+\end{proposition}
+
+The constant $40901$ is assembled from existing library lemmas. A nontrivial $C$-cycle has length
+$L+r\ge122703$ (a formalized Crandall--Eliahou-type bound), and $L<2r$ because
+$3^r<2^L\le3^r(1+\tfrac1{3m})^r<4^r$, where $m$ is the cycle minimum. Hence $3r>122703$, so
+$r\ge40902$; the Lean statement records the slightly weaker $r\ge40901$. The constant is far from
+sharp. The published literature gives much more: Hercher's bounds~\cite{Hercher}, combined with
+Barina's verification to $2^{71}$~\cite{Barina}, give $r>1.375\times10^{11}$. Our constant is
+only the one that was convenient to formalize, and it suffices for every theorem below.
+
+Every actual cycle therefore satisfies $r\ge40901$ and $A<2r$. So the hypotheses $r\ge2325$,
+$r\ge40901$ and $A<2r$ in the results below are automatically met when the results are applied to
+cycles. Coprimality, where it is assumed, is not automatic.
+
+\begin{theorem}[A unit slid any distance, \lean{NormShiftSlide}]\label{thm:slide}
+Let $r\ge40901$ and $3^r+1<2^A$, with any $\gcd(A,r)$. Move one unit from position $i_0$ (where
+$\chr_{i_0}\ge2$) to an arbitrary position $i_1\ne i_0$. The resulting word $v$ satisfies
+$q\nmid B(v)$ (\lean{no\_cycle\_slide\_allRA}). Consequently, no nontrivial positive $T$-cycle,
+read from its chosen odd start, has such a valuation word (\lean{cycle\_slide\_all}).
+\end{theorem}
+
+\emph{Method (\lean{NormShift}): a shift lift.} Let $P_i$ be the partial sums of the periodic
+extension of $v$, and $G_a=\sum_{j<r}3^{r-1-j}2^{P_{a+j}}$ the numerator of the $a$-th rotation.
+If $q\mid B(v)$, then $q$ divides every $G_a$, and each $G_a$ is $2^{P_a}$ times an odd number.
+Choose a shift $\sigma<r$ and write $\sigma A=rm+t$ with $1\le t<r$. For a suitable integer
+$H\ge0$, the combination $2^HG_a-2^{H+m}G_{a-\sigma}$ is a sum of terms indexed by the positions
+where the deviation of $v$ from $\chr$ is not shift-invariant. If these positions leave a long
+cyclic window free, a size estimate against the gap lemma, together with the oddness of the
+$G_a$, gives a contradiction. For $t=1$ in the coprime case this is Mghirbi's lift
+(Thm.~6.3). What is new is that it needs no distinguished root, works for any $t$ and any gcd,
+and uses windows shaped as arcs.
+
+The same shift-lift argument gives a run-count criterion (\lean{NormShift.few\_levels\_coprime};
+cycle form \lean{NormShiftSlide.cycle\_few\_levels\_coprime}). Write
+$\varepsilon_i=A_i-\lfloor iA/r\rfloor$ for the deviation of the partial sums from the
+Christoffel line. Suppose a coprime word has $\max_i|\varepsilon_i|\le H_0$, and its deviation
+changes value at only $J$ cyclic positions. Then $q\nmid B(v)$ whenever
+$2^{2H_0+174}r^{59}<3^{\lfloor r/(6J+3)\rfloor+1}$. This complements Mghirbi's support-height
+criterion.
+
+\begin{theorem}[Two and a few flips, coprime]\label{thm:flips}
+Let $\gcd(A,r)=1$ and $3^r+1<2^A$. In items 1--2 assume also $r\ge2325$ and $A<2r$. A flip at
+site $k\in(0,r)$ means that the partial sum $A_k$ of $\chr$ is lowered (left flip) or raised
+(right flip) by one. The Lean statements carry the corresponding site conditions, which say that
+the flip is legal, i.e.\ all entries stay $\ge1$. The following words $v$ satisfy $q\nmid B(v)$,
+and the corresponding cycle forms hold.
+\begin{enumerate}
+  \item Two left flips (\lean{NormTwo.no\_cycle\_two\_left\_flips}). For cycles this is
+        Mghirbi's $E=2$; the formalization is ours.
+  \item Any two right flips, including adjacent ones and the wrap-around case $A=2r-1$
+        (\lean{NormFlips.no\_cycle\_two\_right\_flips\_all}). This is extended to every gcd in
+        \lean{NormCofactor.no\_cycle\_two\_right\_flips\_allRA}.
+  \item For $r\ge40901$: right flips at a set $K$ of sites, with exponents
+        $p_k=r-1-(kA\bmod r)$ satisfying $5\le p_k$, $p_k+6\le r$, $|p_k-p_{k'}|\ge6$ for
+        $k\ne k'$, and $\sum_{k\in K}4^{p_k/r}\le29/5$
+        (\lean{NormPoly.no\_cycle\_k\_right\_flips\_sep}).
+  \item Mixed pairs, one left and one right flip, in an explicit positive-density region of
+        pair space (\lean{NormMixed}).
+\end{enumerate}
+\end{theorem}
+
+These results rest on weighted Hadamard bounds for the companion-type matrix of the perturbation
+polynomial. The bounds are sharpened by a unitriangular column operation, which we call a
+``Szegő filter'' by analogy with one-step prediction filters (\lean{NormSparse},
+\lean{NormFilter}, \lean{NormPoly}).
+
+\needspace{8\baselineskip}
+\begin{theorem}[Non-coprime families, $d=\gcd(A,r)\ge2$]\leavevmode
+\begin{enumerate}
+  \item Every perturbation of the partial sums of $\chr$ by $\pm1$ at two sites, with any signs
+        and at any distance (\lean{NormCofactor.no\_cycle\_two\_site\_noncoprime}).
+  \item Deviations confined to one window of length about $(1-1/d)r$ (\lean{NormWindow}), or
+        to a cyclic arc (\lean{NormArc}).
+  \item Deviations at up to $d-1$ arbitrary sites (\lean{NormArc}).
+  \item A unit slid any distance, for $d\ge3$ (\lean{NormPlateau}). Theorem~\ref{thm:slide}
+        covers $d=2$ and $d=1$ as well.
+  \item \emph{Self-fold} (\lean{NormFold}). Let $p\ge2$ be any common factor of $A$ and $r$, and
+        write $r=pr'$. Let $v$ be a word whose partial sums stay within $e$ of those of $\chr$,
+        differ from them only on a set $D$ of sites, and are not $r'$-periodic. Then
+        $q\nmid B(v)$, provided $|D|\gamma<r'$ for an integer $\gamma$ with
+        $(r'2^{4e+3})^2<2^{3(\gamma+1)}$ (this is the condition for $p=2$; the general-$p$
+        condition has the same shape), so $\gamma\approx\tfrac23\log_2r'+\tfrac83e$. The
+        proof folds $B(v)$ against its own $r'$-shift modulo $\Phi_p(2^{A/p},3^{r/p})$. For
+        example, at $r=40902$, $A=64830$ ($d=6$) it allows about $1460$ sites, compared with
+        $d-1=5$ in item~3.
+\end{enumerate}
+\end{theorem}
+
+\section{Limits and status}
+
+\begin{itemize}
+  \item \emph{Not a cycle exclusion in general.} Every result concerns words near the
+        Christoffel word, while typical words are far from it. The norm and determinant bounds
+        stop at $O(1)$ moves. Stacked moves, where one partial sum changes by $2$, and the
+        remaining mixed pairs are open. The shift-lift method reaches about $r/\log r$ level
+        changes, which is still a thin class.
+  \item \emph{Rotations.} The slide theorem is stated for slides of $\chr$ read from
+        position~$0$. Since divisibility is rotation-invariant, re-reading a cycle from another
+        odd point covers slides of rotations, but that step is not formalized. The one-move
+        theorem includes cyclic moves, so it needs no such step.
+  \item \emph{Lebel's single-prime form.} Write $D=q$ and $P^+(D)$ for its largest prime factor.
+        The single-prime form is proved only conditionally, when $P^+(D)\gtrsim16r\,D^{2/3}$
+        (\lean{NormLebel}), and in one composite instance, $(A,r)=(37,19)$ with
+        $D=5\cdot27255338401$ (\lean{NormPlateauLift}).
+  \item \emph{Novelty.} A preliminary literature search found no source for
+        Theorem~\ref{thm:main}. Its left-flip half is known for actual cycles (Mghirbi,
+        Solomon). The Christoffel case is Knight's for $\gcd=1$ and Solomon's (Prop.~6.2) for
+        $\gcd>1$, again for actual cycles. The distinguished unit and the three-line Knight
+        argument are Mghirbi's. The trinomial reduction and the local flip identity are
+        Lebel's. Lebel's closure of the canal $s=2$ covers some right flips. What appears new
+        is the rest of the right-flip half, the uniform word-level divisibility statement for
+        all $(r,A)$, and the determinant proof that works modulo the full $q$. The primary
+        texts of Lebel, Mghirbi and Solomon should still be checked line by line. At cycle
+        level, several of the lift results reduce to Terras's 2-adic separation~\cite{Terras}
+        plus a bound on the maximum of the cycle, and should be regarded as known in substance.
+\end{itemize}
+
+\section*{Lean index}
+
+\begin{center}\small
+\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}p{0.24\textwidth}
+  >{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}p{0.27\textwidth}@{}}
+\toprule
+Result & Lean name & File\\
+\midrule
+Knight identity & \lean{knight\_identity}, \lean{knight} & \lean{NormReduce}\\
+Trinomial reduction & \lean{reduce} & \lean{NormReduce}\\
+Determinant bound & \lean{le\_typeI}, \lean{le\_typeII} & \lean{NormDet}\\
+Small $r$ table & \lean{finite\_check} & \lean{NormFinite}\\
+Theorem~\ref{thm:main}, coprime & \lean{no\_cycle\_one\_move\_christoffel} & \lean{NormMain}\\
+Theorem~\ref{thm:main}, all $(r,A)$ & \lean{no\_cycle\_one\_move\_christoffel\_all} & \lean{NormAll}\\
+Classification & \lean{knight\_all}, \lean{one\_move\_classification} & \lean{NormAll}\\
+Bridge to cycles & \lean{cycle\_one\_move\_christoffel} & \lean{NormBridge}\\
+Run-count criterion & \lean{few\_levels\_coprime} & \lean{NormShift}\\
+Two/few flips & \lean{no\_cycle\_two\_left\_flips}, \lean{no\_cycle\_k\_right\_flips\_sep}, \dots & \lean{NormTwo}, \lean{NormFlips}, \lean{NormPoly}\\
+Non-coprime families & \dots & \lean{NormCofactor}, \lean{NormArc}, \lean{NormPlateau}, \lean{NormFold}\\
+Cycle parameters & \lean{cycle\_params} & \lean{NormCycleAll}\\
+Slide any distance & \lean{no\_cycle\_slide\_allRA}, \lean{cycle\_slide\_all} & \lean{NormShiftSlide}\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+All files are in \lean{claude-search/lean/CollatzSearch/}.
+
+{\small
+\begin{thebibliography}{10}
+\setlength{\itemsep}{1pt plus 1pt}
+\bibitem{HH} L.~Halbeisen, N.~Hungerbühler, Optimal bounds for the length of rational Collatz
+  cycles, \emph{Acta Arith.} 78 (1997), 227--239.
+\bibitem{Knight} K.~Knight, Collatz high cycles do not exist, \emph{Discrete Math.} 349 (2026),
+  114812.
+\bibitem{Lebel} M.~Lebel, Christoffel words and modular sieving for accelerated Collatz
+  itineraries, preprint (v3), March 2026.
+\bibitem{Mghirbi} N.~Mghirbi, Defect-area bounds for Collatz cycles via rotation-numerator
+  lifts, preprint, July 2026; an earlier version is Zenodo 21734655.
+\bibitem{Solomon} A.~K.~Solomon, Polynomial boundary coordinates for Collatz cycles, v0.11.2,
+  August 2026, doi:10.5281/zenodo.22220729 (Zenodo record 22220730).
+\bibitem{FI} C.~Fernández, S.~Ibáñez, Christoffel words as extremal structures in Collatz
+  dynamics, arXiv:2607.24844.
+\bibitem{CW} Collatz World forum, ``Rotation swaps, numerator gaps, and central structure in
+  Collatz parity vectors'', 27 January 2026,
+  \url{https://forum.collatzworld.com/t/rotation-swaps-numerator-gaps-and-central-structure-in-collatz-parity-vectors/173}.
+\bibitem{Hercher} C.~Hercher, There are no Collatz $m$-cycles with $m\le91$, \emph{J.\ Integer Seq.}
+  26 (2023), Art.\ 23.3.5.
+\bibitem{Barina} D.~Bařina, Improved verification limit for the convergence of the Collatz conjecture,
+  \emph{J.\ Supercomput.} 81 (2025), Art.\ 810.
+\bibitem{Terras} R.~Terras, A stopping time problem on the positive integers, \emph{Acta Arith.}
+  30 (1976), 241--252.
+\end{thebibliography}
+}
+
+\end{document}

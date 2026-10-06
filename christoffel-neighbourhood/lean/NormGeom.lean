@@ -15,13 +15,13 @@ import NormMixedRev
   `NormMixedRev.cycle_mixed_flips_rev` (even without coprimality) are contradictory: that
   theorem is **cycle-vacuous**. Elementary proof, no norm engine.
 
-Infrastructure only; not a milestone, no progress on `Goal.lean`. The window `200L < 317r`
+Infrastructure only. The window `200L < 317r`
 (i.e. `L/r < 1.585`) is a routine consequence of the published cycle-minimum bound, just above
 `log₂ 3 ≈ 1.58496`.
 -/
 
-namespace CollatzSearch.NormGeom
-open CollatzSearch.NormGoal CollatzSearch.NormBridge CollatzProof Finset CollatzSearch.NormCycleAll
+namespace Collatz.NormGeom
+open Collatz.NormGoal Collatz.NormBridge CollatzProof Finset Collatz.NormCycleAll
 
 set_option exponentiation.threshold 400 in
 /-- `(3M+1)^200 < 2^317 M^200` for `M = 293601280`. -/
@@ -218,11 +218,11 @@ theorem cycle_mixed_flips_rev_vacuous {m L r : ℕ} {v : ℕ → ℕ}
   have hy4 : s * 1386 ≤ 160 * r := by exact_mod_cast hy3
   omega
 
-end CollatzSearch.NormGeom
+end Collatz.NormGeom
 
-#print axioms CollatzSearch.NormGeom.num_step
-#print axioms CollatzSearch.NormGeom.cycle_ratio
-#print axioms CollatzSearch.NormGeom.cycle_params'
-#print axioms CollatzSearch.NormGeom.up_site_of_valid_mixed
-#print axioms CollatzSearch.NormGeom.down_site_of_valid_mixed
-#print axioms CollatzSearch.NormGeom.cycle_mixed_flips_rev_vacuous
+#print axioms Collatz.NormGeom.num_step
+#print axioms Collatz.NormGeom.cycle_ratio
+#print axioms Collatz.NormGeom.cycle_params'
+#print axioms Collatz.NormGeom.up_site_of_valid_mixed
+#print axioms Collatz.NormGeom.down_site_of_valid_mixed
+#print axioms Collatz.NormGeom.cycle_mixed_flips_rev_vacuous

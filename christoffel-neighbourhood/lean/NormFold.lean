@@ -35,18 +35,18 @@ free-gap lemma provides as soon as `|bad columns| · g < r'`.
   `L = 194484`, `p = 3`: `|D| ≤ 2726`) and `witness_fold4` (`r = 122704`, `p = 4`: `|D| ≤ 2045`).
   Compare `NormArc` (`NormArc`): at most `d - 1` sites.
 
-Honest scope: word-level statements (and their `T`-cycle forms) for `r` and `A` with a common
+Scope: word-level statements (and their `T`-cycle forms) for `r` and `A` with a common
 factor `p ≥ 2` (T1/T3: both even);
 height of the deviation bounded; `r'`-periodic words are not excluded (they reduce to `(r', A')`,
-possibly coprime). Not a milestone; does not touch coprime `(r, A)` (the generic case) or the
+possibly coprime). It does not touch coprime `(r, A)` (the generic case) or the
 `d = 2` middle band of `NormPlateau` slides (there every column is bad). Prior art: Solomon (cofactor
 `S_d`), Knight, Lebel, Mghirbi, Fernández–Ibáñez (arXiv 2607.24844); novelty of the self-fold
 is provisional.
 -/
 
-namespace CollatzSearch.NormFold
-open CollatzSearch.NormGoal CollatzSearch.NormReduce CollatzSearch.NormAll
-  CollatzSearch.NormCofactor CollatzSearch.NormWindow CollatzSearch.NormArc Finset
+namespace Collatz.NormFold
+open Collatz.NormGoal Collatz.NormReduce Collatz.NormAll
+  Collatz.NormCofactor Collatz.NormWindow Collatz.NormArc Finset
 
 theorem window_pair {r A E H w m S : ℕ} (hr0 : 0 < r) (h3r : 3 ^ r ≤ 2 ^ A)
     (hS2 : Nat.Coprime 2 S) (hUS : 2 ^ E ≤ S)
@@ -1255,25 +1255,25 @@ theorem witness_fold4 : 3 ^ ((3 + 1) * 30676) + 1 < 2 ^ ((3 + 1) * 48621) ∧
     (3 * 30676 * 2 ^ (2 * (2 * 1 + 1) + 1)) ^ 2 < 2 ^ (3 * (15 + 1)) ∧ 2045 * 15 < 30676 := by
   decide +kernel
 
-end CollatzSearch.NormFold
+end Collatz.NormFold
 
-#print axioms CollatzSearch.NormFold.window_pair
-#print axioms CollatzSearch.NormFold.fold_two
-#print axioms CollatzSearch.NormFold.no_cycle_half_fold
-#print axioms CollatzSearch.NormFold.hW_fold
-#print axioms CollatzSearch.NormFold.no_cycle_half_fold_count
-#print axioms CollatzSearch.NormFold.bal_of_chr
-#print axioms CollatzSearch.NormFold.no_cycle_sites_even
-#print axioms CollatzSearch.NormFold.cycle_half_fold_count
-#print axioms CollatzSearch.NormFold.cycle_sites_even
-#print axioms CollatzSearch.NormFold.witness_fold
-#print axioms CollatzSearch.NormFold.witness_fold2
-#print axioms CollatzSearch.NormFold.fold_top
-#print axioms CollatzSearch.NormFold.rot_fold
-#print axioms CollatzSearch.NormFold.fold_core
-#print axioms CollatzSearch.NormFold.no_cycle_fold_count
-#print axioms CollatzSearch.NormFold.no_cycle_sites_fold
-#print axioms CollatzSearch.NormFold.cycle_fold_count
-#print axioms CollatzSearch.NormFold.cycle_sites_fold
-#print axioms CollatzSearch.NormFold.witness_fold3
-#print axioms CollatzSearch.NormFold.witness_fold4
+#print axioms Collatz.NormFold.window_pair
+#print axioms Collatz.NormFold.fold_two
+#print axioms Collatz.NormFold.no_cycle_half_fold
+#print axioms Collatz.NormFold.hW_fold
+#print axioms Collatz.NormFold.no_cycle_half_fold_count
+#print axioms Collatz.NormFold.bal_of_chr
+#print axioms Collatz.NormFold.no_cycle_sites_even
+#print axioms Collatz.NormFold.cycle_half_fold_count
+#print axioms Collatz.NormFold.cycle_sites_even
+#print axioms Collatz.NormFold.witness_fold
+#print axioms Collatz.NormFold.witness_fold2
+#print axioms Collatz.NormFold.fold_top
+#print axioms Collatz.NormFold.rot_fold
+#print axioms Collatz.NormFold.fold_core
+#print axioms Collatz.NormFold.no_cycle_fold_count
+#print axioms Collatz.NormFold.no_cycle_sites_fold
+#print axioms Collatz.NormFold.cycle_fold_count
+#print axioms Collatz.NormFold.cycle_sites_fold
+#print axioms Collatz.NormFold.witness_fold3
+#print axioms Collatz.NormFold.witness_fold4

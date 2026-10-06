@@ -1,7 +1,7 @@
 import NormSparse
 import NormReduce
-import CollatzSearch.FareyStretch
-import CollatzSearch.CycleLenPoly59
+import FareyStretch
+import CycleLenPoly59
 import NormBridge
 
 /-!
@@ -32,11 +32,11 @@ and `ρ := A mod r = A - r`); `q = 2^A - 3^r`, `g ∈ ZMod q` the unique element
 Limits (from numerics): no norm argument proves all of radius 2
 (stacked moves and opposite-sign adjacent pairs have `|N| ≥ q`); the Parseval bound exceeds 9
 for mixed up/down pairs, the up/up corner, and three down moves. Word-level for `r ≥ 2325`
-only; no milestone.
+only.
 -/
 
-namespace CollatzSearch.NormTwo
-open CollatzSearch.NormGoal CollatzSearch.NormReduce CollatzSearch.NormSparse Finset
+namespace Collatz.NormTwo
+open Collatz.NormGoal Collatz.NormReduce Collatz.NormSparse Finset
 
 
 set_option exponentiation.threshold 3000 in
@@ -552,10 +552,10 @@ theorem cycle_two_right_flips {m L r : ℕ} {v : ℕ → ℕ} (hr : 2325 ≤ r) 
 
 end Cycle
 
-end CollatzSearch.NormTwo
+end Collatz.NormTwo
 
-#print axioms CollatzSearch.NormTwo.size_contra
-#print axioms CollatzSearch.NormTwo.no_cycle_two_left_flips
-#print axioms CollatzSearch.NormTwo.no_cycle_two_right_flips
-#print axioms CollatzSearch.NormTwo.cycle_two_left_flips
-#print axioms CollatzSearch.NormTwo.cycle_two_right_flips
+#print axioms Collatz.NormTwo.size_contra
+#print axioms Collatz.NormTwo.no_cycle_two_left_flips
+#print axioms Collatz.NormTwo.no_cycle_two_right_flips
+#print axioms Collatz.NormTwo.cycle_two_left_flips
+#print axioms Collatz.NormTwo.cycle_two_right_flips

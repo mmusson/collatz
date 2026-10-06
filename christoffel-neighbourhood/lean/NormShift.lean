@@ -39,12 +39,11 @@ With the gap `2^A ≤ 2^172 r^58 q` (`gap_all59`) the size hypothesis reduces to
 `2^176 r^59 < 3^{g+1}` (`size_ok`, `big_r10`). The assembled theorems for actual slides and
 actual `T`-cycles are in `NormShiftSlide.lean`.
 
-Honest scope: word-level / cycle-equation exclusions only. NOT a milestone, NOT
-`no_nontrivial_cycles`.
+Scope: word-level / cycle-equation exclusions only.
 -/
 
-namespace CollatzSearch.NormShift
-open CollatzSearch.NormGoal CollatzSearch.NormReduce Finset
+namespace Collatz.NormShift
+open Collatz.NormGoal Collatz.NormReduce Finset
 
 /-! ### Periodic extension of the partial sums -/
 
@@ -381,7 +380,7 @@ theorem lift_core {r A σ m H E a T : ℕ} {v : ℕ → ℕ} (hr : 0 < r) (hq : 
   obtain ⟨u, hu, hGu⟩ := G_factor hr hv1 a
   obtain ⟨u', hu', hGu'⟩ := G_factor hr hv1 (a - σ)
   rw [hGu, hGu', ← mul_assoc, ← mul_assoc, ← pow_add, ← pow_add] at heq
-  have := CollatzSearch.NormShift.two_adic heq hu hu'
+  have := Collatz.NormShift.two_adic heq hu hu'
   omega
 
 /-! ### T1: the shift lift with a free cyclic window -/
@@ -1068,30 +1067,30 @@ theorem few_levels_coprime {r A H₀ : ℕ} {v : ℕ → ℕ} (hr : 0 < r) (hcop
     exact cover_bwd (eps r A v) P hj hσr hchg'
       (fun c hc => n1 _ (mem_image.mpr ⟨c, hc, rfl⟩))
 
-end CollatzSearch.NormShift
+end Collatz.NormShift
 
-#print axioms CollatzSearch.NormShift.Pe_add
-#print axioms CollatzSearch.NormShift.G_succ
-#print axioms CollatzSearch.NormShift.q_dvd_G
-#print axioms CollatzSearch.NormShift.G_factor
-#print axioms CollatzSearch.NormShift.floor_shift
-#print axioms CollatzSearch.NormShift.Z_iff
-#print axioms CollatzSearch.NormShift.term_pow_le
-#print axioms CollatzSearch.NormShift.lift_core
-#print axioms CollatzSearch.NormShift.shift_lift
-#print axioms CollatzSearch.NormShift.arc_meet
-#print axioms CollatzSearch.NormShift.free_window
-#print axioms CollatzSearch.NormShift.size_ok
-#print axioms CollatzSearch.NormShift.big10
-#print axioms CollatzSearch.NormShift.big_r10
-#print axioms CollatzSearch.NormShift.slide_cover_a
-#print axioms CollatzSearch.NormShift.slide_cover_b
-#print axioms CollatzSearch.NormShift.slide_run
-#print axioms CollatzSearch.NormShift.slide_bounds
-#print axioms CollatzSearch.NormShift.slide_word_coprime
-#print axioms CollatzSearch.NormShift.slide_word_gcd
-#print axioms CollatzSearch.NormShift.cover_fwd
-#print axioms CollatzSearch.NormShift.cover_bwd
-#print axioms CollatzSearch.NormShift.free_window2
-#print axioms CollatzSearch.NormShift.dirichlet
-#print axioms CollatzSearch.NormShift.few_levels_coprime
+#print axioms Collatz.NormShift.Pe_add
+#print axioms Collatz.NormShift.G_succ
+#print axioms Collatz.NormShift.q_dvd_G
+#print axioms Collatz.NormShift.G_factor
+#print axioms Collatz.NormShift.floor_shift
+#print axioms Collatz.NormShift.Z_iff
+#print axioms Collatz.NormShift.term_pow_le
+#print axioms Collatz.NormShift.lift_core
+#print axioms Collatz.NormShift.shift_lift
+#print axioms Collatz.NormShift.arc_meet
+#print axioms Collatz.NormShift.free_window
+#print axioms Collatz.NormShift.size_ok
+#print axioms Collatz.NormShift.big10
+#print axioms Collatz.NormShift.big_r10
+#print axioms Collatz.NormShift.slide_cover_a
+#print axioms Collatz.NormShift.slide_cover_b
+#print axioms Collatz.NormShift.slide_run
+#print axioms Collatz.NormShift.slide_bounds
+#print axioms Collatz.NormShift.slide_word_coprime
+#print axioms Collatz.NormShift.slide_word_gcd
+#print axioms Collatz.NormShift.cover_fwd
+#print axioms Collatz.NormShift.cover_bwd
+#print axioms Collatz.NormShift.free_window2
+#print axioms Collatz.NormShift.dirichlet
+#print axioms Collatz.NormShift.few_levels_coprime

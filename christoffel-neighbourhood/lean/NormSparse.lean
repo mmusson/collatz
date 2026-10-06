@@ -14,8 +14,8 @@ import NormDet
   `1 - g^a + g^b - g^c + g^e` specialisations.
 -/
 
-namespace CollatzSearch.NormSparse
-open Matrix Finset CollatzSearch.NormDet
+namespace Collatz.NormSparse
+open Matrix Finset Collatz.NormDet
 
 /-- Real Hadamard / Frobenius AM–GM: `det(N)^2 · n^n ≤ (Σ N_ij^2)^n`. -/
 theorem det_sq_mul_le_real {n : ℕ} (N : Matrix (Fin n) (Fin n) ℝ) :
@@ -240,8 +240,8 @@ theorem engine5 {q r a b c e : ℕ} (hq1 : 1 < q) (ha : 0 < a) (hab : a < b) (hb
     sum_ind_θ (show b < r by omega), sum_ind_θ (show c < r by omega), sum_ind_θ her] at this
   simpa using this
 
-end CollatzSearch.NormSparse
+end Collatz.NormSparse
 
-#print axioms CollatzSearch.NormSparse.sparse_engine
-#print axioms CollatzSearch.NormSparse.engine3
-#print axioms CollatzSearch.NormSparse.engine5
+#print axioms Collatz.NormSparse.sparse_engine
+#print axioms Collatz.NormSparse.engine3
+#print axioms Collatz.NormSparse.engine5

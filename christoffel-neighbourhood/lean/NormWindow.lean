@@ -19,9 +19,9 @@ import NormCofactor
 Word-level, needs `d ≥ 2`; credit Solomon Prop. 6.3 (one-move cofactor argument).
 -/
 
-namespace CollatzSearch.NormWindow
-open CollatzSearch.NormGoal CollatzSearch.NormReduce CollatzSearch.NormAll
-  CollatzSearch.NormCofactor Finset
+namespace Collatz.NormWindow
+open Collatz.NormGoal Collatz.NormReduce Collatz.NormAll
+  Collatz.NormCofactor Finset
 
 theorem psum_front (v : ℕ → ℕ) (j : ℕ) : psum v (j + 1) = v 0 + psum (fun i => v (i + 1)) j := by
   unfold psum; rw [sum_range_succ']; ring
@@ -288,8 +288,8 @@ theorem cycle_window_noncoprime {m L r : ℕ} {v : ℕ → ℕ} (hr : 2 ≤ r) (
     hout hup hdn hne hdiv
 
 end Cycle
-end CollatzSearch.NormWindow
+end Collatz.NormWindow
 
-#print axioms CollatzSearch.NormWindow.Bnum_inj
-#print axioms CollatzSearch.NormWindow.no_cycle_window_noncoprime
-#print axioms CollatzSearch.NormWindow.cycle_window_noncoprime
+#print axioms Collatz.NormWindow.Bnum_inj
+#print axioms Collatz.NormWindow.no_cycle_window_noncoprime
+#print axioms Collatz.NormWindow.cycle_window_noncoprime

@@ -2,7 +2,7 @@ import NormMain
 import NormGoalAll
 
 /-!
-# the one-move Christoffel theorem for ALL `(r, A)` (MAIN GOAL)
+# the one-move Christoffel theorem for ALL `(r, A)` (main theorem)
 
 * `Sg U V t = Σ_{s<t} U^s V^{t-1-s}` (`Sg_mul_sub`: `Sg·(U-V) = U^t - V^t`; odd, coprime to 3,
   `> 1` for `t ≥ 2`), and `Bf_rep`: the numerator of a `t`-fold repeated block is
@@ -11,8 +11,9 @@ import NormGoalAll
   `w` and differs from it, and `m > 1` coprime to `6` divides `B(w)`, then `m ∤ B(v)`: each move
   changes `B` by a monomial `±3^a 2^b` (one partial sum moves by `±1`) or doubles all terms but the
   first (wrap moves: `B(v) + 3^{r-1} = 2B(w)` or `2B(v) = B(w) + 3^{r-1}`).
-* `no_cycle_one_move_christoffel_all` — the MAIN GOAL (`NormGoal.no_cycle_one_move_christoffel_all`):
-  coprime case is `NormMain.main` (`NormMain`); for `d = gcd(A, r) ≥ 2` the cofactor
+* `no_cycle_one_move_christoffel_all` — the main theorem
+  (`NormGoal.no_cycle_one_move_christoffel_all`): coprime case is `NormMain.main` (`NormMain`);
+  for `d = gcd(A, r) ≥ 2` the cofactor
   `S_d = Sg (2^{A/d}) (3^{r/d}) d` (Solomon 2026, Zenodo 22220730, Prop. 6.3) divides both
   `2^A - 3^r` and `B(chr r A)`, and the monomial lemma applies.
 * `knight_all`: `(2^A - 3^r) ∣ B(chr r A) ↔ A = 2r` (Knight 2026 for coprime `(r, A)`; the
@@ -24,8 +25,8 @@ Prior art: Knight (Christoffel case), Lebel, Mghirbi, Solomon (see
 experiments/NORM_CRITERION.md). No rotation identity is needed for wrap moves.
 -/
 
-namespace CollatzSearch.NormAll
-open CollatzSearch.NormGoal CollatzSearch.NormReduce Finset
+namespace Collatz.NormAll
+open Collatz.NormGoal Collatz.NormReduce Finset
 
 /-- `Sg U V t = Σ_{s<t} U^s V^{t-1-s}` (by recursion `Sg (t+1) = V^t + U·Sg t`). -/
 def Sg (U V : ℕ) : ℕ → ℕ
@@ -273,7 +274,7 @@ theorem main_rep {d r' A' : ℕ} (hd : 2 ≤ d) (hr' : 0 < r')
   exact one_move_not_dvd hr2 hm1 hm2 hm3 (chr_two_letter (by omega)) hv hne hmB
     (dvd_trans hmq hdiv)
 
-/-- **MAIN GOAL.** For all `r ≥ 2` and `A` with `3^r + 1 < 2^A` (no coprimality), no
+/-- **Main theorem.** For all `r ≥ 2` and `A` with `3^r + 1 < 2^A` (no coprimality), no
 word `v` one cyclic adjacent swap or one slide away from `chr r A`, other than `chr r A` itself,
 satisfies `(2^A - 3^r) ∣ B(v)`. Exactly `NormGoal.no_cycle_one_move_christoffel_all`. -/
 theorem no_cycle_one_move_christoffel_all (r A : ℕ) (hr : 2 ≤ r)
@@ -296,7 +297,7 @@ theorem no_cycle_one_move_christoffel_all (r A : ℕ) (hr : 2 ≤ r)
 
 /-- Sanity check: the statement is literally the `NormGoalAll` statement. -/
 example : type_of% @no_cycle_one_move_christoffel_all =
-    type_of% @CollatzSearch.NormGoal.no_cycle_one_move_christoffel_all := rfl
+    type_of% @Collatz.NormGoal.no_cycle_one_move_christoffel_all := rfl
 
 /-- `3^b mod 8 ∈ {1, 3}`. -/
 theorem three_pow_mod_eight (b : ℕ) : 3 ^ b % 8 = 1 ∨ 3 ^ b % 8 = 3 := by
@@ -427,12 +428,12 @@ theorem one_move_classification (r A : ℕ) (hr : 2 ≤ r) (hq : 3 ^ r + 1 < 2 ^
     · intro hdiv; exact absurd hdiv (no_cycle_one_move_christoffel_all r A hr hq v hmove hagree)
     · rintro ⟨_, h⟩; obtain ⟨j, hj, hne⟩ := hagree; exact absurd (h j hj) hne
 
-end CollatzSearch.NormAll
+end Collatz.NormAll
 
-#print axioms CollatzSearch.NormAll.Bf_rep
-#print axioms CollatzSearch.NormAll.one_move_not_dvd
-#print axioms CollatzSearch.NormAll.solomon_factor
-#print axioms CollatzSearch.NormAll.no_cycle_one_move_christoffel_all
-#print axioms CollatzSearch.NormAll.pow_two_eq_three_pow_succ
-#print axioms CollatzSearch.NormAll.knight_all
-#print axioms CollatzSearch.NormAll.one_move_classification
+#print axioms Collatz.NormAll.Bf_rep
+#print axioms Collatz.NormAll.one_move_not_dvd
+#print axioms Collatz.NormAll.solomon_factor
+#print axioms Collatz.NormAll.no_cycle_one_move_christoffel_all
+#print axioms Collatz.NormAll.pow_two_eq_three_pow_succ
+#print axioms Collatz.NormAll.knight_all
+#print axioms Collatz.NormAll.one_move_classification

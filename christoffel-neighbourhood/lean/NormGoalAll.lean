@@ -1,9 +1,9 @@
 import NormGoal
 
 /-!
-# Main goal: extend NormGoal to ALL `(r, A)`
+# Main statement: extend NormGoal to ALL `(r, A)`
 
-`CollatzSearch.NormMain.no_cycle_one_move_christoffel` proves the case `Nat.Coprime A r`.
+`Collatz.NormMain.no_cycle_one_move_christoffel` proves the case `Nat.Coprime A r`.
 This file states the extension without coprimality. The hypothesis `v ≠ chr r A` (on `range r`)
 is needed: for `A = 2r` the identity "swap" of two equal entries returns `chr r (2r) = (2,…,2)`,
 the trivial cycle `n = 1`, which does satisfy the divisibility. Brute force (r < 130, A up to
@@ -20,9 +20,9 @@ that rotations of a `d`-periodic word are `d`-periodic.
 DO NOT EDIT THE STATEMENT BELOW.
 -/
 
-namespace CollatzSearch.NormGoal
+namespace Collatz.NormGoal
 
-/-- **MAIN GOAL.** For all `r ≥ 2`, `A` with `2^A - 3^r > 1` (no coprimality),
+/-- **Main statement.** For all `r ≥ 2`, `A` with `2^A - 3^r > 1` (no coprimality),
 no word one move away from `chr r A`, other than `chr r A` itself, satisfies
 `(2^A - 3^r) ∣ Bnum`. -/
 theorem no_cycle_one_move_christoffel_all (r A : ℕ) (hr : 2 ≤ r)
@@ -31,4 +31,4 @@ theorem no_cycle_one_move_christoffel_all (r A : ℕ) (hr : 2 ≤ r)
     ¬ (2 ^ A - 3 ^ r) ∣ Bnum r v := by
   sorry
 
-end CollatzSearch.NormGoal
+end Collatz.NormGoal

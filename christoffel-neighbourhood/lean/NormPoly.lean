@@ -23,13 +23,13 @@ import Mathlib.Algebra.Order.Chebyshev
   in a cycle word, closing `NormCycleAll`'s open "lower site not an up-site" case except when
   `ρ_k ∈ {1,…,4}` or `ρ_{k+1} ∈ [r-5, r-1]` (at most 9 sites per `(r, L)`).
 
-All results are word-level exclusions near Christoffel words (density zero); not milestones,
-no progress on `Goal.lean`. The filter idea is a discrete Szegő / prediction-filter
-preconditioning of Hadamard's inequality (standard in spirit); its use here is plausibly new.
+All results are word-level exclusions near Christoffel words (density zero). The filter idea is a
+discrete Szegő / prediction-filter preconditioning of Hadamard's inequality (standard in spirit);
+its use here is plausibly new.
 -/
 
-namespace CollatzSearch.NormPoly
-open Matrix Finset CollatzSearch.NormDet CollatzSearch.NormSparse CollatzSearch.NormFilter
+namespace Collatz.NormPoly
+open Matrix Finset Collatz.NormDet Collatz.NormSparse Collatz.NormFilter
 
 /-- `n`-th coefficient (`n < r`) of `w(X)·c(X)` reduced mod `X^r = 2`, for a filter
 `w` of degree `≤ D < r`. -/
@@ -498,8 +498,8 @@ theorem core_sep {r A : ℕ} (hr : 40901 ≤ r) (hq : 3 ^ r + 1 < 2 ^ A)
     (fun _ => by linarith) (fun _ => by nlinarith)
 
 section Word
-open CollatzSearch.NormGoal CollatzSearch.NormBridge CollatzSearch.NormReduce
-  CollatzSearch.NormTwo CollatzSearch.NormFlips
+open Collatz.NormGoal Collatz.NormBridge Collatz.NormReduce
+  Collatz.NormTwo Collatz.NormFlips
 
 /-- **`k` separated right flips with `Σ 4^{p/r} ≤ 29/5` (word level).**
 Let `r ≥ 40901`, `gcd(A, r) = 1`, `3^r + 1 < 2^A`, and `K` a set of sites in `(0, r)` with
@@ -602,7 +602,7 @@ theorem no_cycle_two_right_flips_sep (r A : ℕ) (hr : 40901 ≤ r) (hcop : Nat.
 end Word
 
 section Cycle
-open CollatzProof CollatzSearch.NormGoal CollatzSearch.NormBridge CollatzSearch.NormCycleAll
+open CollatzProof Collatz.NormGoal Collatz.NormBridge Collatz.NormCycleAll
 
 /-- **Cycle form of `no_cycle_k_right_flips_sep` (coprime).** No positive `T`-cycle
 point `m ≠ 1` with `gcd(L, r) = 1` has a valuation word obtained from `chr r L` by `+1`
@@ -708,18 +708,18 @@ theorem cycle_two_right_flips_adjacent {m L r : ℕ} {v : ℕ → ℕ}
 
 end Cycle
 
-end CollatzSearch.NormPoly
+end Collatz.NormPoly
 
-#print axioms CollatzSearch.NormPoly.sum_nn
-#print axioms CollatzSearch.NormPoly.band_sum
-#print axioms CollatzSearch.NormPoly.poly_filter_engine
-#print axioms CollatzSearch.NormPoly.pf_cP
-#print axioms CollatzSearch.NormPoly.E_bound
-#print axioms CollatzSearch.NormPoly.W_bound
-#print axioms CollatzSearch.NormPoly.X_gt
-#print axioms CollatzSearch.NormPoly.core_sep
-#print axioms CollatzSearch.NormPoly.no_cycle_k_right_flips_sep
-#print axioms CollatzSearch.NormPoly.no_cycle_two_right_flips_sep
-#print axioms CollatzSearch.NormPoly.cycle_k_right_flips_sep
-#print axioms CollatzSearch.NormPoly.L_ge_r6
-#print axioms CollatzSearch.NormPoly.cycle_two_right_flips_adjacent
+#print axioms Collatz.NormPoly.sum_nn
+#print axioms Collatz.NormPoly.band_sum
+#print axioms Collatz.NormPoly.poly_filter_engine
+#print axioms Collatz.NormPoly.pf_cP
+#print axioms Collatz.NormPoly.E_bound
+#print axioms Collatz.NormPoly.W_bound
+#print axioms Collatz.NormPoly.X_gt
+#print axioms Collatz.NormPoly.core_sep
+#print axioms Collatz.NormPoly.no_cycle_k_right_flips_sep
+#print axioms Collatz.NormPoly.no_cycle_two_right_flips_sep
+#print axioms Collatz.NormPoly.cycle_k_right_flips_sep
+#print axioms Collatz.NormPoly.L_ge_r6
+#print axioms Collatz.NormPoly.cycle_two_right_flips_adjacent

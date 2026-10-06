@@ -22,8 +22,8 @@ Standard in spirit (discrete Szegő / one-step prediction filter before Hadamard
 tool.
 -/
 
-namespace CollatzSearch.NormFilter
-open Matrix Finset CollatzSearch.NormDet CollatzSearch.NormSparse
+namespace Collatz.NormFilter
+open Matrix Finset Collatz.NormDet Collatz.NormSparse
 
 /-- Coefficients of `(2 + z) P(z)` reduced mod `z^r = 2`, where `P = Σ_{n<r} c_n z^n`. -/
 def efil (r : ℕ) (c : ℕ → ℤ) (n : ℕ) : ℤ :=
@@ -660,9 +660,9 @@ theorem wrap_engine {q r : ℕ} (hq1 : 1 < q) (hr : 4 ≤ r) (g : ZMod q) (hg : 
   have h2 := div_le_div_of_nonneg_right gf (show (0:ℝ) ≤ 4 by norm_num)
   linarith
 
-end CollatzSearch.NormFilter
+end Collatz.NormFilter
 
-#print axioms CollatzSearch.NormFilter.filter_engine
-#print axioms CollatzSearch.NormFilter.filter_engine'
-#print axioms CollatzSearch.NormFilter.flips_engine
-#print axioms CollatzSearch.NormFilter.wrap_engine
+#print axioms Collatz.NormFilter.filter_engine
+#print axioms Collatz.NormFilter.filter_engine'
+#print axioms Collatz.NormFilter.flips_engine
+#print axioms Collatz.NormFilter.wrap_engine

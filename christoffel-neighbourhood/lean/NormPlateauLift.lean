@@ -19,7 +19,7 @@ Notation as in `NormShift`: `q = 2^A - 3^r`, `ε_j = A_j - ⌊jA/r⌋` (`eps`), 
   `cycle_plateau_rot`, `cycle_window_rot`, `cycle_few_levels_plateau`.
 * `lebel_single_prime_37_19` (T2): at `(A, r) = (37, 19)`, `D = 5 · 27255338401`; `5` is bad
   for a one-move word, while `P^+(D)` divides `B` of no one-move word.
-* `few_levels_gcd_nonvacuous` (`NormLevels` critic fix F1), `window_witness`.
+* `few_levels_gcd_nonvacuous` (non-vacuity of `NormLevels`), `window_witness`.
 
 Credit: the `t = 1` lift is Mghirbi's (Zenodo 21734655, Thm 6.3/6.4, Lemma 7.2); the any-`t`,
 any-gcd lift is `NormShift.shift_lift`; one-move framework: Knight, Lebel, Solomon.
@@ -30,12 +30,11 @@ beyond it for arc supports of size `≫ r / log r`.
 **De-novelty (cycle level).** At cycle level these statements are Terras-type 2-adic separation
 plus the max bound: a bounded-height cycle cannot contain a Christoffel factor of length about
 `3·60·log₂ r` (cf. `NormLevels.cycle_levels_max`). The new content is word level only
-(rational cycles / the divisibility `q ∣ B`). No non-2-adic input was found. Not a milestone and
-not progress on `no_nontrivial_cycles`.
+(rational cycles / the divisibility `q ∣ B`). No non-2-adic input was found.
 -/
 
-namespace CollatzSearch.NormPlateauLift
-open CollatzSearch.NormGoal CollatzSearch.NormReduce CollatzSearch.NormShift Finset
+namespace Collatz.NormPlateauLift
+open Collatz.NormGoal Collatz.NormReduce Collatz.NormShift Finset
 
 /-- Reduction of `x < 2r` modulo `r`. -/
 theorem mod2 {r x : ℕ} (hx : x < 2 * r) : x % r = if x < r then x else x - r := by
@@ -398,9 +397,9 @@ theorem window_witness : Nat.Coprime 64830 40903 ∧ 3 ^ 40903 + 1 < 2 ^ 64830 �
     (fun j _ _ => eps_chr j) (by norm_num)
 
 set_option maxRecDepth 100000 in
-/-- **Non-vacuity of `NormLevels.few_levels_gcd` at `d = 2` (fix F1 of the `NormLevels` verify
-critic).** For `v = NormGoal.chr 40902 64832`, `P = ∅`, `H₀ = 0`, every hypothesis of
-`NormLevels.few_levels_gcd` holds (here `g = ⌊40902/6⌋ = 6817`). -/
+/-- **Non-vacuity of `NormLevels.few_levels_gcd` at `d = 2`.** For `v = NormGoal.chr 40902 64832`,
+`P = ∅`, `H₀ = 0`, every hypothesis of `NormLevels.few_levels_gcd` holds
+(here `g = ⌊40902/6⌋ = 6817`). -/
 theorem few_levels_gcd_nonvacuous :
     Nat.gcd 64832 40902 = 2 ∧ 2 ≤ 40902 / 2 ∧ 3 ^ 40902 + 1 < 2 ^ 64832 ∧
     (∀ i < 40902, 1 ≤ NormGoal.chr 40902 64832 i) ∧ psum (NormGoal.chr 40902 64832) 40902 = 64832 ∧
@@ -450,18 +449,18 @@ theorem lebel_single_prime_37_19 :
   · exact NormLebel.lebel_strong_of_large_prime 19 37 27255338401 27255338401 (by norm_num)
       (by norm_num) (by norm_num) prime_27255338401 hPD (by decide +kernel) hPD hmax
 
-end CollatzSearch.NormPlateauLift
+end Collatz.NormPlateauLift
 
-#print axioms CollatzSearch.NormPlateauLift.best_shift
-#print axioms CollatzSearch.NormPlateauLift.plateau_word
-#print axioms CollatzSearch.NormPlateauLift.big_r60
-#print axioms CollatzSearch.NormPlateauLift.window_word
-#print axioms CollatzSearch.NormPlateauLift.window_word_big
-#print axioms CollatzSearch.NormPlateauLift.few_levels_plateau
-#print axioms CollatzSearch.NormPlateauLift.cycle_plateau_rot
-#print axioms CollatzSearch.NormPlateauLift.cycle_window_rot
-#print axioms CollatzSearch.NormPlateauLift.cycle_few_levels_plateau
-#print axioms CollatzSearch.NormPlateauLift.window_witness
-#print axioms CollatzSearch.NormPlateauLift.few_levels_gcd_nonvacuous
-#print axioms CollatzSearch.NormPlateauLift.prime_27255338401
-#print axioms CollatzSearch.NormPlateauLift.lebel_single_prime_37_19
+#print axioms Collatz.NormPlateauLift.best_shift
+#print axioms Collatz.NormPlateauLift.plateau_word
+#print axioms Collatz.NormPlateauLift.big_r60
+#print axioms Collatz.NormPlateauLift.window_word
+#print axioms Collatz.NormPlateauLift.window_word_big
+#print axioms Collatz.NormPlateauLift.few_levels_plateau
+#print axioms Collatz.NormPlateauLift.cycle_plateau_rot
+#print axioms Collatz.NormPlateauLift.cycle_window_rot
+#print axioms Collatz.NormPlateauLift.cycle_few_levels_plateau
+#print axioms Collatz.NormPlateauLift.window_witness
+#print axioms Collatz.NormPlateauLift.few_levels_gcd_nonvacuous
+#print axioms Collatz.NormPlateauLift.prime_27255338401
+#print axioms Collatz.NormPlateauLift.lebel_single_prime_37_19

@@ -1,11 +1,11 @@
 import NormReduce
 import NormDet
 import NormFinite
-import CollatzSearch.FareyStretch
-import CollatzSearch.SwapExclusion
+import FareyStretch
+import Collatz.SwapExclusion
 
 /-!
-# proof of the MAIN GOAL `no_cycle_one_move_christoffel`
+# Proof of the main theorem `no_cycle_one_move_christoffel`
 
 For coprime `r ≥ 2` and `A` with `3^r + 1 < 2^A`, no word one cyclic adjacent swap or one
 slide away from the lower Christoffel word `chr r A` satisfies `(2^A - 3^r) ∣ B`.
@@ -22,11 +22,11 @@ Route (elementary norm argument, no resultants or Mahler measure):
    (`2^A ≤ 2^172 r^58 q`) and `growth_116`.
 
 This is a statement about cycle WORDS (the divisibility `q ∣ B` that every positive cycle with
-that word would satisfy). It is NOT `no_nontrivial_cycles` and not a milestone.
+that word would satisfy).
 -/
 
-namespace CollatzSearch.NormMain
-open CollatzSearch.NormGoal CollatzSearch.NormReduce CollatzSearch.NormDet
+namespace Collatz.NormMain
+open Collatz.NormGoal Collatz.NormReduce Collatz.NormDet
 
 theorem ratio_small {r : ℕ} (hr : 150 ≤ r) : (2 ^ 30) ^ 2 * 6600 ^ r < 9000 ^ r := by
   induction r, hr using Nat.le_induction with
@@ -99,7 +99,7 @@ theorem big_contra {r A q K F : ℕ} (hr : 100 ≤ r) (h3 : 3 ^ r < 2 ^ A) (hA2 
   have c2 := Nat.lt_of_mul_lt_mul_right c1
   omega
 
-/-- **MAIN GOAL.** For coprime `r ≥ 2` and `A` with `3^r + 1 < 2^A`, no word `v`
+/-- **Main theorem.** For coprime `r ≥ 2` and `A` with `3^r + 1 < 2^A`, no word `v`
 one cyclic adjacent swap or one slide away from the lower Christoffel word `chr r A` satisfies
 `(2^A - 3^r) ∣ B(v)`. Same statement as `NormGoal.no_cycle_one_move_christoffel`. -/
 theorem main (r A : ℕ) (hr : 2 ≤ r) (hcop : Nat.Coprime A r)
@@ -211,7 +211,7 @@ theorem main (r A : ℕ) (hr : 2 ≤ r) (hcop : Nat.Coprime A r)
       · have hgap := gap_all59 (k := r) (L := A) (by omega) h3A
         exact big_contra (by omega) h3A hbig hgap hFr hFle (ratio_big (by omega))
 
-/-- The main goal, in the exact form of `NormGoal.no_cycle_one_move_christoffel`. -/
+/-- The main theorem, in the exact form of `NormGoal.no_cycle_one_move_christoffel`. -/
 theorem no_cycle_one_move_christoffel (r A : ℕ) (hr : 2 ≤ r) (hcop : Nat.Coprime A r)
     (hq : 3 ^ r + 1 < 2 ^ A) (v : ℕ → ℕ) (hv : OneMove r (chr r A) v) :
     ¬ (2 ^ A - 3 ^ r) ∣ Bnum r v :=
@@ -219,10 +219,10 @@ theorem no_cycle_one_move_christoffel (r A : ℕ) (hr : 2 ≤ r) (hcop : Nat.Cop
 
 /-- Sanity check: the statement is literally the `NormGoal` statement. -/
 example : type_of% @no_cycle_one_move_christoffel =
-    type_of% @CollatzSearch.NormGoal.no_cycle_one_move_christoffel := rfl
+    type_of% @Collatz.NormGoal.no_cycle_one_move_christoffel := rfl
 
-end CollatzSearch.NormMain
+end Collatz.NormMain
 
-#print axioms CollatzSearch.NormMain.main
-#print axioms CollatzSearch.NormMain.no_cycle_one_move_christoffel
+#print axioms Collatz.NormMain.main
+#print axioms Collatz.NormMain.no_cycle_one_move_christoffel
 

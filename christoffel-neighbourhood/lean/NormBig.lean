@@ -17,11 +17,11 @@ contradiction when `Q ≤ 219/25 = 8.76`, for every `r ≥ 2325`. At the cycle l
 * `t_le_big`: `θ^2 ≤ 1 + 3/40901`.
 
 This is routine infrastructure (an effective irrationality measure of `log 3/log 2` combined
-with a size comparison), not new mathematics.
+with a size comparison).
 -/
 
-namespace CollatzSearch.NormBig
-open CollatzSearch.NormTwo
+namespace Collatz.NormBig
+open Collatz.NormTwo
 
 set_option exponentiation.threshold 400 in
 /-- B1: `4·224^r < 225^r` for `r ≥ 320`. -/
@@ -159,10 +159,10 @@ theorem t_le_big {r : ℕ} {θ : ℝ} (hr : 40901 ≤ r) (hθ : 0 < θ) (hθr : 
     exact_mod_cast hr
   linarith
 
-end CollatzSearch.NormBig
+end Collatz.NormBig
 
-#print axioms CollatzSearch.NormBig.B1
-#print axioms CollatzSearch.NormBig.B2
-#print axioms CollatzSearch.NormBig.B3
-#print axioms CollatzSearch.NormBig.size_contra_big
-#print axioms CollatzSearch.NormBig.t_le_big
+#print axioms Collatz.NormBig.B1
+#print axioms Collatz.NormBig.B2
+#print axioms Collatz.NormBig.B3
+#print axioms Collatz.NormBig.size_contra_big
+#print axioms Collatz.NormBig.t_le_big

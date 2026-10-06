@@ -26,13 +26,13 @@ only in the large-`E` regime. Solomon and Mghirbi do not treat right flips. Knig
 Mghirbi and Solomon are credited for the norm framework and for the left-flip/E-small cases.
 
 Limits: these are word-level results only, for coprime `(r, A)`, `r ≥ 2325` and `A < 2r`.
-They are not a milestone. Mixed up/down pairs, stacked moves and three down moves remain
+They are Mixed up/down pairs, stacked moves and three down moves remain
 open; the one-tap and Szegő filters fail there.
 -/
 
-namespace CollatzSearch.NormFlips
-open CollatzSearch.NormGoal CollatzSearch.NormReduce CollatzSearch.NormSparse
-  CollatzSearch.NormTwo CollatzSearch.NormFilter Finset
+namespace Collatz.NormFlips
+open Collatz.NormGoal Collatz.NormReduce Collatz.NormSparse
+  Collatz.NormTwo Collatz.NormFilter Finset
 
 section Finish
 variable {r A : ℕ} {θ : ℝ}
@@ -399,11 +399,11 @@ theorem cycle_k_right_flips {m L r : ℕ} {v : ℕ → ℕ} (hr : 2325 ≤ r) (h
 
 end Cycle
 
-end CollatzSearch.NormFlips
+end Collatz.NormFlips
 
-#print axioms CollatzSearch.NormFlips.core_right_all
-#print axioms CollatzSearch.NormFlips.core_k
-#print axioms CollatzSearch.NormFlips.no_cycle_two_right_flips_all
-#print axioms CollatzSearch.NormFlips.no_cycle_k_right_flips
-#print axioms CollatzSearch.NormFlips.cycle_two_right_flips_all
-#print axioms CollatzSearch.NormFlips.cycle_k_right_flips
+#print axioms Collatz.NormFlips.core_right_all
+#print axioms Collatz.NormFlips.core_k
+#print axioms Collatz.NormFlips.no_cycle_two_right_flips_all
+#print axioms Collatz.NormFlips.no_cycle_k_right_flips
+#print axioms Collatz.NormFlips.cycle_two_right_flips_all
+#print axioms Collatz.NormFlips.cycle_k_right_flips

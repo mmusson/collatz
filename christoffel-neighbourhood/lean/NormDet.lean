@@ -21,7 +21,7 @@ import Mathlib.Tactic
   `g^(p+1) - g^p + 1` and `g^e - g + 1`.
 -/
 
-namespace CollatzSearch.NormDet
+namespace Collatz.NormDet
 open Matrix Finset
 
 theorem dvd_det_of_vecMul {n q : ℕ} (M : Matrix (Fin n) (Fin n) ℤ) (v : Fin n → ZMod q)
@@ -237,11 +237,11 @@ theorem le_typeII {q r e : ℕ} (hq1 : 1 < q) (he : 2 ≤ e) (her : e < r) (g : 
   push_cast at this
   convert this using 2
 
-end CollatzSearch.NormDet
+end Collatz.NormDet
 
-#print axioms CollatzSearch.NormDet.dvd_det_of_vecMul
-#print axioms CollatzSearch.NormDet.det_sq_mul_le
-#print axioms CollatzSearch.NormDet.le_det_three
-#print axioms CollatzSearch.NormDet.le_typeI
-#print axioms CollatzSearch.NormDet.le_typeII
+#print axioms Collatz.NormDet.dvd_det_of_vecMul
+#print axioms Collatz.NormDet.det_sq_mul_le
+#print axioms Collatz.NormDet.le_det_three
+#print axioms Collatz.NormDet.le_typeI
+#print axioms Collatz.NormDet.le_typeII
 

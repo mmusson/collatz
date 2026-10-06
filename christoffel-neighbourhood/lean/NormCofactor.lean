@@ -24,11 +24,11 @@ one-move case of the argument below is his; `NormAll.solomon_factor`: `S_d > 1`,
 
 Corrects the `NormFlips` survey dead end "the two-move monomial difference can vanish mod `S_d`": it
 vanishes only in the periodic `d = 2`, equal-sign, distance-`r/2` case, which reduces to `NormAll`.
-Word-level results; not a milestone. Prior art: Knight, Lebel, Mghirbi, Solomon.
+Word-level results; Prior art: Knight, Lebel, Mghirbi, Solomon.
 -/
 
-namespace CollatzSearch.NormCofactor
-open CollatzSearch.NormGoal CollatzSearch.NormReduce CollatzSearch.NormAll Finset
+namespace Collatz.NormCofactor
+open Collatz.NormGoal Collatz.NormReduce Collatz.NormAll Finset
 
 /-- `U^t ≤ Sg U V (t+1)`. -/
 theorem pow_le_Sg (U V t : ℕ) : U ^ t ≤ Sg U V (t + 1) := by
@@ -618,12 +618,12 @@ theorem cycle_two_right_flips_allRA {m L r : ℕ} {v : ℕ → ℕ} (hr : 2325 �
   exact no_cycle_two_right_flips_allRA r L hr hq hL2 k₁ k₂ h1 h1r h2 h2r hne hs1 hs2 v hv1 hv hdiv
 
 end Cycle
-end CollatzSearch.NormCofactor
+end Collatz.NormCofactor
 
-#print axioms CollatzSearch.NormCofactor.core_cofactor
-#print axioms CollatzSearch.NormCofactor.two_site_reduce
-#print axioms CollatzSearch.NormCofactor.periodic_case
-#print axioms CollatzSearch.NormCofactor.no_cycle_two_site_noncoprime
-#print axioms CollatzSearch.NormCofactor.no_cycle_two_right_flips_allRA
-#print axioms CollatzSearch.NormCofactor.cycle_two_site_noncoprime
-#print axioms CollatzSearch.NormCofactor.cycle_two_right_flips_allRA
+#print axioms Collatz.NormCofactor.core_cofactor
+#print axioms Collatz.NormCofactor.two_site_reduce
+#print axioms Collatz.NormCofactor.periodic_case
+#print axioms Collatz.NormCofactor.no_cycle_two_site_noncoprime
+#print axioms Collatz.NormCofactor.no_cycle_two_right_flips_allRA
+#print axioms Collatz.NormCofactor.cycle_two_site_noncoprime
+#print axioms Collatz.NormCofactor.cycle_two_right_flips_allRA

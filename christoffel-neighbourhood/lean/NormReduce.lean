@@ -20,8 +20,8 @@ The proof: every Christoffel term is `G g^(r-1-(iA mod r))`, `i ↦ iA mod r` is
 each move changes one partial sum by `±1` or all partial sums `1..r-1` by `±1`.
 -/
 
-namespace CollatzSearch.NormReduce
-open CollatzSearch.NormGoal Finset
+namespace Collatz.NormReduce
+open Collatz.NormGoal Finset
 
 /-! ### L0: arithmetic facts -/
 
@@ -565,11 +565,11 @@ theorem reduce {r A : ℕ} (hr : 2 ≤ r) (hcop : Nat.Coprime A r) (hq : 3 ^ r +
         omega
       · rw [show r - 1 + 1 = r by omega]; exact hx
 
-end CollatzSearch.NormReduce
+end Collatz.NormReduce
 
-#print axioms CollatzSearch.NormReduce.exists_g
-#print axioms CollatzSearch.NormReduce.g_unique
-#print axioms CollatzSearch.NormReduce.knight_identity
-#print axioms CollatzSearch.NormReduce.knight
-#print axioms CollatzSearch.NormReduce.reduce
+#print axioms Collatz.NormReduce.exists_g
+#print axioms Collatz.NormReduce.g_unique
+#print axioms Collatz.NormReduce.knight_identity
+#print axioms Collatz.NormReduce.knight
+#print axioms Collatz.NormReduce.reduce
 

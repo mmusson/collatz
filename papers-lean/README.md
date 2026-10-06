@@ -1,6 +1,6 @@
 # papers-lean
 
-Lean 4 + Mathlib formalizations of results from the Collatz-cycle literature. They are dependencies of `../christoffel-neighbourhood/lean`. Each folder is a separate Lake library; see `../lakefile.toml`.
+Lean 4 + Mathlib formalizations of results from the Collatz-cycle literature. They are dependencies of `../christoffel-neighbourhood/lean`. Each folder is a separate Lake library (see `../lakefile.toml`) holding its `.lean` files directly; module names are the file names, e.g. `import Crandall`.
 
 | Folder | Source | Modules |
 |---|---|---|

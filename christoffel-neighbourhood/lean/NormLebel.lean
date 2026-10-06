@@ -34,14 +34,14 @@ reduction; computational check on 282 pairs), Mghirbi (Zenodo 21734655, the `t =
 lift, Thm 6.3/6.4, Lemma 7.2), Solomon (Zenodo 22220730), Knight. New here (to our knowledge):
 the divisor form of the lift and the resulting conditional proof of Conj. 11.1.
 
-Honest scope: Conj. 11.1 is proved only CONDITIONALLY on `D` having a prime factor above
+Scope: Conj. 11.1 is proved only CONDITIONALLY on `D` having a prime factor above
 `≈ 16r·D^{2/3}` (heuristically ~40% of pairs; numerically ≥ 227/1018 pairs with `r < 90`).
 Nothing new about actual cycles except start-freeness (`cycle_slide_rot_all`), since for a cycle
-`q` itself divides `B`. NOT a milestone, NOT `no_nontrivial_cycles`.
+`q` itself divides `B`.
 -/
 
-namespace CollatzSearch.NormLebel
-open CollatzSearch.NormGoal CollatzSearch.NormReduce CollatzSearch.NormShift Finset
+namespace Collatz.NormLebel
+open Collatz.NormGoal Collatz.NormReduce Collatz.NormShift Finset
 
 /-- `Q ∣ q` and `Q ∣ B(v)` give `Q ∣ G a` for every rotation numerator. -/
 theorem Q_dvd_G {Q r A : ℕ} {v : ℕ → ℕ} (hr : 0 < r) (hA : psum v r = A) (h3 : 3 ^ r ≤ 2 ^ A)
@@ -164,7 +164,7 @@ theorem lift_core_dvd {Q r A σ m H E a T : ℕ} {v : ℕ → ℕ} (hr : 0 < r) 
   obtain ⟨u, hu, hGu⟩ := G_factor hr hv1 a
   obtain ⟨u', hu', hGu'⟩ := G_factor hr hv1 (a - σ)
   rw [hGu, hGu', ← mul_assoc, ← mul_assoc, ← pow_add, ← pow_add] at heq
-  have := CollatzSearch.NormShift.two_adic heq hu hu'
+  have := Collatz.NormShift.two_adic heq hu hu'
   omega
 
 /-- **T1: shift lift for any divisor `Q` of `q`.** Let `3^r + 1 < 2^A`,
@@ -839,25 +839,25 @@ theorem lebel_witness_10_21 : ∃ p, p.Prime ∧ p ∣ 2 ^ 21 - 3 ^ 10 ∧
     (by norm_num) (by norm_num)
   norm_num
 
-end CollatzSearch.NormLebel
+end Collatz.NormLebel
 
-#print axioms CollatzSearch.NormLebel.Q_dvd_G
-#print axioms CollatzSearch.NormLebel.lift_core_dvd
-#print axioms CollatzSearch.NormLebel.shift_lift_dvd
-#print axioms CollatzSearch.NormLebel.free_points
-#print axioms CollatzSearch.NormLebel.one_move_shape
-#print axioms CollatzSearch.NormLebel.one_move_dvd
-#print axioms CollatzSearch.NormLebel.lebel_conj_of_large_prime
-#print axioms CollatzSearch.NormLebel.lebel_strong_of_large_prime
-#print axioms CollatzSearch.NormLebel.one_move_dvd_gcd
-#print axioms CollatzSearch.NormLebel.Pe_rot
-#print axioms CollatzSearch.NormLebel.G_rot
-#print axioms CollatzSearch.NormLebel.Q_dvd_G_iff
-#print axioms CollatzSearch.NormLebel.dvd_Bnum_rot
-#print axioms CollatzSearch.NormLebel.cycle_slide_rot_all
-#print axioms CollatzSearch.NormLebel.cycle_one_move_rot
-#print axioms CollatzSearch.NormLebel.slide_word_coprime_dvd
-#print axioms CollatzSearch.NormLebel.few_levels_coprime_dvd
-#print axioms CollatzSearch.NormLebel.no_cycle_slide_coprime_dvd
-#print axioms CollatzSearch.NormLebel.lebel_witness_13_22
-#print axioms CollatzSearch.NormLebel.lebel_witness_10_21
+#print axioms Collatz.NormLebel.Q_dvd_G
+#print axioms Collatz.NormLebel.lift_core_dvd
+#print axioms Collatz.NormLebel.shift_lift_dvd
+#print axioms Collatz.NormLebel.free_points
+#print axioms Collatz.NormLebel.one_move_shape
+#print axioms Collatz.NormLebel.one_move_dvd
+#print axioms Collatz.NormLebel.lebel_conj_of_large_prime
+#print axioms Collatz.NormLebel.lebel_strong_of_large_prime
+#print axioms Collatz.NormLebel.one_move_dvd_gcd
+#print axioms Collatz.NormLebel.Pe_rot
+#print axioms Collatz.NormLebel.G_rot
+#print axioms Collatz.NormLebel.Q_dvd_G_iff
+#print axioms Collatz.NormLebel.dvd_Bnum_rot
+#print axioms Collatz.NormLebel.cycle_slide_rot_all
+#print axioms Collatz.NormLebel.cycle_one_move_rot
+#print axioms Collatz.NormLebel.slide_word_coprime_dvd
+#print axioms Collatz.NormLebel.few_levels_coprime_dvd
+#print axioms Collatz.NormLebel.no_cycle_slide_coprime_dvd
+#print axioms Collatz.NormLebel.lebel_witness_13_22
+#print axioms Collatz.NormLebel.lebel_witness_10_21

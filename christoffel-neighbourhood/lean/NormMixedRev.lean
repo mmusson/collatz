@@ -19,7 +19,7 @@ Setting as in `NormMixed`: `gcd(A, r) = 1`, `3^r + 1 < 2^A`, `q = 2^A - 3^r`, `g
 * `cycle_mixed_flips_rev`, `cycle_mixed_flips_big`: cycle forms (`m ≠ 1`; `r ≥ 40901` from
   `NormCycleAll.cycle_params`).
 
-**Honest scope (found this round).** For a *valid* word (all letters `≥ 1`) with `r < A < 2r`,
+**Scope.** For a *valid* word (all letters `≥ 1`) with `r < A < 2r`,
 an up flip needs `ρ ≥ r - a` and a down flip needs `ρ' < a`, where `a = A - r`
 (`NormCycleAll.up_site_of_valid` / `down_site_of_valid`). So a valid pair with `ρ < ρ'` has
 `r - a ≤ ρ < ρ' < a`, while the T2 region forces `ρ' ≤ 0.107 r`; hence T2 applies to valid
@@ -34,13 +34,13 @@ to words with `A ≥ 1.893 r`, e.g. letters in `{1,2}` close to all-2, or `A > 2
 flips are always valid). T3's region does meet cycle-relevant valid words (`ρ` near `r`, `ρ'`
 small).
 
-Credit: Knight, Lebel, Mghirbi, Solomon (norm framework). Word level, not a milestone.
+Credit: Knight, Lebel, Mghirbi, Solomon (norm framework). Word level,
 -/
 
-namespace CollatzSearch.NormMixedRev
-open CollatzSearch.NormGoal CollatzSearch.NormReduce CollatzSearch.NormSparse
-  CollatzSearch.NormTwo CollatzSearch.NormFilter CollatzSearch.NormFlips
-  CollatzSearch.NormMixed CollatzSearch.NormBig Finset
+namespace Collatz.NormMixedRev
+open Collatz.NormGoal Collatz.NormReduce Collatz.NormSparse
+  Collatz.NormTwo Collatz.NormFilter Collatz.NormFlips
+  Collatz.NormMixed Collatz.NormBig Finset
 
 /-! ### The common relation for a mixed pair -/
 
@@ -351,7 +351,7 @@ theorem no_cycle_mixed_flips_big (r A : ℕ) (hr : 40901 ≤ r) (hcop : Nat.Copr
   exact finish_mixed_big hr hq hAr.le hθ hθr hY1 hX1 (by rw [hY, hX]; exact H4) hE
 
 section Cycle
-open CollatzProof CollatzSearch.NormCycleAll
+open CollatzProof Collatz.NormCycleAll
 
 /-- **Cycle form of `no_cycle_mixed_flips_rev`.** No positive `T`-cycle through `m ≠ 1`
 (period `L`, `r` odd steps, `gcd(L, r) = 1`) has a valuation word whose partial sums are those
@@ -395,13 +395,13 @@ theorem cycle_mixed_flips_big {m L r : ℕ} {v : ℕ → ℕ} (hcop : Nat.Coprim
 
 end Cycle
 
-end CollatzSearch.NormMixedRev
+end Collatz.NormMixedRev
 
-#print axioms CollatzSearch.NormMixedRev.mixed_rel
-#print axioms CollatzSearch.NormMixedRev.rev_engine
-#print axioms CollatzSearch.NormMixedRev.finish_rev
-#print axioms CollatzSearch.NormMixedRev.finish_mixed_big
-#print axioms CollatzSearch.NormMixedRev.no_cycle_mixed_flips_rev
-#print axioms CollatzSearch.NormMixedRev.no_cycle_mixed_flips_big
-#print axioms CollatzSearch.NormMixedRev.cycle_mixed_flips_rev
-#print axioms CollatzSearch.NormMixedRev.cycle_mixed_flips_big
+#print axioms Collatz.NormMixedRev.mixed_rel
+#print axioms Collatz.NormMixedRev.rev_engine
+#print axioms Collatz.NormMixedRev.finish_rev
+#print axioms Collatz.NormMixedRev.finish_mixed_big
+#print axioms Collatz.NormMixedRev.no_cycle_mixed_flips_rev
+#print axioms Collatz.NormMixedRev.no_cycle_mixed_flips_big
+#print axioms Collatz.NormMixedRev.cycle_mixed_flips_rev
+#print axioms Collatz.NormMixedRev.cycle_mixed_flips_big

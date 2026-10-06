@@ -13,8 +13,8 @@ verifies the window, `g₀^r ≡ 2`, `g₀^{A₀} ≡ 3`, and that `g₀^(p+1) -
   `g ∈ ZMod q` with `g^r = 2`, `g^A = 3`, neither trinomial vanishes in those ranges.
 -/
 
-namespace CollatzSearch.NormFinite
-open CollatzSearch.NormGoal CollatzSearch.NormReduce
+namespace Collatz.NormFinite
+open Collatz.NormGoal Collatz.NormReduce
 
 def tbl : List (ℕ × ℕ × ℕ) := [
   (3, 5, 3),
@@ -239,7 +239,7 @@ theorem finite_check {r A : ℕ} (hr3 : 3 ≤ r) (hr : r < 150) (hq : 3 ^ r + 1 
     rw [ZMod.natCast_eq_natCast_iff'] at h'
     rw [h', Nat.mod_add_mod]
 
-end CollatzSearch.NormFinite
+end Collatz.NormFinite
 
-#print axioms CollatzSearch.NormFinite.tblOK_eq
-#print axioms CollatzSearch.NormFinite.finite_check
+#print axioms Collatz.NormFinite.tblOK_eq
+#print axioms Collatz.NormFinite.finite_check

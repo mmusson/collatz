@@ -29,13 +29,13 @@ Prior art: Mghirbi (Zenodo 21734655) Thm 1.3 covers height-one interval bridges 
 `D = 1`; `NormPlateau`: `gcd ≥ 3`, and `gcd = 2` outside a middle band; Solomon (Zenodo 22220730, Prop. 6.3)
 cofactor; Knight, Lebel. Here: every `D`, every `(r, A)`, `r ≥ 40901`.
 
-Honest scope: word-level / cycle-equation exclusions. Rotations: `cycle_slide_all` reads the
+Scope: word-level / cycle-equation exclusions. Rotations: `cycle_slide_all` reads the
 word from the chosen start; the start-free form (any rotation of a slide of `chr r L`) is proved
-in `NormLebel.cycle_slide_rot_all` (via `NormLebel.dvd_Bnum_rot`). NOT a milestone, NOT `no_nontrivial_cycles`.
+in `NormLebel.cycle_slide_rot_all` (via `NormLebel.dvd_Bnum_rot`).
 -/
 
-namespace CollatzSearch.NormShiftSlide
-open CollatzSearch.NormGoal Finset
+namespace Collatz.NormShiftSlide
+open Collatz.NormGoal Finset
 
 /-- **T2: one unit slid any distance, coprime case.** For `r ≥ 40901`,
 `gcd(A, r) = 1`, `3^r + 1 < 2^A`, and any `a ≠ b < r` with `chr r A a ≥ 2`, the word obtained
@@ -168,15 +168,15 @@ end Cycle2
 theorem witness_levels : 2 ^ (2 * 1 + 174) * 40903 ^ 59 < 3 ^ (40903 / (6 * 9 + 3) + 1) := by
   decide +kernel
 
-end CollatzSearch.NormShiftSlide
+end Collatz.NormShiftSlide
 
-#print axioms CollatzSearch.NormShiftSlide.no_cycle_slide_coprime
-#print axioms CollatzSearch.NormShiftSlide.no_cycle_slide_gcd
-#print axioms CollatzSearch.NormShiftSlide.no_cycle_slide_gcd2
-#print axioms CollatzSearch.NormShiftSlide.no_cycle_slide_allRA
-#print axioms CollatzSearch.NormShiftSlide.cycle_slide_all
-#print axioms CollatzSearch.NormShiftSlide.witness_gcd1
-#print axioms CollatzSearch.NormShiftSlide.witness_gcd2
-#print axioms CollatzSearch.NormShiftSlide.no_cycle_few_levels_coprime
-#print axioms CollatzSearch.NormShiftSlide.cycle_few_levels_coprime
-#print axioms CollatzSearch.NormShiftSlide.witness_levels
+#print axioms Collatz.NormShiftSlide.no_cycle_slide_coprime
+#print axioms Collatz.NormShiftSlide.no_cycle_slide_gcd
+#print axioms Collatz.NormShiftSlide.no_cycle_slide_gcd2
+#print axioms Collatz.NormShiftSlide.no_cycle_slide_allRA
+#print axioms Collatz.NormShiftSlide.cycle_slide_all
+#print axioms Collatz.NormShiftSlide.witness_gcd1
+#print axioms Collatz.NormShiftSlide.witness_gcd2
+#print axioms Collatz.NormShiftSlide.no_cycle_few_levels_coprime
+#print axioms Collatz.NormShiftSlide.cycle_few_levels_coprime
+#print axioms Collatz.NormShiftSlide.witness_levels

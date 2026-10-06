@@ -1,5 +1,5 @@
 import NormAll
-import CollatzSearch.ChristoffelMin
+import ChristoffelMin
 
 /-!
 # bridge from the one-move theorems to actual `T`-cycles (DIRECTIVES 2(a))
@@ -15,8 +15,8 @@ one-swaps and the non-coprime factor). The one-move statement for all moves incl
 `(r, L)` is (as far as we know) new; see experiments/NORM_CRITERION.md.
 -/
 
-namespace CollatzSearch.NormBridge
-open CollatzSearch.NormGoal CollatzSearch.NormAll CollatzProof Finset
+namespace Collatz.NormBridge
+open Collatz.NormGoal Collatz.NormAll CollatzProof Finset
 
 /-- Partial sums are monotone. -/
 theorem psum_mono (v : ℕ → ℕ) {a b : ℕ} (h : a ≤ b) : psum v a ≤ psum v b :=
@@ -129,8 +129,8 @@ theorem cycle_one_move_christoffel {m L r : ℕ} {v : ℕ → ℕ} (hr : 2 ≤ r
   have : (2 ^ L - 3 ^ r) * m = (2 ^ L - 3 ^ r) * 1 := by rw [heq, mul_one]
   exact Nat.eq_of_mul_eq_mul_left hqpos this
 
-end CollatzSearch.NormBridge
+end Collatz.NormBridge
 
-#print axioms CollatzSearch.NormBridge.cycle_word_eq
-#print axioms CollatzSearch.NormBridge.Bnum_chr_double
-#print axioms CollatzSearch.NormBridge.cycle_one_move_christoffel
+#print axioms Collatz.NormBridge.cycle_word_eq
+#print axioms Collatz.NormBridge.Bnum_chr_double
+#print axioms Collatz.NormBridge.cycle_one_move_christoffel

@@ -1,10 +1,10 @@
 import NormCofactor
 import NormMixed
-import CollatzSearch.Crandall
-import CollatzSearch.MaxProduct
-import CollatzSearch.CRuns
-import CollatzSearch.CycleMin
-import CollatzSearch.CycleMax
+import Crandall
+import Collatz.MaxProduct
+import CRuns
+import Collatz.CycleMin
+import Collatz.CycleMax
 
 
 /-!
@@ -32,12 +32,11 @@ the earlier files cycle forms are automatic, and are removed here:
   `hs1`, `hs2` are unused; that is false (`NormFlips`' `omega` calls use them from the context, for
   `b + 1 ≤ A - r`), so the two-right-flip forms keep them or derive them.
 
-All results are about valuation words close to Christoffel words; they are not milestones and
-do not advance `Goal.lean`.
+All results are about valuation words close to Christoffel words.
 -/
 
-namespace CollatzSearch.NormCycleAll
-open CollatzSearch.NormGoal CollatzSearch.NormBridge CollatzProof Finset
+namespace Collatz.NormCycleAll
+open Collatz.NormGoal Collatz.NormBridge CollatzProof Finset
 
 /-- Along a cycle word, the number of odd steps among the first `psum v i` steps is `i`
 (the first conjunct of the claim in `NormBridge.cycle_word_eq`). -/
@@ -154,8 +153,8 @@ theorem cycle_params {m L r : ℕ} {v : ℕ → ℕ} (hr : 1 ≤ r) (hv1 : ∀ i
 
 
 section Word
-open CollatzSearch.NormReduce CollatzSearch.NormSparse CollatzSearch.NormTwo
-  CollatzSearch.NormFilter CollatzSearch.NormFlips
+open Collatz.NormReduce Collatz.NormSparse Collatz.NormTwo
+  Collatz.NormFilter Collatz.NormFlips
 
 /-- `NormFlips`' `NormFlips.no_cycle_k_right_flips` without its unused up-site hypothesis and
 without `A < 2r` (both checked unused by recompiling `NormFlips`' proof without them): any set `K`
@@ -429,17 +428,17 @@ theorem cycle_mixed_flips_uncond {m L r : ℕ} {v : ℕ → ℕ} (hcop : Nat.Cop
 
 end Uncond
 
-end CollatzSearch.NormCycleAll
+end Collatz.NormCycleAll
 
-#print axioms CollatzSearch.NormCycleAll.oddSteps_psum
-#print axioms CollatzSearch.NormCycleAll.exists_odd_point
-#print axioms CollatzSearch.NormCycleAll.cycle_params
-#print axioms CollatzSearch.NormCycleAll.up_site_of_valid
-#print axioms CollatzSearch.NormCycleAll.no_cycle_k_right_flips'
-#print axioms CollatzSearch.NormCycleAll.cycle_two_right_flips_uncond
-#print axioms CollatzSearch.NormCycleAll.cycle_two_right_flips_nonadj
-#print axioms CollatzSearch.NormCycleAll.cycle_two_left_flips_uncond
-#print axioms CollatzSearch.NormCycleAll.down_site_of_valid
-#print axioms CollatzSearch.NormCycleAll.cycle_two_left_flips_nonadj
-#print axioms CollatzSearch.NormCycleAll.cycle_k_right_flips_uncond
-#print axioms CollatzSearch.NormCycleAll.cycle_mixed_flips_uncond
+#print axioms Collatz.NormCycleAll.oddSteps_psum
+#print axioms Collatz.NormCycleAll.exists_odd_point
+#print axioms Collatz.NormCycleAll.cycle_params
+#print axioms Collatz.NormCycleAll.up_site_of_valid
+#print axioms Collatz.NormCycleAll.no_cycle_k_right_flips'
+#print axioms Collatz.NormCycleAll.cycle_two_right_flips_uncond
+#print axioms Collatz.NormCycleAll.cycle_two_right_flips_nonadj
+#print axioms Collatz.NormCycleAll.cycle_two_left_flips_uncond
+#print axioms Collatz.NormCycleAll.down_site_of_valid
+#print axioms Collatz.NormCycleAll.cycle_two_left_flips_nonadj
+#print axioms Collatz.NormCycleAll.cycle_k_right_flips_uncond
+#print axioms Collatz.NormCycleAll.cycle_mixed_flips_uncond

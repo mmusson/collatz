@@ -19,7 +19,7 @@ Notation: `d = gcd(A, r) ≥ 2`, `chr r A` the Christoffel word (partial sums `�
 * Cycle forms `cycle_arc_noncoprime`, `cycle_few_sites_noncoprime`; numerical non-vacuity
   certificates `witness_d3`, `witness_d4` (kernel `decide`).
 
-Honest scope: word-level statements, `gcd(A, r) ≥ 2` only; not a milestone. For actual cycles the
+Scope: word-level statements, `gcd(A, r) ≥ 2` only; For actual cycles the
 Christoffel entries are in `{1, 2}` (`L < 2r`), which caps realisable heights; for `d = 3` two
 sites are already covered by `NormCofactor.no_cycle_two_site_noncoprime`, so T2 is new for
 cycles when `d ≥ 4` (three or more sites), and T1 is new for wrapping arcs with `≥ 3` sites.
@@ -28,9 +28,9 @@ words, `(12,40,3,2)`: 10596, `(12,20,3,2)`: 609, `(8,20,3,2)`: 1140, `(9,24,2,2)
 no `q ∣ B(v)` (beyond the theorem's hypotheses too). Prior art: Knight, Lebel, Mghirbi, Solomon.
 -/
 
-namespace CollatzSearch.NormArc
-open CollatzSearch.NormGoal CollatzSearch.NormReduce CollatzSearch.NormAll
-  CollatzSearch.NormCofactor CollatzSearch.NormWindow Finset
+namespace Collatz.NormArc
+open Collatz.NormGoal Collatz.NormReduce Collatz.NormAll
+  Collatz.NormCofactor Collatz.NormWindow Finset
 
 theorem tail_factor (n : ℕ) (F : ℕ → ℕ) (hF : ∀ s < n, F 0 + 1 ≤ F (s + 1)) :
     ∑ s ∈ range (n + 1), 3 ^ (n + 1 - 1 - s) * 2 ^ F s =
@@ -548,13 +548,13 @@ theorem witness_d4 : Nat.gcd 194484 122704 = 4 ∧ 3 ^ 122704 + 1 < 2 ^ 194484 �
     (122704 * 2 ^ (2 * 8094 + 1)) ^ (Nat.gcd 194484 122704 - 1) <
       2 ^ (194484 / Nat.gcd 194484 122704) := by decide +kernel
 
-end CollatzSearch.NormArc
+end Collatz.NormArc
 
-#print axioms CollatzSearch.NormArc.seq_inj
-#print axioms CollatzSearch.NormArc.window_core
-#print axioms CollatzSearch.NormArc.no_cycle_arc_noncoprime
-#print axioms CollatzSearch.NormArc.cycle_arc_noncoprime
-#print axioms CollatzSearch.NormArc.no_cycle_few_sites_noncoprime
-#print axioms CollatzSearch.NormArc.cycle_few_sites_noncoprime
-#print axioms CollatzSearch.NormArc.witness_d3
-#print axioms CollatzSearch.NormArc.witness_d4
+#print axioms Collatz.NormArc.seq_inj
+#print axioms Collatz.NormArc.window_core
+#print axioms Collatz.NormArc.no_cycle_arc_noncoprime
+#print axioms Collatz.NormArc.cycle_arc_noncoprime
+#print axioms Collatz.NormArc.no_cycle_few_sites_noncoprime
+#print axioms Collatz.NormArc.cycle_few_sites_noncoprime
+#print axioms Collatz.NormArc.witness_d3
+#print axioms Collatz.NormArc.witness_d4

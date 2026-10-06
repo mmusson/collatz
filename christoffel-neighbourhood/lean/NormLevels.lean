@@ -1,6 +1,6 @@
 import NormLebel
 import NormCycleAll
-import CollatzSearch.BackCong
+import BackCong
 
 /-!
 # few level changes for every gcd, and the Terras form of the shift lift
@@ -28,7 +28,7 @@ cyclic level changes of `ε`, `g = ⌊r/((6J+3)d)⌋`.
   `≤ H₀` deviation and `≤ J` level changes when `2^{2H₀+174} r^59 < 3^{g+1}`. Non-vacuity of the
   size hypothesis at `d = 2`: `witness_levels_gcd2` (`r = 40902`, `L = 64832`, `J = 4`).
 
-**Honest scope / de-novelty (must accompany any flag).** At the cycle level, the `NormShift` shift-lift
+**Scope / de-novelty (must accompany any flag).** At the cycle level, the `NormShift` shift-lift
 and T5 are Terras 2-adic separation plus a bound on the cycle maximum: `q ∣ B(v)` gives
 `G_a = 2^{Pe a} q n_a`, the lift identity says two cycle elements whose valuation words agree
 on a window are 2-adically (resp. 3-adically) close, and bounded height bounds every element by
@@ -36,11 +36,11 @@ on a window are 2-adically (resp. 3-adically) close, and bounded height bounds e
 is therefore "Terras + word combinatorics"; only the pure word-level divisibility forms (T1)
 need the lift. T1/T2 are a routine generalization of Mghirbi's rotation-numerator lift
 (Zenodo 21734655, Thm 6.3/6.4, Lemma 7.2) and `NormShift`; credit Mghirbi, Solomon (cofactor,
-non-coprime), Lebel, Knight. NOT a milestone; NOT `no_nontrivial_cycles`.
+non-coprime), Lebel, Knight.
 -/
 
-namespace CollatzSearch.NormLevels
-open CollatzSearch.NormGoal CollatzSearch.NormReduce CollatzSearch.NormShift Finset
+namespace Collatz.NormLevels
+open Collatz.NormGoal Collatz.NormReduce Collatz.NormShift Finset
 
 /-- Counting inequality for `gcd_window`: `J` arcs of length `ℓ` plus `≤ d t₀` specials leave
 a free window of length `g = ⌊r/((6J+3)d)⌋`. -/
@@ -442,12 +442,12 @@ theorem witness_levels_gcd2 : Nat.gcd 64832 40902 = 2 ∧
     2 ^ (2 * 1 + 174) * 40902 ^ 59 < 3 ^ (40902 / ((6 * 4 + 3) * 2) + 1) := by
   refine ⟨by decide +kernel, by decide +kernel⟩
 
-end CollatzSearch.NormLevels
+end Collatz.NormLevels
 
-#print axioms CollatzSearch.NormLevels.count_aux
-#print axioms CollatzSearch.NormLevels.gcd_window
-#print axioms CollatzSearch.NormLevels.few_levels_gcd
-#print axioms CollatzSearch.NormLevels.cycle_levels_max
-#print axioms CollatzSearch.NormLevels.cycle_far_from_christoffel_rot
-#print axioms CollatzSearch.NormLevels.witness_levels_gcd2
+#print axioms Collatz.NormLevels.count_aux
+#print axioms Collatz.NormLevels.gcd_window
+#print axioms Collatz.NormLevels.few_levels_gcd
+#print axioms Collatz.NormLevels.cycle_levels_max
+#print axioms Collatz.NormLevels.cycle_far_from_christoffel_rot
+#print axioms Collatz.NormLevels.witness_levels_gcd2
 

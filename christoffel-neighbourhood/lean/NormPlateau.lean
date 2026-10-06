@@ -34,24 +34,24 @@ indices where `ε` differs from a constant `κ = e₂ - e₁` matter, not where 
   `cycle_slide_noncoprime3` (only `gcd(L, r) ≥ 3` and `m ≠ 1`; `r ≥ 40901` from
   `NormCycleAll.cycle_params` gives `(32r)^6 < 2^L` via `pow6`), `cycle_slide_noncoprime`.
 
-Honest scope: word-level / cycle-equation exclusions for NON-coprime `(r, A)` only. The coprime
-case of 2(c) — the generic case — remains OPEN (S_d methods are empty there). The `d = 2` band is a
-method gap, not a counterexample (all 402 tested `d = 2` pairs, `r < 900`: no slide at any
-distance even has `S_2 ∣ Δ`). Numerics (`NormPlateau` strategist): 1.8·10^6 small words with `≤ d - 1`
-level changes, no `q ∣ B`. Not a milestone. Prior art: Knight, Lebel, Mghirbi, Solomon,
+Scope: word-level / cycle-equation exclusions for NON-coprime `(r, A)` only. The coprime
+case of 2(c) — the generic case — is not covered (S_d methods are empty there). The `d = 2` band
+is a method gap, not a counterexample (all 402 tested `d = 2` pairs, `r < 900`: no slide at any
+distance even has `S_2 ∣ Δ`). Numerics: 1.8·10^6 small words with `≤ d - 1`
+level changes, no `q ∣ B`. Prior art: Knight, Lebel, Mghirbi, Solomon,
 Fernández–Ibáñez (arXiv 2607.24844).
 
-Scope wording (`NormFold` repair): the slide theorems exclude a cycle whose valuation word, read from
+Scope wording: the slide theorems exclude a cycle whose valuation word, read from
 the chosen start `m`, is *a slide of `chr r L`*; they do not say "any perturbation of a balanced
 cycle". Slides of rotations of chr are covered by choosing another start on the cycle
 (`rot^k(slide(chr, a, b)) = slide(rot^k chr, a-k, b-k)`): a remark, not a proved statement here.
-The `d = 2` case is NOT settled: about 20 middle distances remain open, and `NormFold`'s `NormFold`
+The `d = 2` case is NOT settled: about 20 middle distances remain open, and `NormFold`
 does not close them either (every column is bad there).
 -/
 
-namespace CollatzSearch.NormPlateau
-open CollatzSearch.NormGoal CollatzSearch.NormReduce CollatzSearch.NormAll
-  CollatzSearch.NormCofactor CollatzSearch.NormWindow CollatzSearch.NormArc Finset
+namespace Collatz.NormPlateau
+open Collatz.NormGoal Collatz.NormReduce Collatz.NormAll
+  Collatz.NormCofactor Collatz.NormWindow Collatz.NormArc Finset
 
 /-- `NormArc.window_core` with comparison sequence `⌊jA/r⌋ + e`: an odd `S ≥ 2^{A-A'}` cannot
 divide the nonzero window sum `Σ_{s<w} 3^{w-1-s}(2^{α(k+s)} - 2^{⌊(k+s)A/r⌋ + e})` when `α` is
@@ -785,17 +785,17 @@ theorem cycle_slide_noncoprime {m L r : ℕ} {v : ℕ → ℕ} (hr : 2 ≤ r) (h
 
 end Cycle
 
-end CollatzSearch.NormPlateau
+end Collatz.NormPlateau
 
-#print axioms CollatzSearch.NormPlateau.window_core_shift
-#print axioms CollatzSearch.NormPlateau.no_cycle_offset_arc_noncoprime
-#print axioms CollatzSearch.NormPlateau.hW_of_hJ
-#print axioms CollatzSearch.NormPlateau.no_cycle_few_levels_noncoprime
-#print axioms CollatzSearch.NormPlateau.psum_slide
-#print axioms CollatzSearch.NormPlateau.no_cycle_slide_noncoprime3
-#print axioms CollatzSearch.NormPlateau.no_cycle_slide_noncoprime
-#print axioms CollatzSearch.NormPlateau.pow6
-#print axioms CollatzSearch.NormPlateau.cycle_offset_arc_noncoprime
-#print axioms CollatzSearch.NormPlateau.cycle_few_levels_noncoprime
-#print axioms CollatzSearch.NormPlateau.cycle_slide_noncoprime3
-#print axioms CollatzSearch.NormPlateau.cycle_slide_noncoprime
+#print axioms Collatz.NormPlateau.window_core_shift
+#print axioms Collatz.NormPlateau.no_cycle_offset_arc_noncoprime
+#print axioms Collatz.NormPlateau.hW_of_hJ
+#print axioms Collatz.NormPlateau.no_cycle_few_levels_noncoprime
+#print axioms Collatz.NormPlateau.psum_slide
+#print axioms Collatz.NormPlateau.no_cycle_slide_noncoprime3
+#print axioms Collatz.NormPlateau.no_cycle_slide_noncoprime
+#print axioms Collatz.NormPlateau.pow6
+#print axioms Collatz.NormPlateau.cycle_offset_arc_noncoprime
+#print axioms Collatz.NormPlateau.cycle_few_levels_noncoprime
+#print axioms Collatz.NormPlateau.cycle_slide_noncoprime3
+#print axioms Collatz.NormPlateau.cycle_slide_noncoprime

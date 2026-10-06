@@ -24,12 +24,12 @@ finding that adjacent opposite-sign pairs have true norm `≥ q`).
 
 Credit: Knight, Lebel, Mghirbi, Solomon (norm framework; Mghirbi's `E ≤ 1.536 r^{2/3}` covers
 small-defect words for actual cycles). Novelty only plausible for large defect area and at the
-word/rational-cycle level; not a milestone.
+word/rational-cycle level;
 -/
 
-namespace CollatzSearch.NormMixed
-open CollatzSearch.NormGoal CollatzSearch.NormReduce CollatzSearch.NormSparse
-  CollatzSearch.NormTwo CollatzSearch.NormFilter CollatzSearch.NormFlips Finset
+namespace Collatz.NormMixed
+open Collatz.NormGoal Collatz.NormReduce Collatz.NormSparse
+  Collatz.NormTwo Collatz.NormFilter Collatz.NormFlips Finset
 
 /-- Coefficients of `1 - z + z^s - z^m + z^{m+1}`. -/
 def cM (s m n : ℕ) : ℤ := ind 0 n - ind 1 n + ind s n - ind m n + ind (m + 1) n
@@ -263,9 +263,9 @@ theorem cycle_mixed_flips {m L r : ℕ} {v : ℕ → ℕ} (hr : 2325 ≤ r) (hco
 
 end Cycle
 
-end CollatzSearch.NormMixed
+end Collatz.NormMixed
 
-#print axioms CollatzSearch.NormMixed.mixed_engine
-#print axioms CollatzSearch.NormMixed.finish_mixed
-#print axioms CollatzSearch.NormMixed.no_cycle_mixed_flips
-#print axioms CollatzSearch.NormMixed.cycle_mixed_flips
+#print axioms Collatz.NormMixed.mixed_engine
+#print axioms Collatz.NormMixed.finish_mixed
+#print axioms Collatz.NormMixed.no_cycle_mixed_flips
+#print axioms Collatz.NormMixed.cycle_mixed_flips

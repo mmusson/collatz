@@ -23,14 +23,14 @@ Notation as in `NormShift`: `v` a valuation word of length `r` (letters `≥ 1`,
   factor of `chr s p` (any `s ≥ 1`, any `p`), `g + 1 ≤ N < r/gcd(A, r)`: `q ∤ B(v)`.
 * `chr_pieces` (T2b, K-piece theorem): if every cyclic arc of length `ℓ` that avoids a cut set `P`
   agrees with a factor of some Christoffel word (slopes may vary from arc to arc) and
-  `|P| · ℓ < r`, then `q ∤ B(v)`. (`NormFactor` verify-critic restatement: the real content is
+  `|P| · ℓ < r`, then `q ∤ B(v)`. (The real content is
   `chr_piece` — ONE Christoffel factor of length `ℓ ≈ 3g` suffices; `|P| · ℓ < r` is only the
   pigeonhole that supplies such an arc, which is where the piece count comes from.) So a bounded-height word with `q ∣ B(v)` needs about
   `r / (3g)` balanced pieces. This contains `NormMain`/`NormAll` (one move), `NormShift` (slides), `NormLevels` (few
   levels) and `NormPlateauLift` (plateaus, windows) for large `r`, and also bounded-height words with `Θ(r)`
   level changes, e.g. `chr(r₁, A₁+1) chr(r₂, A₂-1)`, which `NormShift`'s T5 cannot reach.
 * `big_r50`, `cycle_chr_pieces_rot`, `cycle_chr_pieces_big`: start-free `T`-cycle forms.
-* `chr_piece_witness` (critic fix F1): all hypotheses of `chr_piece` (hence of `rep_factor_gap`)
+* `chr_piece_witness` (non-vacuity): all hypotheses of `chr_piece` (hence of `rep_factor_gap`)
   hold at `v = slide (chr 40903 64830) 1 20001`, `h = 1`, a word with deviation `-1` on the
   whole arc used.
 
@@ -43,8 +43,7 @@ of arbitrary slopes). **Cycle level = Terras + max bound**: two odd cycle elemen
 the same valuation factor `u` are congruent mod `2^{|u|₁+1}` (Terras/Everett 2-adic
 separation), so the cycle maximum is `≳ 2^{1.58 g}`, while height `≤ h` and the minimum bound
 `m ≤ 2^171 L^59` bound it above (`NormLevels` `cycle_levels_max`). Real cycles are not known to have
-bounded height, so nothing is excluded unconditionally. NOT a milestone, NOT
-`no_nontrivial_cycles`.
+bounded height, so nothing is excluded unconditionally.
 
 **Scope notes.** (1) The arbitrary-slope feature is UNWITNESSED at word level: the only
 non-vacuity witness (`chr_piece_witness`) uses a piece of the word's own slope `r/A`. At the
@@ -61,8 +60,8 @@ Credit: Mghirbi (Zenodo 21734655: the `t = 1` rotation-numerator lift), Knight, 
 Solomon (one-move framework), Fernández–Ibáñez arXiv 2607.24844; `NormShift` `NormShift.shift_lift`.
 -/
 
-namespace CollatzSearch.NormFactor
-open CollatzSearch.NormGoal CollatzSearch.NormReduce CollatzSearch.NormShift Finset
+namespace Collatz.NormFactor
+open Collatz.NormGoal Collatz.NormReduce Collatz.NormShift Finset
 
 /-! ### T1: repeated factor -/
 
@@ -420,7 +419,7 @@ theorem cycle_chr_pieces_big {m L r k h : ℕ} {v : ℕ → ℕ} (hr : 2 ≤ r) 
 
 end Cycle
 
-/-! ### Non-vacuity (critic fix F1) -/
+/-! ### Non-vacuity -/
 
 set_option maxRecDepth 100000 in
 /-- **Witness with nonzero deviation (fix F1).** For `r = 40903`, `A = 64830` (coprime),
@@ -452,14 +451,14 @@ theorem chr_piece_witness :
     unfold NormGoal.slide
     rw [if_neg (by omega), if_neg (by omega)]
 
-end CollatzSearch.NormFactor
+end Collatz.NormFactor
 
-#print axioms CollatzSearch.NormFactor.rep_factor
-#print axioms CollatzSearch.NormFactor.rep_factor_gap
-#print axioms CollatzSearch.NormFactor.chr_rep
-#print axioms CollatzSearch.NormFactor.chr_piece
-#print axioms CollatzSearch.NormFactor.chr_pieces
-#print axioms CollatzSearch.NormFactor.big_r50
-#print axioms CollatzSearch.NormFactor.cycle_chr_pieces_rot
-#print axioms CollatzSearch.NormFactor.cycle_chr_pieces_big
-#print axioms CollatzSearch.NormFactor.chr_piece_witness
+#print axioms Collatz.NormFactor.rep_factor
+#print axioms Collatz.NormFactor.rep_factor_gap
+#print axioms Collatz.NormFactor.chr_rep
+#print axioms Collatz.NormFactor.chr_piece
+#print axioms Collatz.NormFactor.chr_pieces
+#print axioms Collatz.NormFactor.big_r50
+#print axioms Collatz.NormFactor.cycle_chr_pieces_rot
+#print axioms Collatz.NormFactor.cycle_chr_pieces_big
+#print axioms Collatz.NormFactor.chr_piece_witness

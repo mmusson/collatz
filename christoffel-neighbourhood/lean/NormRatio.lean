@@ -21,14 +21,14 @@ Notation: `P_i = psum v i`, `y_i = T^{P_i}(m)` (the odd points of the cycle),
 * `fold_count_nonvacuous` (T4): the word `(1,3,2,…,2)` (`r' = 7`, `A' = 14`, `h = 1`, `g = 3`)
   satisfies every hypothesis of `NormFold.no_cycle_fold_count` (kernel-checked).
 
-Honest scope: a corollary of `NormFold` plus two elementary lemmas. T1 is classical in spirit
+Scope: a corollary of `NormFold` plus two elementary lemmas. T1 is classical in spirit
 (Halbeisen–Hungerbühler, Eliahou-type window estimates); T2 is elementary. No unconditional
-bound `M/m0 = O(r^c)` is known, so T3 stays conditional on the max/min ratio. Not a milestone.
+bound `M/m0 = O(r^c)` is known, so T3 stays conditional on the max/min ratio.
 Prior art: Solomon (cofactor `S_d`), Knight, Lebel, Mghirbi.
 -/
 
-namespace CollatzSearch.NormRatio
-open CollatzSearch.NormGoal CollatzSearch.NormFold CollatzSearch.NormBridge CollatzProof Finset
+namespace Collatz.NormRatio
+open Collatz.NormGoal Collatz.NormFold Collatz.NormBridge CollatzProof Finset
 
 /-- **T0 (prefix equation).** Under the cycle-word hypotheses, for `i ≤ r`:
 `2^{P_i} · T^{P_i}(m) = 3^i m + B_i(v)`. -/
@@ -483,14 +483,14 @@ theorem fold_count_nonvacuous :
   exact no_cycle_fold_count 1 7 14 1 3 le_rfl (by norm_num) hq (by norm_num) wv hv1 hsum hbal
     (by norm_num) hx (by rw [wv_card]; norm_num) (by rw [wv_card]; norm_num)
 
-end CollatzSearch.NormRatio
+end Collatz.NormRatio
 
-#print axioms CollatzSearch.NormRatio.cycle_balanced
-#print axioms CollatzSearch.NormRatio.periodic_cycle_shorter
-#print axioms CollatzSearch.NormRatio.cycle_fold_ratio
-#print axioms CollatzSearch.NormRatio.cycle_periodic_or_far
-#print axioms CollatzSearch.NormRatio.cycle_fold_ratio'
-#print axioms CollatzSearch.NormRatio.cycle_balanced_fold
-#print axioms CollatzSearch.NormRatio.prefix_eq
-#print axioms CollatzSearch.NormRatio.witness_ratio
-#print axioms CollatzSearch.NormRatio.fold_count_nonvacuous
+#print axioms Collatz.NormRatio.cycle_balanced
+#print axioms Collatz.NormRatio.periodic_cycle_shorter
+#print axioms Collatz.NormRatio.cycle_fold_ratio
+#print axioms Collatz.NormRatio.cycle_periodic_or_far
+#print axioms Collatz.NormRatio.cycle_fold_ratio'
+#print axioms Collatz.NormRatio.cycle_balanced_fold
+#print axioms Collatz.NormRatio.prefix_eq
+#print axioms Collatz.NormRatio.witness_ratio
+#print axioms Collatz.NormRatio.fold_count_nonvacuous

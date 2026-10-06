@@ -21,15 +21,18 @@ is what any future progress has to remove.
   on odds.
 * `CollatzProof.T` — the Terras accelerated map, which folds the forced halving
   after an odd step into that step: `n ↦ (3n + 1) / 2` on odds.
+* `CollatzProof.S` — the Syracuse map on odd numbers, which removes *all* factors
+  of two after each `3n + 1` step: `n ↦ (3n + 1) / 2^{v₂(3n + 1)}`, computed via
+  `CollatzProof.oddPart`.
 
 ## Main statements
 
 * `CollatzProof.collatz_conjecture` — every positive integer reaches `1` under
   iteration of `C`.  **Open**, and the only hole in the whole development.
 
-The Terras form of the conjecture is *not* stated here.  It is a corollary, and
-lives in `CollatzProof.Equivalence` next to the proof that the two formulations
-agree.
+The Terras and Syracuse forms of the conjecture are *not* stated here.  They are
+corollaries, and live in `CollatzProof.Equivalence` next to the proofs that the
+formulations agree.
 
 ## References
 
@@ -47,6 +50,43 @@ def C (n : ℕ) : ℕ := if n % 2 = 0 then n / 2 else 3 * n + 1
 `n` is odd.  The extra halving is free, since `3n + 1` is even for odd `n`.
 This is the map for which the stopping time question is usually posed. -/
 def T (n : ℕ) : ℕ := if n % 2 = 0 then n / 2 else (3 * n + 1) / 2
+
+/-- Repeated halving with explicit fuel: strip factors of two from `x` while
+`x` is even and positive, at most `k` times. -/
+def oddPartAux : ℕ → ℕ → ℕ
+  | 0, x => x
+  | k + 1, x => if x % 2 = 0 ∧ 0 < x then oddPartAux k (x / 2) else x
+
+/-- The odd part of `x`: `x / 2^{v₂(x)}` for `x > 0`, and `0` for `x = 0`. Fuel `x`
+suffices, since each halving at least halves a positive number. -/
+def oddPart (x : ℕ) : ℕ := oddPartAux x x
+
+/-- **The Syracuse map** `n ↦ (3n + 1) / 2^{v₂(3n + 1)}`, intended for odd `n`. -/
+def S (n : ℕ) : ℕ := oddPart (3 * n + 1)
+
+section Sanity
+
+/-- `27 ↦ 41`: `3·27 + 1 = 82 = 2·41`. -/
+example : S 27 = 41 := by decide
+
+/-- `5 ↦ 1`: `16 = 2^4`, so the whole power of two is stripped in one step. -/
+example : S 5 = 1 := by decide
+
+/-- `1` is a fixed point of `S`: `3·1 + 1 = 4 = 2^2`. The trivial cycle has length
+one here, against two for `T` and three for `C`. -/
+example : S 1 = 1 := by decide
+
+/-- `27 ↦ 41`: `3·27 + 1 = 82 = 2·41`. -/
+example : S 27 = 41 := by decide
+
+/-- `5 ↦ 1`: `16 = 2^4`, so the whole power of two is stripped in one step. -/
+example : S 5 = 1 := by decide
+
+/-- `1` is a fixed point of `S`: `3·1 + 1 = 4 = 2^2`. The trivial cycle has length
+one here, against two for `T` and three for `C`. -/
+example : S 1 = 1 := by decide
+
+end Sanity
 
 section Sanity
 

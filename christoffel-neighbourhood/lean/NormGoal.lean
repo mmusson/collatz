@@ -2,7 +2,7 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Basic
 import Mathlib.Data.Nat.GCD.Basic
 
 /-!
-# Main goal: no cycle is one move away from a Christoffel word
+# Main statement: no cycle is one move away from a Christoffel word
 
 Valuation words `w : ℕ → ℕ` of length `r` (entries `w 0, …, w (r-1)`, the 2-adic valuations
 `a_j` of the accelerated odd map `n ↦ (3n+1)/2^{a}`), partial sums `A_j = Σ_{i<j} w i`, and the
@@ -10,7 +10,7 @@ Böhm–Sontacchi numerator `B = Σ_{j<r} 3^{r-1-j} 2^{A_j}`. A positive cycle w
 `A = A_r` satisfies `n · (2^A - 3^r) = B`, so `(2^A - 3^r) ∣ B`.
 
 `chr r A` is the lower Christoffel word of slope `A/r`. Knight (2026) excludes it (for `q > 1`);
-the main goal excludes every word obtained from it by ONE cyclic adjacent swap or ONE slide
+the main statement excludes every word obtained from it by ONE cyclic adjacent swap or ONE slide
 (move one unit of valuation to a cyclic neighbour). Divisibility is rotation-invariant, so
 rotations are covered too.
 
@@ -21,7 +21,7 @@ Suggested route (see experiments/NORM_CRITERION.md): with `θ = 2^{1/r}`, `gcd(A
 DO NOT EDIT THE STATEMENTS BELOW. The theorem is proved by `sorry` until the search closes it.
 -/
 
-namespace CollatzSearch.NormGoal
+namespace Collatz.NormGoal
 
 open Finset
 
@@ -48,7 +48,7 @@ def OneMove (r : ℕ) (w v : ℕ → ℕ) : Prop :=
   (∃ j < r, v = cswap r w j) ∨
   (∃ j < r, 2 ≤ w j ∧ ∃ k, (k = (j + 1) % r ∨ (k + 1) % r = j) ∧ k < r ∧ k ≠ j ∧ v = slide w j k)
 
-/-- **MAIN GOAL.** For coprime `r ≥ 2`, `A` with `2^A - 3^r > 1`, no word one
+/-- **Main statement.** For coprime `r ≥ 2`, `A` with `2^A - 3^r > 1`, no word one
 move away from the Christoffel word `chr r A` satisfies the cycle divisibility
 `(2^A - 3^r) ∣ B`. -/
 theorem no_cycle_one_move_christoffel (r A : ℕ) (hr : 2 ≤ r) (hcop : Nat.Coprime A r)
@@ -56,4 +56,4 @@ theorem no_cycle_one_move_christoffel (r A : ℕ) (hr : 2 ≤ r) (hcop : Nat.Cop
     ¬ (2 ^ A - 3 ^ r) ∣ Bnum r v := by
   sorry
 
-end CollatzSearch.NormGoal
+end Collatz.NormGoal

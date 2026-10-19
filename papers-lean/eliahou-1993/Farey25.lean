@@ -1,26 +1,40 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import Sieve25
 import Collatz.MilestoneInstances
 
 /-!
 # Farey decomposition at the verified range `2^25`
 
-With `min_orbit_ge_25` the Eliahou-type Farey pair improves from `18403/11611` (at `2^24`) to
-`1054/665 < log₂3 < log₂(3 + 2^{-25}) < 21565/13606` (`21565·665 − 1054·13606 = 1`; the mediant
-`22619/14271` lies inside the interval, so this is the Farey pair). Consequences: the odd minimum
-`m ≥ 2^25` of a nontrivial cycle has `S_L(m) = 665a + 13606b`, `L = 1054a + 21565b`, `a, b ≥ 1`,
-hence `CycleLengthAtLeast 36890` (`36890 = 1054 + 21565 + 665 + 13606`).
+With the verified range `min_orbit_ge_25`, the Farey pair of Eliahou's argument improves from
+`18403/11611` at `2^24` to `1054/665 < log₂ 3 < log₂ (3 + 2^{-25}) < 21565/13606` (with
+`21565 · 665 − 1054 · 13606 = 1`; the mediant `22619/14271` lies inside the interval). The odd
+minimum `m ≥ 2^25` of a nontrivial cycle has `oddSteps L m = 665a + 13606b` and
+`L = 1054a + 21565b` with `a, b ≥ 1`, hence every nontrivial `C`-cycle has period at least
+`36890 = 1054 + 21565 + 665 + 13606`.
 
-Classical (Eliahou 1993 method at a tiny verified range); far below published bounds.
+## Main results
+
+- `farey25_up`: `log₂ (3 + 2^{-25}) < 21565/13606`.
+- `cycleLengthAtLeast_36890`: every nontrivial positive `C`-cycle has period at least `36890`.
+
+## References
+
+- S. Eliahou, *The 3x+1 problem: new lower bounds on nontrivial cycle lengths*, Discrete Math.
+  118 (1993), 45–56.
 -/
 
 namespace Collatz
+
 open CollatzProof
 
-/-- `log₂(3 + 2^{-25}) < 21565/13606` (kernel, `decide +kernel`). -/
+/-- `log₂ (3 + 2^{-25}) < 21565/13606` (checked by the kernel). -/
 theorem farey25_up : (3*2^25+1)^13606 < 2^21565 * (2^25)^13606 := by decide +kernel
 
-/-- **`CycleLengthAtLeast 36890`.** Every nontrivial positive `C`-cycle has period
-`ℓ ≥ 36890 = (1054+21565) + (665+13606)`. -/
+/-- Every nontrivial positive `C`-cycle has period `ℓ ≥ 36890 = (1054 + 21565) + (665 + 13606)`. -/
 theorem cycleLengthAtLeast_36890 : CycleLengthAtLeast 36890 := by
   intro n ℓ hn hℓ h h1 h2 h4
   obtain ⟨m, hm0, hodd, hmℓ, hmin, hmn, t, ht⟩ := exists_min_odd_T_cycle_aux' n hn ℓ hℓ h
@@ -35,6 +49,3 @@ theorem cycleLengthAtLeast_36890 : CycleLengthAtLeast 36890 := by
   nlinarith
 
 end Collatz
-
-#print axioms Collatz.farey25_up
-#print axioms Collatz.cycleLengthAtLeast_36890

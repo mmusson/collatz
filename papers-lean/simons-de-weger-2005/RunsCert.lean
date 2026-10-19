@@ -1,40 +1,57 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import Runs
 
 /-!
-# Run certificate: cycles with few odd runs in a finite range
+# Cycles with few odd runs: a kernel certificate
 
-Combines the rotation-free run inequality `cycle_run_ineq` (`2^L X^r ≤ 3^k (X+1)^r` when every
-cycle point is `≥ X`) with the verified lower bound `X = 2^17` (`cycle_points_ge`) and a kernel
-certificate.
+In this file we combine the cycle run inequality `cycle_run_ineq` (`2^L X^r ≤ 3^k (X+1)^r` when
+every cycle point is at least `X`) with the verified lower bound `X = 2^17` on cycle points and a
+kernel-checked certificate. The result is that every point `x ∉ {1, 2}` of a `T`-cycle has at
+least `10000` odd steps or at least `54` odd runs in the chosen window. This is a finite instance
+of the Simons–de Weger method with a small verified range.
 
-* `runOKX X R k` (generic in `X`, `R`; `L0 = candL k`): `2^{L0-1} ≤ 3^k` and
-  `3^k (X+1)^R < 2^{L0} X^R`.  `runOKX_sound` shows that it refutes every `L` with `3^k < 2^L` and
-  every `r ≤ R` obeying the run inequality; soundness never uses the accuracy of `candL`.
-  A future verified lower bound `X0` on cycle elements can be plugged into `X`.
-* `runRange_971_10000`: `runOKX (2^17) 53 k` holds for all `971 ≤ k < 10000` (`decide +kernel`,
-  no `native_decide`, no `set_option`).
-* **`runs_or_oddSteps_of_cycle`: every point `x ∉ {1,2}` of a `T`-cycle has
-  `S_L(x) ≥ 10000` or `oddRuns L x ≥ 54`.**  Rotation-free.  (`oddRuns L x` is the number of
-  maximal cyclic odd runs only when `L` is the minimal period and the cycle contains both
-  parities; for `L = t·p`, `oddRuns_mul` in `RunsRotate.lean` gives `t` times that number.)
-* `nontrivial_C_cycle_runs`: the same, stated for `C`-cycles.
+The certificate `runOKX X R k` is generic in `X` and `R`, so a larger verified lower bound on cycle
+points can be substituted for `2^17`. At `X = 2^17` the certificate fails at `R = 54` (for
+`k = 9616`), and it degrades near the convergent denominators `15601, 47468, 79335` of `log₂ 3`.
 
-The certificate discriminates: `runOKX (2^17) 54 9616 = false`.  At `X = 2^17` it degrades near
-the convergent denominators `15601, 47468, 79335` of `log₂ 3`, so pushing `K` much past `10^4`
-at this `X` is a dead end; only a larger verified `X0` helps.
+## Main definitions
 
-A finite formal instance of the Simons–de Weger (2005) method with a small `X0`.
+- `runOKX X R k`: with `L0 = candL k`, the two inequalities `2^{L0-1} ≤ 3^k` and
+  `3^k (X+1)^R < 2^{L0} X^R`.
+- `runRange lo n`, `RunRange lo hi`: the check `runOKX (2^17) 53 k` over a range of `k`.
+
+## Main results
+
+- `runOKX_sound`: `runOKX X R k` refutes every `L` with `3^k < 2^L` and every `r ≤ R` obeying the
+  run inequality; soundness does not depend on the accuracy of `candL`.
+- `runRange_971_10000`: `runOKX (2^17) 53 k` holds for all `971 ≤ k < 10000`.
+- `cycle_points_ge`: every point of a `T`-cycle through `x ∉ {1, 2}` is at least `2^17`.
+- `runs_or_oddSteps_of_cycle`: every point `x ∉ {1, 2}` of a `T`-cycle of length `L` has
+  `S_L(x) ≥ 10000` or `oddRuns L x ≥ 54`.
+- `nontrivial_C_cycle_runs`: the same, stated for cycles of the Collatz map `C`.
+
+## References
+
+- J. L. Simons, B. M. M. de Weger, *Theoretical and computational bounds for m-cycles of the
+  3n+1-problem*, Acta Arith. 117 (2005), 51–70.
 -/
 
 namespace Collatz
 open CollatzProof
 
+/-! ### The certificate and its soundness -/
+
 /-- Kernel certificate: with `L0 = candL k`, `2^{L0-1} ≤ 3^k` and `3^k (X+1)^R < 2^{L0} X^R`. -/
 def runOKX (X R k : ℕ) : Bool :=
-  Nat.ble (2 ^ (candL k - 1)) (3 ^ k) && Nat.ble (3 ^ k * (X+1) ^ R + 1) (2 ^ (candL k) * X ^ R)
+  Nat.ble (2 ^ (candL k - 1)) (3 ^ k) &&
+    Nat.ble (3 ^ k * (X+1) ^ R + 1) (2 ^ (candL k) * X ^ R)
 
-/-- Soundness (independent of `candL` accuracy): if `r ≤ R`, `3^k < 2^L`,
-`2^L X^r ≤ 3^k (X+1)^r` and `runOKX X R k`, contradiction. -/
+/-- Soundness of the certificate, independent of the accuracy of `candL`: if `r ≤ R`,
+`3^k < 2^L`, `2^L X^r ≤ 3^k (X+1)^r` and `runOKX X R k` holds, then we have a contradiction. -/
 theorem runOKX_sound {X R k L r : ℕ} (hr : r ≤ R) (hL : 3^k < 2^L)
     (h : 2^L * X^r ≤ 3^k * (X+1)^r) (hc : runOKX X R k = true) : False := by
   simp only [runOKX, Bool.and_eq_true, Nat.ble_eq] at hc
@@ -55,6 +72,8 @@ theorem runOKX_sound {X R k L r : ℕ} (hr : r ≤ R) (hL : 3^k < 2^L)
     rw [← mul_assoc]; exact Nat.mul_le_mul_left _ hs
   omega
 
+/-! ### Checking a range of `k` -/
+
 /-- `runRange lo n` checks `runOKX (2^17) 53 k` for `lo ≤ k < lo + n`. -/
 def runRange (lo : ℕ) : ℕ → Bool
   | 0 => true
@@ -73,13 +92,13 @@ theorem runRange_sound (lo : ℕ) : ∀ n, runRange lo n = true → ∀ k, lo �
     · have : k = lo + n := by omega
       subst this; exact h.2
 
-/-- `RunRange lo hi`: `runOKX (2^17) 53 k` for all `lo ≤ k < hi`. -/
+/-- `RunRange lo hi`: `runOKX (2^17) 53 k` holds for all `lo ≤ k < hi`. -/
 def RunRange (lo hi : ℕ) : Prop := ∀ k, lo ≤ k → k < hi → runOKX (2^17) 53 k = true
 
-theorem runRange_nil (hi : ℕ) : RunRange hi hi := fun k h1 h2 => absurd h2 (by omega)
+theorem runRange_nil (hi : ℕ) : RunRange hi hi := fun k h1 h2 ↦ absurd h2 (by omega)
 
 theorem runRange_cons {lo n hi : ℕ} (h : runRange lo n = true) (hr : RunRange (lo + n) hi) :
-    RunRange lo hi := fun k h1 h2 => by
+    RunRange lo hi := fun k h1 h2 ↦ by
   rcases Nat.lt_or_ge k (lo + n) with hk | hk
   · exact runRange_sound lo n h k h1 hk
   · exact hr k hk h2
@@ -101,7 +120,9 @@ theorem runRange_971_10000 : ∀ k, 971 ≤ k → k < 10000 → runOKX (2^17) 53
   runRange_cons runBlock_6 <| runRange_cons runBlock_7 <| runRange_cons runBlock_8 <|
   runRange_nil 10000
 
-/-- Every point of a `T`-cycle through `x > 0`, `x ∉ {1,2}`, is `≥ 2^17`. -/
+/-! ### Cycles with few odd runs -/
+
+/-- Every point of a `T`-cycle through `x > 0`, `x ∉ {1, 2}`, is at least `2^17`. -/
 theorem cycle_points_ge {x L : ℕ} (hx : 0 < x) (hL : 0 < L) (hc : T^[L] x = x)
     (h1 : x ≠ 1) (h2 : x ≠ 2) : ∀ i, 2^17 ≤ T^[i] x := by
   obtain ⟨j0, hj0, hmin, hper⟩ := exists_cycle_min hL hc
@@ -120,8 +141,8 @@ theorem cycle_points_ge {x L : ℕ} (hx : 0 < x) (hL : 0 < L) (hc : T^[L] x = x)
   rw [this]
   exact le_trans hM17 (hmin _)
 
-/-- **Rotation-free run exclusion.** A point `x > 0`, `x ∉ {1,2}`, of a `T`-cycle of length
-`L > 0` has `S_L(x) ≥ 10000` or `oddRuns L x ≥ 54`. -/
+/-- A point `x > 0`, `x ∉ {1, 2}`, of a `T`-cycle of length `L > 0` has `S_L(x) ≥ 10000` or
+`oddRuns L x ≥ 54`. -/
 theorem runs_or_oddSteps_of_cycle {x L : ℕ} (hx : 0 < x) (hL : 0 < L) (hc : T^[L] x = x)
     (h1 : x ≠ 1) (h2 : x ≠ 2) : 10000 ≤ oddSteps L x ∨ 54 ≤ oddRuns L x := by
   have hineq := cycle_run_ineq hx hc (cycle_points_ge hx hL hc h1 h2)
@@ -131,18 +152,15 @@ theorem runs_or_oddSteps_of_cycle {x L : ℕ} (hx : 0 < x) (hL : 0 < L) (hc : T^
   push Not at hh
   exact runOKX_sound (R := 53) (by omega) h3 hineq (runRange_971_10000 _ h971 hh.1)
 
-/-- A nontrivial `T`-cycle with at most `53` odd runs (in particular a 1- or 2-run cycle,
-in any phase) has `S_L(x) ≥ 10000`. -/
+/-- A nontrivial `T`-cycle with at most `53` odd runs in the window (in particular a cycle with
+one or two odd runs) has `S_L(x) ≥ 10000`. -/
 theorem oddSteps_ge_of_few_runs {x L : ℕ} (hx : 0 < x) (hL : 0 < L) (hc : T^[L] x = x)
     (h1 : x ≠ 1) (h2 : x ≠ 2) (hr : oddRuns L x ≤ 53) : 10000 ≤ oddSteps L x := by
   have := runs_or_oddSteps_of_cycle hx hL hc h1 h2; omega
 
-/-- Sanity: the certificate fails at `R = 54`, `k = 9616`. -/
-example : runOKX (2^17) 54 9616 = false := by decide +kernel
-
-/-- Corollary for `C`-cycles: a positive `C`-cycle point `n ∉ {1,2,4}` yields an odd `m`,
-`2^17 ≤ m ≤ n`, on a `T`-cycle of length `L > 0`, with `S_L(m) ≥ 971` and
-(`S_L(m) ≥ 10000` or `oddRuns L m ≥ 54`). -/
+/-- A positive `C`-cycle point `n ∉ {1, 2, 4}` yields an odd `m` with `2^17 ≤ m ≤ n` on a
+`T`-cycle of length `L > 0`, with `S_L(m) ≥ 971` and either `S_L(m) ≥ 10000` or
+`oddRuns L m ≥ 54`. -/
 theorem nontrivial_C_cycle_runs (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
     (h1 : n ≠ 1) (h2 : n ≠ 2) (h4 : n ≠ 4) :
     ∃ m L, m % 2 = 1 ∧ 2^17 ≤ m ∧ m ≤ n ∧ 0 < L ∧ T^[L] m = m ∧ 971 ≤ oddSteps L m ∧
@@ -152,11 +170,9 @@ theorem nontrivial_C_cycle_runs (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < �
   exact ⟨m, L, a1, a2, a3, a4, a5, a6,
     runs_or_oddSteps_of_cycle (by omega) a4 a5 (by omega) (by omega)⟩
 
-end Collatz
+/-! ### Examples -/
 
-#print axioms Collatz.runOKX_sound
-#print axioms Collatz.runRange_971_10000
-#print axioms Collatz.cycle_points_ge
-#print axioms Collatz.runs_or_oddSteps_of_cycle
-#print axioms Collatz.oddSteps_ge_of_few_runs
-#print axioms Collatz.nontrivial_C_cycle_runs
+-- The certificate fails at `R = 54`, `k = 9616`.
+example : runOKX (2^17) 54 9616 = false := by decide +kernel
+
+end Collatz

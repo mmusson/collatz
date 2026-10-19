@@ -1,40 +1,61 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import RunsBridge
 import Collatz.Diophantine
 import Mathlib.Data.Nat.Factorization.Basic
 import Mathlib.Tactic
 
 /-!
-# Run growth and the minimum bound (Simons–de Weger m-cycle machinery, pure ℕ)
+# Run growth and the Simons–de Weger upper bound
 
-**CLASSICAL.** This is the engine of the Simons–de Weger (2005) upper bound for the number of
-odd steps of an `m`-cycle (cf. Hercher 2023, arXiv:2201.00406, Lemma 14 and the bound
-`K < 1.4784·m·δ^m`), in an exact pure-`ℕ` form with the exponent `8/5 ≥ log₂ 3` in place of
-`δ = log₂ 3`.
+In this file we prove the engine of the Simons–de Weger upper bound for the number of odd steps
+of a cycle with a given number of odd runs, in an exact form over `ℕ`. The exponent `8/5 ≥ log₂ 3`
+replaces `log₂ 3`: consecutive run starts `x, x'` satisfy `(x'+1)^5 ≤ (x+1)^8`, and a run of length
+`k` starting at `x` has `2^k ∣ x + 1`. Summing over the runs gives
+`S_N(x) ≤ log₂(x+1) · ∑_{j<ρ} (8/5)^j` for a window with `ρ` runs.
 
-* `W r = ∑_{j<r} 8^j 5^{r-1-j}` (`W 0 = 0`, `W (r+1) = 5^r + 8 W r`).
-* `odd_run_iter`, `even_run_iter`: explicit form of `T` along an odd / even stretch.
-* `runs_growth`: if `x` is odd, `T^N x` odd, `T^{N-1} x` even (the window ends just after an
-  even→odd transition) and `(x+1)^{5^e} ≤ 2^c`, then
-  `5^{e+ρ} S_N(x) ≤ 5 c W(ρ)`, `ρ = oddRuns N x`.  With `e = 0`:
-  `S_N(x) ≤ log₂(x+1) · ∑_{j<ρ} (8/5)^j`.  Engine: consecutive run starts satisfy
-  `(x'+1)^5 ≤ (x+1)^8`, and a run of length `k` from `x` has `2^k ∣ x+1`.
-* `min_add_one_le`: Bernoulli applied to the run inequality: `2^L X^r ≤ 3^K (X+1)^r`,
-  `3^K < 2^L`, `2^L ≤ 2^s (2^L − 3^K)` ⇒ `X + 1 ≤ r 2^s`.
-* `pred_even_of_min`: the point before an odd cycle minimum is even.
-* `runs_bound_of_min`: for the odd minimum `m` of a `T`-cycle (window `L`, `k = S_L(m)`,
-  `r = oddRuns L m ≤ 2^t`) with gap exponent `s`: `5^r k ≤ 5 (s+t) W(r)`.
+Combined with the cycle run inequality and Bernoulli's inequality, this bounds the number of odd
+steps `k` of a cycle with `r` odd runs through its odd minimum: `k ≤ (s+t) ∑_{j<r} (8/5)^j` when
+`r ≤ 2^t` and `2^L ≤ 2^s (2^L − 3^k)`. Here `oddRuns L m` counts even→odd transitions in the
+chosen window `L`; if `L` is `t` times the minimal period, it is `t` times the per-lap count.
 
-`oddRuns L m` counts even→odd transitions in the chosen window `L`; if `L` is `t` times the
-minimal period, it is `t` times the per-lap count (`oddRuns_mul`).
+## Main definitions
+
+- `W r`: the sum `∑_{j<r} 8^j 5^{r-1-j}`, defined by `W 0 = 0`, `W (r+1) = 5^r + 8 W r`.
+
+## Main results
+
+- `odd_run_iter`, `even_run_iter`: the explicit form of `T` along an odd and an even stretch.
+- `runs_growth`: if `x` is odd, `T^N x` is odd, `T^{N-1} x` is even and `(x+1)^{5^e} ≤ 2^c`, then
+  `5^{e+ρ} S_N(x) ≤ 5 c W(ρ)` with `ρ = oddRuns N x`.
+- `min_add_one_le`: if `r ≥ 1`, `2^L X^r ≤ 3^K (X+1)^r`, `3^K < 2^L` and
+  `2^L ≤ 2^s (2^L − 3^K)`, then `X + 1 ≤ r 2^s`.
+- `pred_even_of_min`: the point before an odd cycle minimum is even.
+- `runs_bound_of_min`: for the odd minimum `m` of a `T`-cycle of length `L` with `k = S_L(m)`,
+  `r = oddRuns L m ≤ 2^t` and gap exponent `s`, `5^r k ≤ 5 (s+t) W(r)`.
+
+## References
+
+- J. L. Simons, B. M. M. de Weger, *Theoretical and computational bounds for m-cycles of the
+  3n+1-problem*, Acta Arith. 117 (2005), 51–70.
+- C. Hercher, *There are no Collatz m-cycles with m ≤ 91*, J. Integer Seq. 26 (2023),
+  Art. 23.3.5 (Lemma 14).
 -/
 
 namespace Collatz
 open CollatzProof
 
+/-! ### The weight sum `W` -/
+
 /-- `W 0 = 0`, `W (r+1) = 5^r + 8 W r`, so `W r = ∑_{j<r} 8^j 5^{r-1-j}`. -/
 def W : ℕ → ℕ
   | 0 => 0
   | r+1 => 5^r + 8 * W r
+
+/-! ### Odd and even stretches -/
 
 /-- Odd stretch: if `x + 1 = 2^k a`, then for `i + j = k`, `T^j x + 1 = 3^j 2^i a`
 (so `T^j x` is odd for `j < k` when `a` is odd, and `T^k x = 3^k a − 1`). -/
@@ -42,7 +63,9 @@ theorem odd_run_iter {x k a : ℕ} (hxa : x + 1 = 2^k * a) :
     ∀ j i, i + j = k → T^[j] x + 1 = 3^j * 2^i * a := by
   intro j
   induction j with
-  | zero => intro i hi; simp only [Function.iterate_zero, id, pow_zero, one_mul]; rw [hxa]; congr 2; omega
+  | zero =>
+    intro i hi
+    simp only [Function.iterate_zero, id, pow_zero, one_mul]; rw [hxa]; congr 2; omega
   | succ j ih =>
     intro i hi
     have h := ih (i+1) (by omega)
@@ -72,8 +95,10 @@ theorem even_run_iter {z l b : ℕ} (hz : z = 2^l * b) : ∀ i, i ≤ l → T^[i
 theorem runStart_of_next_even {y : ℕ} (h : T y % 2 = 0) : runStart y = 0 := by
   unfold runStart; simp [h]
 
-/-- **Run growth (classical, Simons–de Weger / Hercher Lemma 14 in pure ℕ form).**
-If `x` is odd, `N ≥ 1`, `T^N x` is odd, `T^{N−1} x` is even and `(x+1)^{5^e} ≤ 2^c`, then
+/-! ### Run growth -/
+
+/-- **Run growth** (Simons–de Weger; Hercher, Lemma 14, in exact form over `ℕ`). If `x` is odd,
+`N ≥ 1`, `T^N x` is odd, `T^{N−1} x` is even and `(x+1)^{5^e} ≤ 2^c`, then
 `5^{e+ρ}·S_N(x) ≤ 5·c·W(ρ)` with `ρ = oddRuns N x`. -/
 theorem runs_growth : ∀ (N x e c : ℕ), x % 2 = 1 → 0 < N → (T^[N] x) % 2 = 1 →
     (T^[N-1] x) % 2 = 0 → (x+1)^(5^e) ≤ 2^c →
@@ -129,7 +154,8 @@ theorem runs_growth : ∀ (N x e c : ℕ), x % 2 = 1 → 0 < N → (T^[N] x) % 2
     rw [oddRuns_add]
     have h1 : oddRuns k x = 0 := by
       rw [oddRuns_eq_sum]
-      exact Finset.sum_eq_zero (fun i hi => runStart_of_odd (hodd i (Finset.mem_range.mp hi)))
+      exact Finset.sum_eq_zero
+        (fun i hi ↦ runStart_of_odd (hodd i (Finset.mem_range.mp hi)))
     have h2 : oddRuns l z0 = 1 := by
       obtain ⟨l', rfl⟩ : ∃ l', l = l' + 1 := ⟨l-1, by omega⟩
       rw [oddRuns_add, oddRuns_one]
@@ -222,8 +248,10 @@ theorem runs_growth : ∀ (N x e c : ℕ), x % 2 = 1 → 0 < N → (T^[N] x) % 2
       _ ≤ 5 * 5^ρ * c + 5 * (8 * c) * W ρ := Nat.add_le_add h5 hIH
       _ = 5 * c * (5^ρ + 8 * W ρ) := by ring
 
-/-- Minimum bound (Bernoulli on the run inequality): if `r ≥ 1`, `2^L X^r ≤ 3^K (X+1)^r`,
-`3^K < 2^L` and `2^L ≤ 2^s (2^L − 3^K)`, then `X + 1 ≤ r·2^s`. -/
+/-! ### The bound through the cycle minimum -/
+
+/-- Minimum bound (Bernoulli's inequality applied to the run inequality): if `r ≥ 1`,
+`2^L X^r ≤ 3^K (X+1)^r`, `3^K < 2^L` and `2^L ≤ 2^s (2^L − 3^K)`, then `X + 1 ≤ r·2^s`. -/
 theorem min_add_one_le {X K L r s : ℕ} (hr : 1 ≤ r) (h : 2^L * X^r ≤ 3^K * (X+1)^r)
     (h3 : 3^K < 2^L) (hgap : 2^L ≤ 2^s * (2^L - 3^K)) : X + 1 ≤ r * 2^s := by
   rcases Nat.lt_or_ge (X+1) r with hlt | hge
@@ -255,8 +283,8 @@ theorem min_add_one_le {X K L r s : ℕ} (hr : 1 ≤ r) (h : 2^L * X^r ≤ 3^K *
         _ = D * (r * 2^s) := by ring
     exact Nat.le_of_mul_le_mul_left c4 hD0
 
-/-- The predecessor on the cycle of an odd cycle minimum is even:
-`x` odd, `T^L x = x` (`L > 0`), `x ≤ T^j x ∀ j` ⇒ `T^{L−1} x` even. -/
+/-- The predecessor on the cycle of an odd cycle minimum is even: if `x` is odd, `T^L x = x` with
+`L > 0` and `x ≤ T^j x` for all `j`, then `T^{L−1} x` is even. -/
 theorem pred_even_of_min {x L : ℕ} (hodd : x % 2 = 1) (hL : 0 < L) (hc : T^[L] x = x)
     (hmin : ∀ j, x ≤ T^[j] x) : (T^[L-1] x) % 2 = 0 := by
   have hT : T (T^[L-1] x) = x := by
@@ -268,7 +296,7 @@ theorem pred_even_of_min {x L : ℕ} (hodd : x % 2 = 1) (hL : 0 < L) (hc : T^[L]
   rw [T_of_odd hz1] at hT
   omega
 
-/-- **Simons–de Weger upper bound (pure ℕ form, classical).** For the odd minimum `m` of a
+/-- **Simons–de Weger upper bound** (exact form over `ℕ`). For the odd minimum `m` of a
 `T`-cycle of length `L > 0` with `k = S_L(m)`, `3^k < 2^L`, gap `2^L ≤ 2^s (2^L − 3^k)` and
 `r = oddRuns L m ≤ 2^t`: `5^r k ≤ 5 (s+t) W(r)`, i.e. `k ≤ (s+t) ∑_{j<r} (8/5)^j`. -/
 theorem runs_bound_of_min {m L s t : ℕ} (hodd : m % 2 = 1) (hL : 0 < L) (hc : T^[L] m = m)
@@ -288,10 +316,3 @@ theorem runs_bound_of_min {m L s t : ℕ} (hodd : m % 2 = 1) (hL : 0 < L) (hc : 
   simpa using this
 
 end Collatz
-
-#print axioms Collatz.odd_run_iter
-#print axioms Collatz.even_run_iter
-#print axioms Collatz.runs_growth
-#print axioms Collatz.min_add_one_le
-#print axioms Collatz.pred_even_of_min
-#print axioms Collatz.runs_bound_of_min

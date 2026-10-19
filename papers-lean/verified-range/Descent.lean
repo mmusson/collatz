@@ -1,21 +1,44 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import Collatz.Affine
 
 /-!
 # Kernel-verified descent below `2 + 2^17`
 
-Every `m` with `2 ≤ m < 2 + 2^17` has a `T`-iterate strictly below `m`.  This is checked by
-the Lean kernel (`decide +kernel`, no `native_decide`) with a fuel-bounded search
-(`descends`, fuel 200; the maximal `T`-stopping time below `2^17` is 135).  The range is
-split into 32 blocks of `2^12` numbers, each its own declaration (the kernel cost of a
-single `2^17` block was superlinear: 601 s, versus ~1 s per `2^12` block).  Consequence
-`min_orbit_ge`: the minimum `m > 1` of a `T`-orbit satisfies `m ≥ 2^17`.
-Classical: the literature has verified far larger ranges (`> 2^68`).
+In this file we verify, by kernel computation, that every `m` with `2 ≤ m < 2 + 2^17` has a
+`T`-iterate strictly below `m`. The check `descends` follows the orbit with a fuel bound of 200
+steps; the largest `T`-stopping time below `2^17` is 135. The range is split into 32 blocks of
+`2^12` numbers, each checked by `decide +kernel` in its own declaration.
+
+## Main definitions
+
+- `Tb`: a `Bool`-valued copy of `T` suited to kernel evaluation.
+- `descends m f x`: some `T`-iterate of `x`, within `f` steps, is below `m`.
+- `checkBlock fuel lo d`: `descends` holds for every `m ∈ [lo, lo + 2^d)`.
+- `DescRange lo hi`: every `m` with `lo ≤ m < hi` has a `T`-iterate below `m`.
+
+## Main results
+
+- `descends_sound`, `checkBlock_sound`: soundness of the two checks.
+- `descRange_17`: `DescRange 2 (2 + 2^17)`.
+- `min_orbit_ge`: the minimum `m > 1` of a `T`-orbit satisfies `2^17 ≤ m`.
+
+## References
+
+Computer verifications of the Collatz conjecture reach far larger ranges, e.g.
+D. Bařina, *Improved verification limit for the convergence of the Collatz conjecture*,
+J. Supercomput. 81 (2025), Art. 810.
 -/
 
 namespace Collatz
 open CollatzProof
 
-/-- Bool-friendly copy of `T` for kernel evaluation. -/
+/-! ### The descent check -/
+
+/-- A `Bool`-valued copy of `T`, suited to kernel evaluation. -/
 def Tb (x : ℕ) : ℕ := bif x % 2 == 0 then x / 2 else (3 * x + 1) / 2
 
 theorem Tb_eq (x : ℕ) : Tb x = T x := by
@@ -71,6 +94,8 @@ theorem descRange_cons {fuel lo d hi : ℕ} (h : checkBlock fuel lo d = true)
   by_cases hc : m < lo + 2 ^ d
   · exact checkBlock_sound fuel d lo h m h1 hc
   · exact h2 m (by omega) hm
+
+/-! ### Verification below `2 + 2^17` -/
 
 theorem descBlock_0 : checkBlock 200 2 12 = true := by decide +kernel
 theorem descBlock_1 : checkBlock 200 4098 12 = true := by decide +kernel
@@ -149,10 +174,3 @@ theorem min_orbit_ge (m : ℕ) (hm1 : 1 < m) (hmin : ∀ j, m ≤ T^[j] m) : 2 ^
   exact absurd (hmin j) (by omega)
 
 end Collatz
-
-#print axioms Collatz.Tb_eq
-#print axioms Collatz.descends_sound
-#print axioms Collatz.checkBlock_sound
-#print axioms Collatz.descRange_cons
-#print axioms Collatz.descRange_17
-#print axioms Collatz.min_orbit_ge

@@ -1,3 +1,5 @@
+This repo started as motivated way for me to learn (new to me) mathematics under the guise of study the Collatz Conjecture since I tend to learn better in an applied setting. I started accumulating interesting material, for example, a collection of Lean formalized proofs of results in papers by other authors. Nothing earthshaking but I thought I would put it in a public repo since it might be useful to other people.
+
 # Collatz cycles: results and Lean 4 proofs
 
 Lean 4 formalizations of published results on Collatz cycles, and notes with verified proofs. None of this proves the Collatz conjecture.

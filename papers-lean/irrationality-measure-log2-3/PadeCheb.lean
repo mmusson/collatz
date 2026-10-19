@@ -1,24 +1,49 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import FewRunsUncond
 import LcmCheb
 import SignSplitR
 import IrrMeasure
 
 /-!
-# The `V_q` Padé family under the Chebyshev lcm bound ⇒ `IrrMeasHyp 59 (2^167)`
-(known mathematics, re-derived and formalized; literature: Rhin 1987 irrationality measure ≈ 8.616
-for `log 3/log 2` (from memory, unverified; non-explicit threshold); Wu–Wang 2014 ≈ 5.125
-(unverified; that bound is for `log 3`))
+# An explicit irrationality measure of `log 3 / log 2`
 
-* `Dq_le_cheb_int`: `2^{5n+1} D'_n ≤ 2^38 · 21 · 1210104^n` (from `Lc_le_cheb`).
-* `Qn_abs_le_cheb`: `|Q_n| ≤ 2^{45+36n}`, so `|Q_{2m+1}| ≤ 2^{81+72m}`.
-* `sigma_cheb`: `σ^{2m+1} 2^{⌊5m/2⌋} ≤ 1` for `σ = 1210104/3104000` (`32σ^4 < 1`).
-* `form1_sup_cheb`, `form2_sup_cheb`: `|E_j| 2^{⌊5m/2⌋} ≤ 2^41`.
-* `signApproxR_Vq : SignApproxR 72 37 81 41 26 5 2`.
-* `irrMeasHyp_59 : IrrMeasHyp 59 (2^167)`; `linFormHyp_58 : LinFormHyp (2^167) 2 58`.
+In this file we combine the Padé family `Vq_n` (`PadeArithQ`, `PadeAssembly`, `PadeSup`,
+`PadeLower`) with the Chebyshev-type bound `lcm(1, …, N) ≤ 2^37 (7/2)^N` of `LcmCheb`. The
+sharper denominator bound improves the size of `Q_n` to `|Q_n| ≤ 2^{45 + 36n}` and the decay of
+the forms to a factor `2^{-⌊5m/2⌋}` for `n = 2m + 1`, which verifies the rational-rate interface
+`SignApproxR 72 37 81 41 26 5 2` of `SignSplitR`. The transference theorem of `SignSplitR` then
+gives the explicit irrationality measure `|log 3 / log 2 - p/q| ≥ q^{-59}` for all `q ≥ 2^167`.
+
+Rhin's method gives a much smaller exponent, but with a threshold that is not explicit; the point
+here is that every constant is explicit and checked.
+
+## Main results
+
+- `Dq_le_cheb_int`, `Dq_le_cheb`: `2^{5n+1} D'_n ≤ 2^38 · 21 · 1210104^n`.
+- `Qn_abs_le_cheb_int`, `Qn_abs_le_cheb_odd`: `|Q_n| ≤ 2^{45 + 36n}` and
+  `|Q_{2m+1}| ≤ 2^{81 + 72m}`.
+- `sigma_cheb`: `σ^{2m+1} 2^{⌊5m/2⌋} ≤ 1` for `σ = 1210104/3104000`.
+- `form1_sup_cheb`, `form2_sup_cheb`: both forms satisfy `|E_j| · 2^{⌊5m/2⌋} ≤ 2^41`.
+- `signApproxR_Vq`: `SignApproxR 72 37 81 41 26 5 2` for the family `Vq_{2m+1}`.
+- `irrMeasHyp_59`: `IrrMeasHyp 59 (2^167)`.
+- `linFormHyp_58`: `LinFormHyp (2^167) 2 58`, i.e. `2^L ≤ 4 k^58 (2^L - 3^k)` whenever
+  `k ≥ 2^167` and `3^k < 2^L`.
+
+## References
+
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, Séminaire de Théorie des
+  Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
+- M. Hata, *Rational approximations to π and some other numbers*, Acta Arith. 63 (1993), 335–349.
 -/
 
 namespace Collatz
 open PadeArith PadeArithQ PadeSign PadeAssembly PadeLower PadeSup
+
+/-! ### Size of the denominator and of `Q_n` -/
 
 /-- `2^{5n+1} D'_n ≤ 2^38 · 21 · 1210104^n` (Chebyshev bound at `N = 5n+1`). -/
 theorem Dq_le_cheb_int (n : ℕ) : 2^(5*n+1) * Dq n ≤ 2^38 * 21 * 1210104^n := by
@@ -76,6 +101,8 @@ theorem Qn_abs_le_cheb_odd (m : ℕ) : |(Qn (2*m+1):ℝ)| ≤ 2^(81 + 72*m) := b
   have := Qn_abs_le_cheb_int (2*m+1)
   rw [show 45 + 36*(2*m+1) = 81 + 72*m by ring] at this
   exact_mod_cast this
+
+/-! ### Decay of the forms -/
 
 /-- With `σ = 1210104/3104000`: `σ^{2m+1} · 2^{⌊5m/2⌋} ≤ 1` (since `32σ^4 ≤ 1`). -/
 theorem sigma_cheb (m : ℕ) : (1210104/3104000:ℝ)^(2*m+1) * 2^((5*m)/2) ≤ 1 := by
@@ -145,37 +172,26 @@ theorem form2_sup_cheb (m : ℕ) :
     _ ≤ 2^37 * 7 * 1 := by gcongr
     _ ≤ 2^41 := by norm_num
 
-/-- **Unconditional witness** of the rational-rate interface:
-`SignApproxR 72 37 81 41 26 5 2` for `Q_m = Qn(2m+1)`, `P1_m = P1n(2m+1)`,
-`P2_m = P2n(2m+1)` (the `V_q` Padé family with the Chebyshev lcm bound). -/
+/-! ### The irrationality measure -/
+
+/-- The family `Q_m = Qn(2m+1)`, `P1_m = P1n(2m+1)`, `P2_m = P2n(2m+1)` satisfies
+`SignApproxR 72 37 81 41 26 5 2`. -/
 theorem signApproxR_Vq : SignApproxR 72 37 81 41 26 5 2 (fun m => Qn (2*m+1))
     (fun m => P1n (2*m+1)) (fun m => P2n (2*m+1)) := by
   intro m
   exact ⟨Qn_abs_le_cheb_odd m, form1_sup_cheb m, form2_sup_cheb m, form1_nonpos m,
     form2_nonneg m, form1_lower m⟩
 
-/-- **Unconditional explicit irrationality measure:** `IrrMeasHyp 59 (2^167)`, i.e.
-`|log₂3 − p/q| ≥ q^{−59}` for all `q ≥ 2^167` (was `IrrMeasHyp 342 (2^100)`). Known
-mathematics (Rhin 1987 ≈ 8.616, unverified, non-explicit threshold; Wu–Wang 2014 ≈ 5.125,
-unverified, for `log 3`); formalized here. -/
+/-- An explicit irrationality measure: `|log 3 / log 2 − p/q| ≥ q^{−59}` for all natural `p`
+and all `q ≥ 2^167`. -/
 theorem irrMeasHyp_59 : IrrMeasHyp 59 (2^167) := by
   have h := irrMeasHyp_of_signApproxR (r := 44) (t := 14) (Q0 := 2^167)
     (by norm_num) (by norm_num) (by norm_num) signApproxR_Vq (by norm_num) (by norm_num)
     (by rw [← pow_mul]; exact pow_le_pow_right₀ (by norm_num) (by norm_num))
   exact h
 
-/-- **Unconditional** `LinFormHyp (2^167) 2 58`: `k ≥ 2^167`, `3^k < 2^L` ⇒
-`2^L ≤ 4 k^58 (2^L − 3^k)` (was `LinFormHyp (2^100) 2 341`). -/
+/-- If `k ≥ 2^167` and `3^k < 2^L`, then `2^L ≤ 4 k^58 (2^L − 3^k)`. -/
 theorem linFormHyp_58 : LinFormHyp (2^167) 2 58 :=
   linFormHyp_of_irrMeas (μ := 59) (by norm_num) (by norm_num) irrMeasHyp_59
 
 end Collatz
-
-#print axioms Collatz.Dq_le_cheb_int
-#print axioms Collatz.Qn_abs_le_cheb_int
-#print axioms Collatz.sigma_cheb
-#print axioms Collatz.form1_sup_cheb
-#print axioms Collatz.form2_sup_cheb
-#print axioms Collatz.signApproxR_Vq
-#print axioms Collatz.irrMeasHyp_59
-#print axioms Collatz.linFormHyp_58

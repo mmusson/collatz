@@ -1,33 +1,57 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import CycleWord
 import Mathlib.Data.List.Rotate
 import Mathlib.Tactic.LinearCombination
 import Mathlib.Tactic.Ring
 
 /-!
-# Word algebra for `CycleDivStatement` (classical Böhm–Sontacchi algebra)
+# Algebra of the Böhm–Sontacchi word numerator
 
-Notation: `L = |w|`, `c = #true w`, `D(w) = 2^L − 3^c` (ℕ subtraction, used under `3^c < 2^L`).
+In this file we develop the arithmetic of the word numerator `rhoW` and the denominator
+`D(w) = 2^L − 3^c`, without using dynamics. We prove a concatenation law and closed forms for runs,
+show that the divisibility `D(w) ∣ rhoW w` is invariant under rotation and under taking powers
+`w^r`, and identify the corresponding quotients. Consequently `CycleDivStatement` needs to be
+checked only on primitive words, up to rotation.
+
+## Main definitions
+
+- `wpow w r`: the word `w ++ w ++ ⋯ ++ w` with `r` copies.
 
 ## Main results
-* T1 `rhoW_append`: `rhoW (u ++ v) = 3^{#v}·rhoW u + 2^{|u|}·rhoW v`; closed forms
-  `rhoW_replicate_true` (`rhoW 1^k + 2^k = 3^k`), `rhoW_replicate_false`, `rhoW_one_run`
-  (`rhoW (1^k 0^l) + 2^k = 3^k`).
-* T2 `D_odd`, `coprime_two_D`, `coprime_three_D`, `dvd_rhoW_rotate_iff`: `D(w) ∣ rhoW w` is
-  invariant under rotation, proved arithmetically (no dynamics); `rhoW_rotate_div`: the quotient
-  of the `j`-th rotation is `T^[j]` of the quotient.
-* T3 `wpow`, `rhoW_wpow_int` (`R_r·(2^L−3^c) = ρ·(2^{rL}−3^{rc})` over ℤ), `dvd_rhoW_wpow_iff`,
-  `rhoW_wpow_div`: a power `w^r` (`r ≥ 1`) satisfies the divisibility iff `w` does, with the same
-  quotient; so `CycleDivStatement` need only be checked on primitive words up to rotation.
-  `cycle_of_word_pos`: if moreover `c ≥ 1`, the cycle point is positive.
 
-All classical (Böhm–Sontacchi 1978 word algebra): bookkeeping that makes
-`CycleDivStatement` easier to work with.
+- `rhoW_append`: `rhoW (u ++ v) = 3^{#true v} · rhoW u + 2^{|u|} · rhoW v`.
+- `rhoW_replicate_true`, `rhoW_one_run`: `rhoW (1^k) + 2^k = 3^k` and
+  `rhoW (1^k 0^l) + 2^k = 3^k`.
+- `D_odd`, `coprime_two_D`, `coprime_three_D`: `D(w)` is odd, and prime to `3` when `c ≥ 1`.
+- `dvd_rhoW_rotate_iff`: `D(w) ∣ rhoW w` is invariant under rotation.
+- `rhoW_rotate_div`: the quotient for the `j`-th rotation is `T^[j]` of the quotient for `w`.
+- `dvd_rhoW_wpow_iff`, `rhoW_wpow_div`: for `r ≥ 1`, `w^r` satisfies the divisibility iff `w` does,
+  with the same quotient.
+- `cycle_of_word_pos`: if moreover `c ≥ 1`, the periodic point is positive.
+
+## Notation
+
+For a word `w`, `L = w.length`, `c = w.count true`, and `D(w) = 2^L − 3^c` (natural-number
+subtraction, used under the hypothesis `3^c < 2^L`).
+
+## References
+
+- C. Böhm, G. Sontacchi, *On the existence of cycles of given length in integer sequences like
+  `x_{n+1} = x_n/2` if `x_n` even, and `x_{n+1} = 3x_n + 1` otherwise*, Atti Accad. Naz. Lincei
+  Rend. 64 (1978), 260–264.
 -/
 
 namespace Collatz
+
 open CollatzProof
 
-/-- **Concatenation law.** `rhoW (u ++ v) = 3^{#true v}·rhoW u + 2^{|u|}·rhoW v`. -/
+/-! ### Concatenation -/
+
+/-- **Concatenation law.** `rhoW (u ++ v) = 3^{#true v} · rhoW u + 2^{|u|} · rhoW v`. -/
 theorem rhoW_append (u v : List Bool) :
     rhoW (u ++ v) = 3 ^ v.count true * rhoW u + 2 ^ u.length * rhoW v := by
   induction u with
@@ -50,27 +74,13 @@ theorem rhoW_replicate_false (l : ℕ) : rhoW (List.replicate l false) = 0 := by
   | zero => rfl
   | succ l ih => rw [List.replicate_succ, rhoW, ih]; simp
 
-/-- One-run word: `rhoW (1^k 0^l) + 2^k = 3^k` (the zeros contribute nothing). -/
+/-- One run: `rhoW (1^k 0^l) + 2^k = 3^k`; the zeros contribute nothing. -/
 theorem rhoW_one_run (k l : ℕ) :
     rhoW (List.replicate k true ++ List.replicate l false) + 2 ^ k = 3 ^ k := by
   rw [rhoW_append, rhoW_replicate_false, List.count_replicate]
   simpa using rhoW_replicate_true k
 
-example : rhoW ([true, true] ++ [false]) = 5 := by decide
-
-/-- Rotating a leading `true` to the end: `2·rhoW (u++[1]) = 3·rhoW (1::u) + D`. -/
-theorem two_mul_rhoW_rotate_true (u : List Bool)
-    (hlt : 3 ^ (true :: u).count true < 2 ^ (true :: u).length) :
-    2 * rhoW (u ++ [true]) = 3 * rhoW (true :: u) +
-      (2 ^ (true :: u).length - 3 ^ (true :: u).count true) := by
-  rw [rhoW_append_true, rhoW] at *
-  simp only [List.count_cons_self, List.length_cons, ite_true, pow_succ] at *
-  omega
-
-/-- Rotating a leading `false` to the end: `2·rhoW (u++[0]) = rhoW (0::u)`. -/
-theorem two_mul_rhoW_rotate_false (u : List Bool) :
-    2 * rhoW (u ++ [false]) = rhoW (false :: u) := by
-  rw [rhoW_append_false, rhoW]; simp
+/-! ### The denominator -/
 
 /-- `3^c < 2^L` forces `L ≥ 1`. -/
 theorem length_pos_of_lt {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length) :
@@ -89,7 +99,6 @@ theorem D_odd {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length) :
   have h3 := three_pow_mod_two (w.count true)
   omega
 
-/-- `D(w)` is coprime to `2`. -/
 theorem coprime_two_D {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length) :
     Nat.Coprime 2 (2 ^ w.length - 3 ^ w.count true) := by
   rw [Nat.coprime_two_left]
@@ -107,7 +116,23 @@ theorem coprime_three_D {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length)
   have := Nat.Prime.dvd_of_dvd_pow Nat.prime_three this
   omega
 
-/-- `D(w) ∣ rhoW w ↔ D(w) ∣ rhoW (rotate w 1)` (arithmetic proof, no dynamics). -/
+/-! ### Rotation invariance -/
+
+/-- Rotating a leading `true` to the end: `2 · rhoW (u ++ [1]) = 3 · rhoW (1 :: u) + D`. -/
+theorem two_mul_rhoW_rotate_true (u : List Bool)
+    (hlt : 3 ^ (true :: u).count true < 2 ^ (true :: u).length) :
+    2 * rhoW (u ++ [true]) = 3 * rhoW (true :: u) +
+      (2 ^ (true :: u).length - 3 ^ (true :: u).count true) := by
+  rw [rhoW_append_true, rhoW] at *
+  simp only [List.count_cons_self, List.length_cons, ite_true, pow_succ] at *
+  omega
+
+/-- Rotating a leading `false` to the end: `2 · rhoW (u ++ [0]) = rhoW (0 :: u)`. -/
+theorem two_mul_rhoW_rotate_false (u : List Bool) :
+    2 * rhoW (u ++ [false]) = rhoW (false :: u) := by
+  rw [rhoW_append_false, rhoW]; simp
+
+/-- `D(w) ∣ rhoW w ↔ D(w) ∣ rhoW (w.rotate 1)`, proved arithmetically. -/
 theorem dvd_rhoW_rotate_one_iff {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length) :
     (2 ^ w.length - 3 ^ w.count true) ∣ rhoW w ↔
       (2 ^ w.length - 3 ^ w.count true) ∣ rhoW (w.rotate 1) := by
@@ -135,7 +160,7 @@ theorem dvd_rhoW_rotate_one_iff {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.
         rw [e] at h'
         exact h3.symm.dvd_of_dvd_mul_left ((Nat.dvd_add_left (dvd_refl _)).mp h')
 
-/-- **Rotation invariance.** `D(w) ∣ rhoW w ↔ D(w) ∣ rhoW (rotate w j)` for every `j`. -/
+/-- **Rotation invariance.** `D(w) ∣ rhoW w ↔ D(w) ∣ rhoW (w.rotate j)` for every `j`. -/
 theorem dvd_rhoW_rotate_iff {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length) (j : ℕ) :
     (2 ^ w.length - 3 ^ w.count true) ∣ rhoW w ↔
       (2 ^ w.length - 3 ^ w.count true) ∣ rhoW (w.rotate j) := by
@@ -150,7 +175,7 @@ theorem dvd_rhoW_rotate_iff {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.leng
     rw [ih, this]
 
 /-- **Quotient identity.** If `D(w) ∣ rhoW w`, then
-`rhoW (rotate w j) / D(w) = T^[j] (rhoW w / D(w))`. -/
+`rhoW (w.rotate j) / D(w) = T^[j] (rhoW w / D(w))`. -/
 theorem rhoW_rotate_div {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length)
     (hd : (2 ^ w.length - 3 ^ w.count true) ∣ rhoW w) (j : ℕ) :
     rhoW (w.rotate j) / (2 ^ w.length - 3 ^ w.count true) =
@@ -159,44 +184,46 @@ theorem rhoW_rotate_div {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length)
   have hn := Nat.mul_div_cancel' hd
   rw [← word_iterate j hlt hn, Nat.mul_div_cancel_left _ hDpos]
 
+/-! ### Powers of words -/
+
 /-- `wpow w r = w ++ w ++ ⋯ ++ w` (`r` copies). -/
 def wpow (w : List Bool) : ℕ → List Bool
   | 0 => []
   | r + 1 => w ++ wpow w r
 
-/-- `|w^r| = r·|w|`. -/
 theorem length_wpow (w : List Bool) (r : ℕ) : (wpow w r).length = r * w.length := by
   induction r with
   | zero => simp [wpow]
   | succ r ih => rw [wpow, List.length_append, ih]; ring
 
-/-- `#true (w^r) = r·#true w`. -/
 theorem count_wpow (w : List Bool) (r : ℕ) : (wpow w r).count true = r * w.count true := by
   induction r with
   | zero => simp [wpow]
   | succ r ih => rw [wpow, List.count_append, ih]; ring
 
-/-- **Power law over ℤ.** `rhoW(w^r)·(2^L − 3^c) = rhoW(w)·(2^{rL} − 3^{rc})`. -/
+/-- **Power law over `ℤ`.** `rhoW (w^r) · (2^L − 3^c) = rhoW w · (2^{rL} − 3^{rc})`. -/
 theorem rhoW_wpow_int (w : List Bool) (r : ℕ) :
     (rhoW (wpow w r) : ℤ) * (2 ^ w.length - 3 ^ w.count true) =
       (rhoW w : ℤ) * (2 ^ (r * w.length) - 3 ^ (r * w.count true)) := by
   induction r with
   | zero => simp [wpow, rhoW]
   | succ r ih =>
-    have e : rhoW (wpow w (r + 1)) = 3 ^ (r * w.count true) * rhoW w + 2 ^ w.length * rhoW (wpow w r) := by
+    have e : rhoW (wpow w (r + 1)) =
+        3 ^ (r * w.count true) * rhoW w + 2 ^ w.length * rhoW (wpow w r) := by
       rw [wpow, rhoW_append, count_wpow]
     rw [e, add_mul, add_mul, one_mul, one_mul, pow_add, pow_add]
     push_cast
     linear_combination (2 : ℤ) ^ w.length * ih
 
-/-- `3^c < 2^L` and `r ≥ 1` give `3^{#(w^r)} < 2^{|w^r|}`. -/
+/-- `3^c < 2^L` and `r ≥ 1` give `3^{#true (w^r)} < 2^{|w^r|}`. -/
 theorem D_wpow_pos {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length) {r : ℕ} (hr : 0 < r) :
     3 ^ (wpow w r).count true < 2 ^ (wpow w r).length := by
   rw [length_wpow, count_wpow, mul_comm r, mul_comm r, pow_mul, pow_mul]
   exact Nat.pow_lt_pow_left hlt hr.ne'
 
-/-- ℕ form of the power law: `rhoW(w^r)·D(w) = rhoW(w)·D(w^r)` (for `3^c<2^L`, `r ≥ 1`). -/
-theorem rhoW_wpow_nat {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length) {r : ℕ} (hr : 0 < r) :
+/-- Power law over `ℕ`: `rhoW (w^r) · D(w) = rhoW w · D(w^r)` for `3^c < 2^L` and `r ≥ 1`. -/
+theorem rhoW_wpow_nat {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length) {r : ℕ}
+    (hr : 0 < r) :
     rhoW (wpow w r) * (2 ^ w.length - 3 ^ w.count true) =
       rhoW w * (2 ^ (wpow w r).length - 3 ^ (wpow w r).count true) := by
   have h2 := D_wpow_pos hlt hr
@@ -205,7 +232,7 @@ theorem rhoW_wpow_nat {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length) {r
   zify [hlt.le, h2.le]
   exact this
 
-/-- **Power reduction.** For `r ≥ 1`: `D(w^r) ∣ rhoW(w^r) ↔ D(w) ∣ rhoW w`. -/
+/-- **Power reduction.** For `r ≥ 1`, `D(w^r) ∣ rhoW (w^r) ↔ D(w) ∣ rhoW w`. -/
 theorem dvd_rhoW_wpow_iff {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length) {r : ℕ}
     (hr : 0 < r) :
     (2 ^ (wpow w r).length - 3 ^ (wpow w r).count true) ∣ rhoW (wpow w r) ↔
@@ -228,8 +255,8 @@ theorem dvd_rhoW_wpow_iff {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length
     apply Nat.eq_of_mul_eq_mul_left hD
     rw [mul_comm D (rhoW _), e]; ring
 
-/-- **Power reduction, quotients.** For `r ≥ 1` and `D(w) ∣ rhoW w`, the cycle point of `w^r`
-equals that of `w`. -/
+/-- **Power reduction for quotients.** For `r ≥ 1` and `D(w) ∣ rhoW w`, the periodic point of
+`w^r` equals that of `w`. -/
 theorem rhoW_wpow_div {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length) {r : ℕ}
     (hr : 0 < r) (hd : (2 ^ w.length - 3 ^ w.count true) ∣ rhoW w) :
     rhoW (wpow w r) / (2 ^ (wpow w r).length - 3 ^ (wpow w r).count true) =
@@ -247,7 +274,7 @@ theorem rhoW_wpow_div {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length) {r
     rw [mul_comm D (rhoW _), e]; ring
   rw [this, Nat.mul_div_cancel_left _ hDr, Nat.mul_div_cancel_left _ hD]
 
-/-- **Positive cycle point.** If `3^c < 2^L`, `D(w) ∣ rhoW w` and `c ≥ 1`, then
+/-- **Positive periodic point.** If `3^c < 2^L`, `D(w) ∣ rhoW w` and `c ≥ 1`, then
 `rhoW w / D(w) > 0`. -/
 theorem cycle_of_word_pos {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length)
     (hd : (2 ^ w.length - 3 ^ w.count true) ∣ rhoW w) (hc : 0 < w.count true) :
@@ -259,40 +286,16 @@ theorem cycle_of_word_pos {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length
   have hpos : 0 < rhoW w := by omega
   exact Nat.div_pos (Nat.le_of_dvd hpos hd) hD
 
-/-- Convenience: `cycle_of_word` together with positivity of the cycle point. -/
-theorem cycle_of_word_pos' {w : List Bool} (hlt : 3 ^ w.count true < 2 ^ w.length)
-    (hd : (2 ^ w.length - 3 ^ w.count true) ∣ rhoW w) (hc : 0 < w.count true) :
-    T^[w.length] (rhoW w / (2 ^ w.length - 3 ^ w.count true)) =
-        rhoW w / (2 ^ w.length - 3 ^ w.count true) ∧
-      0 < rhoW w / (2 ^ w.length - 3 ^ w.count true) :=
-  ⟨(cycle_of_word hlt hd).1, cycle_of_word_pos hlt hd hc⟩
+/-! ### Examples -/
 
+-- The concatenation law on a small word.
+example : rhoW ([true, true] ++ [false]) = 5 := by decide
+
+-- Numerators of powers.
 example : rhoW (wpow [true, false] 2) = 7 ∧ rhoW (wpow [true, false, false] 2) = 11 := by decide
 
+-- One rotation of a leading `true`: `2 · rhoW (u ++ [1]) = 3 · rhoW (1 :: u) + D`.
 example : rhoW [true, false, false] = 1 ∧ rhoW ([true, false, false].rotate 1) = 4 ∧
     2 * 4 = 3 * 1 + (2 ^ 3 - 3 ^ 1) := by decide
 
 end Collatz
-
-#print axioms Collatz.rhoW_append
-#print axioms Collatz.rhoW_replicate_true
-#print axioms Collatz.rhoW_replicate_false
-#print axioms Collatz.rhoW_one_run
-#print axioms Collatz.two_mul_rhoW_rotate_true
-#print axioms Collatz.two_mul_rhoW_rotate_false
-#print axioms Collatz.length_pos_of_lt
-#print axioms Collatz.D_odd
-#print axioms Collatz.coprime_two_D
-#print axioms Collatz.coprime_three_D
-#print axioms Collatz.dvd_rhoW_rotate_one_iff
-#print axioms Collatz.dvd_rhoW_rotate_iff
-#print axioms Collatz.rhoW_rotate_div
-#print axioms Collatz.length_wpow
-#print axioms Collatz.count_wpow
-#print axioms Collatz.rhoW_wpow_int
-#print axioms Collatz.D_wpow_pos
-#print axioms Collatz.rhoW_wpow_nat
-#print axioms Collatz.dvd_rhoW_wpow_iff
-#print axioms Collatz.rhoW_wpow_div
-#print axioms Collatz.cycle_of_word_pos
-#print axioms Collatz.cycle_of_word_pos'

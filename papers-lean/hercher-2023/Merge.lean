@@ -1,26 +1,50 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import RunGrowth
 import Sieve24
 import Mathlib.Tactic
 
 /-!
-# Hercher's merge lemma (Hercher 2023, arXiv:2201.00406, Lemma 9 and Remark 10)
+# Hercher's merge lemma
 
-CLASSICAL (Hercher 2023).
+If an odd number `n` is followed by an odd run of exactly `k` steps and then by at least two even
+steps, its orbit merges with the orbit of the smaller number `(n − 1)/2`. In this file we prove
+this merge lemma for the accelerated map `T` (`n/2` on evens, `(3n+1)/2` on odds), and derive two
+consequences: a lower bound for such points on a cycle, given a verified bound on orbit minima, and
+congruence restrictions on a least positive integer that does not reach `1`.
 
-All statements are about the accelerated map `T` (`n/2` on evens, `(3n+1)/2` on odds).
+## Main definitions
 
-* `merge_step`: if `n + 1 = 2^k b` (`k ≥ 1`, `b` odd) and `3^k b ≡ 1 (mod 4)`, then
-  `T^{k+2} n = T^{k+1} ((n-1)/2)`; `merge_value` gives the common value `(3^k b - 1)/4`, and
-  `merge_cond_iff` says the condition means `T^{k+1} n` is even.
-* `cycle_localmin_ge`: parametric in a verified orbit-minimum bound `X0`, such a point on a
-  `T`-cycle satisfies `x ≥ 2 X0 + 1`; `cycle_localmin_ge_24` instantiates `X0 = 2^24`.
-* `least_counterexample_shape`, `least_counterexample_mod64`: a least positive integer not
-  reaching `1` under `T` is `≡ 3 (mod 4)`, has exactly one even step after its first odd run,
-  and lies in `{7,11,27,31,39,43,47,59,63} mod 64`.
+- `ReachesOne n`: some `T`-iterate of `n` equals `1`.
+
+## Main results
+
+- `merge_step`: if `n + 1 = 2^k b` (`k ≥ 1`, `b` odd) and `3^k b ≡ 1 (mod 4)`, then
+  `T^{k+2} n = T^{k+1} ((n-1)/2)`.
+- `merge_value`: the common value is `(3^k b - 1)/4`.
+- `merge_cond_iff`: the condition `3^k b ≡ 1 (mod 4)` holds iff `T^{k+1} n` is even.
+- `cycle_localmin_ge`: if every `m > 1` that is minimal on its orbit satisfies `X0 ≤ m`, then a
+  point of a `T`-cycle satisfying the merge hypotheses is at least `2 X0 + 1`.
+- `cycle_localmin_ge_24`: the instance `X0 = 2^24`.
+- `least_counterexample_mod_four`, `least_counterexample_shape`: a least positive integer not
+  reaching `1` is `≡ 3 (mod 4)`, and exactly one even step follows its first odd run.
+- `least_counterexample_mod64`: such an integer lies in `{7, 11, 27, 31, 39, 43, 47, 59, 63}`
+  mod `64`.
+
+## References
+
+- C. Hercher, *There are no Collatz m-cycles with m ≤ 91*, J. Integer Seq. 26 (2023),
+  Art. 23.3.5. Lemma and remark numbers below refer to the preprint version, arXiv:2201.00406.
 -/
 
 namespace Collatz
+
 open CollatzProof
+
+/-! ### The merge lemma -/
 
 private theorem T_even' {x : ℕ} (h : x % 2 = 0) : T x = x / 2 := by
   unfold T; simp [h]
@@ -88,10 +112,7 @@ theorem merge_cond_iff {n k b : ℕ} (_hk : 1 ≤ k) (hb : b % 2 = 1) (hn : n + 
   rw [Function.iterate_succ_apply', T_even' (by omega)]
   omega
 
-example : T^[4] 19 = T^[3] 9 := by decide
-example : T^[3] 5 = T^[2] 2 := by decide
-
-/-! ## Orbit minima and the cycle consequence -/
+/-! ### Orbit minima and the cycle consequence -/
 
 /-- Every `T`-orbit has a minimum: there is an index `j0` with `T^{j0} z ≤ T^j z` for all `j`. -/
 theorem exists_orbit_min (z : ℕ) : ∃ j0, ∀ j, T^[j0] z ≤ T^[j] z := by
@@ -180,10 +201,11 @@ theorem cycle_localmin_ge {X0 x L k b : ℕ}
 odd run of length `k ≥ 1` and then at least two even steps satisfies `x ≥ 2^25 + 1`. -/
 theorem cycle_localmin_ge_24 {x L k b : ℕ} (hL : 0 < L) (hc : T^[L] x = x) (hk : 1 ≤ k)
     (hb : b % 2 = 1) (hn : x + 1 = 2^k * b) (h4 : (3^k * b) % 4 = 1) : 2^25 + 1 ≤ x := by
-  have := cycle_localmin_ge (X0 := 2^24) (fun m h1 h2 => min_orbit_ge_24 h1 h2) hL hc hk hb hn h4
+  have := cycle_localmin_ge (X0 := 2^24) (fun m h1 h2 ↦ min_orbit_ge_24 h1 h2)
+    hL hc hk hb hn h4
   norm_num at *; omega
 
-/-! ## Least counterexample shape (Hercher 2023, Remark 10) -/
+/-! ### The shape of a least counterexample -/
 
 /-- `n` reaches `1` under the accelerated map `T`. -/
 def ReachesOne (n : ℕ) : Prop := ∃ j, T^[j] n = 1
@@ -192,12 +214,9 @@ private theorem reaches_of_iterate {n i : ℕ} (h : ReachesOne (T^[i] n)) : Reac
   obtain ⟨j, hj⟩ := h
   exact ⟨j + i, by rw [Function.iterate_add_apply, hj]⟩
 
-/-- **Least counterexample shape (Hercher 2023, Remark 10, for `T`).** If `n > 0` does not reach
-`1` under `T` but every `0 < m < n` does (this covers both a least element of a nontrivial cycle
-and a least divergent starting value), then `n ≡ 3 (mod 4)`, and for every factorisation
-`n + 1 = 2^k b` with `b` odd we have `3^k b ≡ 3 (mod 4)`: exactly one even step follows the
-first odd run. -/
-theorem least_counterexample_shape {n : ℕ} (hn0 : 0 < n) (hnot : ¬ ReachesOne n)
+/-- The shape of a least counterexample, both conclusions at once; see
+`least_counterexample_mod_four` and `least_counterexample_shape`. -/
+private theorem least_counterexample_shape_aux {n : ℕ} (hn0 : 0 < n) (hnot : ¬ ReachesOne n)
     (hless : ∀ m, 0 < m → m < n → ReachesOne m) :
     n % 4 = 3 ∧ ∀ k b, b % 2 = 1 → n + 1 = 2^k * b → (3^k * b) % 4 = 3 := by
   have hn1 : n ≠ 1 := fun h => hnot ⟨0, by simp [h]⟩
@@ -232,25 +251,40 @@ theorem least_counterexample_shape {n : ℕ} (hn0 : 0 < n) (hnot : ¬ ReachesOne
   apply reaches_of_iterate (i := k+2)
   exact ⟨j', by rw [hm, hj']⟩
 
-/-- Corollary of `least_counterexample_shape`: a least counterexample satisfies
+/-- If `n > 0` does not reach `1` under `T` but every `0 < m < n` does (this covers both a least
+element of a nontrivial cycle and a least divergent starting value), then `n ≡ 3 (mod 4)`. -/
+theorem least_counterexample_mod_four {n : ℕ} (hn0 : 0 < n) (hnot : ¬ ReachesOne n)
+    (hless : ∀ m, 0 < m → m < n → ReachesOne m) : n % 4 = 3 :=
+  (least_counterexample_shape_aux hn0 hnot hless).1
+
+/-- **Shape of a least counterexample (Hercher, Remark 10, for `T`).** If `n > 0` does not reach
+`1` under `T` but every `0 < m < n` does, then for every factorisation `n + 1 = 2^k b` with `b`
+odd we have `3^k b ≡ 3 (mod 4)`: exactly one even step follows the first odd run. -/
+theorem least_counterexample_shape {n : ℕ} (hn0 : 0 < n) (hnot : ¬ ReachesOne n)
+    (hless : ∀ m, 0 < m → m < n → ReachesOne m) :
+    ∀ k b, b % 2 = 1 → n + 1 = 2^k * b → (3^k * b) % 4 = 3 :=
+  (least_counterexample_shape_aux hn0 hnot hless).2
+
+/-- A least counterexample satisfies
 `n mod 64 ∈ {7, 11, 27, 31, 39, 43, 47, 59, 63}`. -/
 theorem least_counterexample_mod64 {n : ℕ} (hn0 : 0 < n) (hnot : ¬ ReachesOne n)
     (hless : ∀ m, 0 < m → m < n → ReachesOne m) :
     n % 64 = 7 ∨ n % 64 = 11 ∨ n % 64 = 27 ∨ n % 64 = 31 ∨ n % 64 = 39 ∨ n % 64 = 43 ∨
       n % 64 = 47 ∨ n % 64 = 59 ∨ n % 64 = 63 := by
-  obtain ⟨h4, hc⟩ := least_counterexample_shape hn0 hnot hless
+  have h4 := least_counterexample_mod_four hn0 hnot hless
+  have hc := least_counterexample_shape hn0 hnot hless
   have c2 := hc 2 ((n+1)/4)
   have c3 := hc 3 ((n+1)/8)
   have c4 := hc 4 ((n+1)/16)
   norm_num at c2 c3 c4
   omega
 
-end Collatz
+/-! ### Examples -/
 
-#print axioms Collatz.merge_step
-#print axioms Collatz.merge_value
-#print axioms Collatz.merge_cond_iff
-#print axioms Collatz.cycle_localmin_ge
-#print axioms Collatz.cycle_localmin_ge_24
-#print axioms Collatz.least_counterexample_shape
-#print axioms Collatz.least_counterexample_mod64
+-- The merge lemma at `n = 19` (`k = 2`, `b = 5`): the orbits of `19` and `9` meet.
+example : T^[4] 19 = T^[3] 9 := by decide
+
+-- The merge lemma at `n = 5` (`k = 1`, `b = 3`): the orbits of `5` and `2` meet.
+example : T^[3] 5 = T^[2] 2 := by decide
+
+end Collatz

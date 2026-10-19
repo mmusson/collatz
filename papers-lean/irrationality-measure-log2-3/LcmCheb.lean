@@ -1,22 +1,43 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import LcmBound
 
 /-!
-# Chebyshev-type bound `2^N · lcm(1..N) ≤ 2^37 · 7^N`
-(classical)
+# The Chebyshev-type bound `2^N · lcm(1, …, N) ≤ 2^37 · 7^N`
 
-Improves `LcmBound.Lc_le_four_pow` (`lcm(1..N) ≤ 4^N`) to `lcm(1..N) ≤ 2^37·3.5^N`.
-* `floor_ineq`: `⌊3n/q⌋+⌊2n/q⌋+⌊n/q⌋ + [n<q≤6n] ≤ ⌊6n/q⌋`.
-* `val_Mn`: Legendre ⇒ `v_p(C(6n,3n)C(3n,n)) ≥ #{i : n < p^i ≤ 6n}`.
-* `Lc_six_dvd`: `lcm(1..6n) ∣ lcm(1..n)·C(6n,3n)C(3n,n)`; `Mn_le`: the multinomial is `≤ 432^n`.
-* `Lc_le_cheb`: strong induction (base `N ≤ 192` from `4^N`; step via
-  `2^{160+5j}·432^{33+j} ≤ 7^{160+5j}`).
+In this file we improve `LcmBound.Lc_le_four_pow` to `lcm(1, …, N) ≤ 2^37 · (7/2)^N`. The proof
+follows Chebyshev: the multinomial coefficient `M_n = C(6n, 3n) · C(3n, n)` is divisible by every
+prime power in `(n, 6n]`, so `lcm(1, …, 6n) ∣ lcm(1, …, n) · M_n`, and `M_n ≤ 432^n`. A strong
+induction with the base case `N ≤ 192` (from `lcm(1, …, N) ≤ 4^N`) concludes.
+
+## Main definitions
+
+- `Mn n`: the multinomial coefficient `C(6n, 3n) · C(3n, n)`.
+
+## Main results
+
+- `floor_ineq`: `⌊3n/q⌋ + ⌊2n/q⌋ + ⌊n/q⌋ + [n < q ≤ 6n] ≤ ⌊6n/q⌋`.
+- `val_Mn`: by Legendre's formula, `v_p(M_n) ≥ #{i ≥ 1 : n < p^i ≤ 6n}`.
+- `Lc_six_dvd`: `lcm(1, …, 6n) ∣ lcm(1, …, n) · M_n` for `n ≥ 1`.
+- `Mn_le`: `M_n ≤ 432^n`.
+- `Lc_le_cheb`: `2^N · lcm(1, …, N) ≤ 2^37 · 7^N`.
+- `Lc_le_cheb_real`: `lcm(1, …, N) ≤ 2^37 · (7/2)^N` in `ℝ`.
+
+## References
+
+- P. L. Chebyshev, *Mémoire sur les nombres premiers*, J. Math. Pures Appl. 17 (1852), 366–390.
 -/
 
 namespace Collatz.LcmCheb
 
 open Collatz.LcmBound Nat
 
-/-- Floor inequality (i): `3n/q + 2n/q + n/q ≤ 6n/q`, and (ii) with `+1` when `n < q ≤ 6n`. -/
+/-! ### Valuations of the multinomial coefficient -/
+
+/-- `⌊3n/q⌋ + ⌊2n/q⌋ + ⌊n/q⌋ ≤ ⌊6n/q⌋`, with an extra `1` on the left when `n < q ≤ 6n`. -/
 theorem floor_ineq (n q : ℕ) (hq : 0 < q) :
     3*n/q + 2*n/q + n/q + (if n < q ∧ q ≤ 6*n then 1 else 0) ≤ 6*n/q := by
   set M := 6*n/q with hM
@@ -38,7 +59,7 @@ theorem floor_ineq (n q : ℕ) (hq : 0 < q) :
     omega
   · omega
 
-/-- The multinomial `C(6n,3n)·C(3n,n)`. -/
+/-- The multinomial coefficient `C(6n, 3n) · C(3n, n)`. -/
 def Mn (n : ℕ) : ℕ := Nat.choose (6*n) (3*n) * Nat.choose (3*n) n
 
 theorem Mn_ne_zero (n : ℕ) : Mn n ≠ 0 :=
@@ -54,7 +75,7 @@ theorem Mn_mul (n : ℕ) : Mn n * ((3*n)! * (2*n)! * n !) = (6*n)! := by
       = Nat.choose (6*n) (3*n) * (3*n)! * (Nat.choose (3*n) n * n ! * (2*n)!) := by ring
     _ = _ := by rw [h2, h1]
 
-/-- Valuation bound: `v_p(Mn) ≥ #{i ∈ [1,B) : n < p^i ≤ 6n}`. -/
+/-- Legendre's formula: `v_p(M_n)` is at least the number of `i ≥ 1` with `n < p^i ≤ 6n`. -/
 theorem val_Mn {p n : ℕ} (hp : p.Prime) (hn : 1 ≤ n) :
     ((Finset.Ico 1 (Nat.log p (6*n) + 1)).filter (fun i => n < p^i ∧ p^i ≤ 6*n)).card
       ≤ (Mn n).factorization p := by
@@ -76,7 +97,9 @@ theorem val_Mn {p n : ℕ} (hp : p.Prime) (hn : 1 ≤ n) :
     ← Finset.card_filter] at hsum
   omega
 
-/-- `lcm(1..6n) ∣ lcm(1..n) · Mn` for `n ≥ 1`. -/
+/-! ### Divisibility and size -/
+
+/-- `lcm(1, …, 6n) ∣ lcm(1, …, n) · M_n` for `n ≥ 1`. -/
 theorem Lc_six_dvd {n : ℕ} (hn : 1 ≤ n) : Lc (6*n) ∣ Lc n * Mn n := by
   unfold Lc
   apply Finset.lcm_dvd
@@ -121,7 +144,7 @@ theorem Lc_six_dvd {n : ℕ} (hn : 1 ≤ n) : Lc (6*n) ∣ Lc n * Mn n := by
     have hB := val_Mn hp hn
     omega
 
-/-- `Mn ≤ 432^n`. -/
+/-- `M_n ≤ 432^n`. -/
 theorem Mn_le (n : ℕ) : Mn n ≤ 432^n := by
   have h1 : Nat.choose (6*n) (3*n) ≤ 64^n := by
     calc _ ≤ 2^(6*n) := Nat.choose_le_two_pow _ _
@@ -157,10 +180,12 @@ theorem Lc_mono {N M : ℕ} (h : N ≤ M) : Lc N ≤ Lc M := by
   rw [Finset.mem_Icc] at hj
   exact dvd_Lc hj.1 (le_trans hj.2 h)
 
-/-- `lcm(1..6n) ≤ lcm(1..n)·432^n` for `n ≥ 1`. -/
+/-- `lcm(1, …, 6n) ≤ lcm(1, …, n) · 432^n` for `n ≥ 1`. -/
 theorem Lc_six_le {n : ℕ} (hn : 1 ≤ n) : Lc (6*n) ≤ Lc n * 432^n :=
   le_trans (Nat.le_of_dvd (Nat.pos_of_ne_zero (mul_ne_zero (Lc_ne_zero n) (Mn_ne_zero n)))
     (Lc_six_dvd hn)) (Nat.mul_le_mul_left _ (Mn_le n))
+
+/-! ### The Chebyshev-type bound -/
 
 theorem core_cheb (j : ℕ) : 2^(160+5*j) * 432^(33+j) ≤ 7^(160+5*j) := by
   induction j with
@@ -188,8 +213,8 @@ theorem base_cheb {N : ℕ} (hN : N ≤ 192) : 8^N ≤ 2^37 * 7^N := by
       _ = 2^37 * 7^N * 7^(192-N) := by rw [mul_assoc, ← pow_add]; congr 2; omega
   exact Nat.le_of_mul_le_mul_right h (by positivity)
 
-/-- **Chebyshev-type bound (classical):** `2^N · lcm(1..N) ≤ 2^37 · 7^N`,
-i.e. `lcm(1..N) ≤ 2^37 · 3.5^N`. -/
+/-- Chebyshev-type bound: `2^N · lcm(1, …, N) ≤ 2^37 · 7^N`, i.e.
+`lcm(1, …, N) ≤ 2^37 · (7/2)^N`. -/
 theorem Lc_le_cheb (N : ℕ) : 2^N * Lc N ≤ 2^37 * 7^N := by
   induction N using Nat.strong_induction_on with
   | _ N ih =>
@@ -214,7 +239,7 @@ theorem Lc_le_cheb (N : ℕ) : 2^N * Lc N ≤ 2^37 * 7^N := by
           _ = 2^n * (2^37 * 7^N) := by rw [hs]; ring
       exact Nat.le_of_mul_le_mul_left key (by positivity)
 
-/-- Real form: `lcm(1..N) ≤ 2^37 (7/2)^N`. -/
+/-- Real form: `lcm(1, …, N) ≤ 2^37 · (7/2)^N`. -/
 theorem Lc_le_cheb_real (N : ℕ) : (Lc N : ℝ) ≤ 2^37 * (7/2)^N := by
   have h : ((2^N * Lc N : ℕ) : ℝ) ≤ ((2^37 * 7^N : ℕ) : ℝ) := by exact_mod_cast Lc_le_cheb N
   push_cast at h
@@ -223,8 +248,3 @@ theorem Lc_le_cheb_real (N : ℕ) : (Lc N : ℝ) ≤ 2^37 * (7/2)^N := by
   rw [le_div_iff₀ h2]; linarith
 
 end Collatz.LcmCheb
-
-#print axioms Collatz.LcmCheb.Lc_six_dvd
-#print axioms Collatz.LcmCheb.Mn_le
-#print axioms Collatz.LcmCheb.Lc_le_cheb
-#print axioms Collatz.LcmCheb.Lc_le_cheb_real

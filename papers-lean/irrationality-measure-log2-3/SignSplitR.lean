@@ -1,23 +1,48 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import SignSplit
 
 /-!
-# Rational-rate sign-split transference
+# Sign-split transference with a rational decay rate
 
-`SignApproxR a b cQ cE cL e d Q P1 P2` generalizes `SignApprox a b c d`: the decay factor is
-`2^{⌊e m/d⌋}` and the three constants (size of `Q`, error bound, lower bound) are separate.
-The mechanism is the same sign split as in `SignSplit.lean`; only the index choice
-`m = d·⌊(k0+e)/e⌋` changes, so that `⌊e m/d⌋ = e j ∈ [k0+1, k0+e]`.
-* `linForm_lower_of_signApproxR`: `(a+b)d ≤ e r` ⇒
-  `1 ≤ 2^{cQ+cL+5} (2^{cE+1+e}(p+q))^r |q log 3 − p log 2|`.
-* `irrMeasHyp_of_signApproxR`: moreover `2^{cQ+cL+5+(cE+3+e)r} ≤ Q0^t`, `t ≥ 1`, `Q0 ≥ 3` ⇒
-  `IrrMeasHyp (r+1+t) Q0`.
+In this file we generalize the hypothesis `SignApprox a b c d` of `SignSplit` to
+`SignApproxR a b cQ cE cL e d`: the decay factor is `2^{⌊e m/d⌋}` instead of `2^{⌊m/d⌋}`, and the
+three constants for the size of `Q`, the decay bound and the lower bound are independent. The
+argument is the sign split of `SignSplit`; only the choice of index changes, to
+`m = d · ⌊(k0 + e)/e⌋`, so that `⌊e m/d⌋ ∈ [k0 + 1, k0 + e]`.
+
+The hypothesis `SignApproxR` is a definition, not an axiom. It is verified for the Padé family of
+`PadeArithQ` in `PadeCheb`.
+
+## Main definitions
+
+- `SignApproxR a b cQ cE cL e d Q P1 P2`: for every `m`, `|Q_m| ≤ 2^{cQ + am}`,
+  `|E_j(m)| · 2^{⌊e m/d⌋} ≤ 2^{cE}` for `j = 1, 2`, `E1(m) ≤ 0 ≤ E2(m)` and
+  `1 ≤ |E1(m)| · 2^{cL + bm}`.
+
+## Main results
+
+- `signApproxR_of_signApprox`: `SignApprox a b c d` is the case `e = 1`, `cQ = cE = cL = c`.
+- `linForm_lower_of_signApproxR`: if `(a+b)d ≤ e r`, then
+  `1 ≤ 2^{cQ+cL+5} (2^{cE+1+e} (p + q))^r |q log 3 - p log 2|` for `q ≥ 1`.
+- `irrMeasHyp_of_signApproxR`: if moreover `2^{cQ+cL+5+(cE+3+e)r} ≤ Q0^t`, `t ≥ 1` and `Q0 ≥ 3`,
+  then `IrrMeasHyp (r + 1 + t) Q0`.
+
+## References
+
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, Séminaire de Théorie des
+  Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
 -/
 
 namespace Collatz
 
-/-- Rational-rate sign-split approximation data for `(log(4/3), log(9/8))` (hypothesis
-interface, a definition): for every `m`, `|Q_m| ≤ 2^{cQ+am}`;
-`|E_j(m)|·2^{⌊e m/d⌋} ≤ 2^{cE}`; `E1 ≤ 0 ≤ E2`; `1 ≤ |E1|·2^{cL+bm}`, where
+/-! ### The rational-rate hypothesis -/
+
+/-- Rational-rate sign-split approximation data for `(log (4/3), log (9/8))`: for every `m`,
+`|Q_m| ≤ 2^{cQ+am}`; `|E_j(m)| · 2^{⌊e m/d⌋} ≤ 2^{cE}`; `E1 ≤ 0 ≤ E2`; `1 ≤ |E1|·2^{cL+bm}`, where
 `E1 = Q_m log(4/3) − P1_m`, `E2 = Q_m log(9/8) − P2_m`. -/
 def SignApproxR (a b cQ cE cL e d : ℕ) (Q P1 P2 : ℕ → ℤ) : Prop :=
   ∀ m : ℕ, |(Q m : ℝ)| ≤ 2^(cQ + a*m) ∧
@@ -27,15 +52,16 @@ def SignApproxR (a b cQ cE cL e d : ℕ) (Q P1 P2 : ℕ → ℤ) : Prop :=
     0 ≤ (Q m : ℝ) * (2*Real.log 3 - 3*Real.log 2) - P2 m ∧
     1 ≤ |(Q m : ℝ) * (2*Real.log 2 - Real.log 3) - P1 m| * 2^(cL + b*m)
 
-/-- The old interface is the special case `e = 1`, `cQ = cE = cL = c`. -/
+/-- `SignApprox` is the special case `e = 1`, `cQ = cE = cL = c` of `SignApproxR`. -/
 theorem signApproxR_of_signApprox {a b c d : ℕ} {Q P1 P2 : ℕ → ℤ}
     (h : SignApprox a b c d Q P1 P2) : SignApproxR a b c c c 1 d Q P1 P2 := by
   intro m
   simpa only [one_mul] using h m
 
-/-- Lower bound for `|q log 3 − p log 2|` from `SignApproxR` (unconditional implication):
-if `d, e ≥ 1`, `(a+b)d ≤ e r` and `q ≥ 1`, then
-`1 ≤ 2^{cQ+cL+5}(2^{cE+1+e}(p+q))^r |q log 3 − p log 2|`. -/
+/-! ### Transference -/
+
+/-- Lower bound for `|q log 3 − p log 2|` from `SignApproxR`: if `d, e ≥ 1`, `(a+b)d ≤ e r` and
+`q ≥ 1`, then `1 ≤ 2^{cQ+cL+5}(2^{cE+1+e}(p+q))^r |q log 3 − p log 2|`. -/
 theorem linForm_lower_of_signApproxR {a b cQ cE cL e d r : ℕ} {Q P1 P2 : ℕ → ℤ}
     (hd : 1 ≤ d) (he : 1 ≤ e) (hr : (a+b)*d ≤ e*r)
     (h : SignApproxR a b cQ cE cL e d Q P1 P2) (p q : ℕ) (hq : 1 ≤ q) :
@@ -196,9 +222,9 @@ theorem linForm_lower_of_signApproxR {a b cQ cE cL e d r : ℕ} {Q P1 P2 : ℕ �
       apply mul_le_mul_of_nonneg_right _ hΛ0
       exact mul_le_mul_of_nonneg_right h2c5 (by positivity)
 
-/-- `SignApproxR` gives an explicit irrationality measure (unconditional implication):
-if `d, e, t ≥ 1`, `(a+b)d ≤ e r`, `Q0 ≥ 3` and `2^{cQ+cL+5+(cE+3+e)r} ≤ Q0^t`, then
-`|log₂3 − p/q| ≥ q^{−(r+1+t)}` for all `q ≥ Q0`, i.e. `IrrMeasHyp (r+1+t) Q0`. -/
+/-- `SignApproxR` gives an explicit irrationality measure: if `d, e, t ≥ 1`, `(a+b)d ≤ e r`,
+`Q0 ≥ 3` and `2^{cQ+cL+5+(cE+3+e)r} ≤ Q0^t`, then `|log₂3 − p/q| ≥ q^{−(r+1+t)}` for all
+`q ≥ Q0`, i.e. `IrrMeasHyp (r+1+t) Q0`. -/
 theorem irrMeasHyp_of_signApproxR {a b cQ cE cL e d r t Q0 : ℕ} {Q P1 P2 : ℕ → ℤ}
     (hd : 1 ≤ d) (he : 1 ≤ e) (hr : (a+b)*d ≤ e*r)
     (h : SignApproxR a b cQ cE cL e d Q P1 P2) (ht : 1 ≤ t) (hQ0 : 3 ≤ Q0)
@@ -267,7 +293,3 @@ theorem irrMeasHyp_of_signApproxR {a b cQ cE cL e d r t Q0 : ℕ} {Q P1 P2 : ℕ
     nlinarith
 
 end Collatz
-
-#print axioms Collatz.signApproxR_of_signApprox
-#print axioms Collatz.linForm_lower_of_signApproxR
-#print axioms Collatz.irrMeasHyp_of_signApproxR

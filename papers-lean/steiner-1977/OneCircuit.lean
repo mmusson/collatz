@@ -1,37 +1,54 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import OddStepBound
 
 /-!
-# Steiner 1-circuits in a finite range
+# Steiner's 1-circuits in a finite range
 
-A *1-circuit* is a `T`-cycle whose parity vector is one run of `k` odd steps followed by one
-run of `l` even steps.  We prove the elementary Steiner reduction:
+A 1-circuit is a `T`-cycle whose parity vector is one run of `k` odd steps followed by one run
+of `l` even steps. In this file we prove Steiner's elementary reduction of a 1-circuit through
+`m` to the circuit equation `m + 1 = 2^k a`, `a (2^{k+l} − 3^k) = 2^l − 1`, and deduce
+`2^{k+l−1} < 3^k < 2^{k+l}` and `(2^{k+l} − 3^k) ∣ 2^l − 1`.
 
-* odd run: `2^k (T^k x + 1) = 3^k (x + 1)`; even run: `2^l T^l y = y`;
-* circuit equation: `m + 1 = 2^k a` with `a (2^{k+l} - 3^k) = 2^l - 1`;
-  (in Lean this is stated subtraction-free, `one_circuit_eq`: `a 2^{k+l} + 1 = a 3^k + 2^l`; the
-  two forms are equivalent because `3^k < 2^{k+l}` and `2^l ≥ 1`, see `one_circuit_size`);
-* hence `2^{k+l-1} < 3^k < 2^{k+l}` (so `l` is determined by `k`) and
-  `(2^{k+l} - 3^k) ∣ 2^l - 1`;
+We then exclude every nontrivial 1-circuit with `k < 100000` by a kernel-checked certificate
+(`decide +kernel`). The soundness of the certificate does not depend on the accuracy of the
+rational approximation `candL` of `log₂ 3`. Steiner proved that there is no nontrivial 1-circuit
+at all, using lower bounds for linear forms in logarithms, which are not formalized here.
 
-Remark: the divisibility clause of `circOK` is redundant in practice: for every
-tested `k ≥ 2` (Python, `2 ≤ k ≤ 20000`, and a further check up to `10^5`),
-`2^L - 3^k > 2^{L-k} - 1`, so the certificate really checks a size
-(Diophantine-approximation) fact about `log₂ 3`.  Extending the range beyond `10^5` is a dead end.
+## Main definitions
 
-We then exclude every nontrivial 1-circuit with `k < 100000` by a kernel-checked
-certificate (`decide +kernel`, no `native_decide`, no `set_option`).  Soundness of the
-certificate does not depend on the accuracy of `candL` (a rational approximation of `log₂ 3`).
+- `IsOneCircuit m k l`: the orbit of `m` consists of `k ≥ 1` odd steps followed by `l ≥ 1` even
+  steps, and then returns to `m`.
+- `circOK k`: a Boolean certificate excluding 1-circuits with `k` odd steps.
 
-Steiner (1977) proved that there is **no** nontrivial 1-circuit at all, and Simons (2005)
-extended this; both use Baker/Rhin-type linear-form bounds, which are not formalized here.
-This file is a finite-range formal instance (`k < 100000`) of Steiner's theorem; it does not
-address general cycles.
+## Main results
+
+- `odd_run`, `even_run`: `2^k (T^k x + 1) = 3^k (x + 1)` along a run of `k` odd values, and
+  `2^l T^l y = y` along a run of `l` even values.
+- `one_circuit_eq`: a 1-circuit has `a ≥ 1` with `m + 1 = 2^k a` and
+  `a 2^{k+l} + 1 = a 3^k + 2^l` (the circuit equation without subtraction).
+- `one_circuit_size_lower`, `one_circuit_size`, `one_circuit_mod_eq_zero`:
+  `2^{k+l−1} < 3^k < 2^{k+l}` and `(2^{k+l} − 3^k) ∣ 2^l − 1`.
+- `circOK_sound`, `circRange_2_100000`: the certificate is sound, and it holds for all
+  `2 ≤ k < 100000`.
+- `one_circuit_eq_one`: every 1-circuit with `k < 100000` has `m = 1`.
+
+## References
+
+- R. P. Steiner, *A theorem on the Syracuse problem*, Proceedings of the Seventh Manitoba
+  Conference on Numerical Mathematics and Computing (1977), Congr. Numer. 20 (1978), 553–559.
 -/
 
 namespace Collatz
+
 open CollatzProof
 
-/-- `(m,k,l)` is a 1-circuit: `k ≥ 1` odd steps, then `l ≥ 1` even steps, returning to `m`. -/
+/-! ### Runs of odd and even steps -/
+
+/-- `(m, k, l)` is a 1-circuit: `k ≥ 1` odd steps, then `l ≥ 1` even steps, returning to `m`. -/
 def IsOneCircuit (m k l : ℕ) : Prop :=
   1 ≤ k ∧ 1 ≤ l ∧ (∀ i < k, T^[i] m % 2 = 1) ∧ (∀ i < l, T^[k+i] m % 2 = 0) ∧ T^[k+l] m = m
 
@@ -50,7 +67,7 @@ theorem odd_run (k x : ℕ) (h : ∀ i < k, T^[i] x % 2 = 1) :
   | zero => simp
   | succ k ih =>
     have h0 : x % 2 = 1 := h 0 (by omega)
-    have ih' := ih (T x) (fun i hi => by
+    have ih' := ih (T x) (fun i hi ↦ by
       have := h (i + 1) (by omega); rwa [Function.iterate_succ_apply] at this)
     have h2 := two_mul_T_odd h0
     rw [Function.iterate_succ_apply, pow_succ, pow_succ]
@@ -65,21 +82,23 @@ theorem even_run (l y : ℕ) (h : ∀ i < l, T^[i] y % 2 = 0) : 2 ^ l * T^[l] y 
   | zero => simp
   | succ l ih =>
     have h0 : y % 2 = 0 := h 0 (by omega)
-    have ih' := ih (T y) (fun i hi => by
+    have ih' := ih (T y) (fun i hi ↦ by
       have := h (i + 1) (by omega); rwa [Function.iterate_succ_apply] at this)
     have h2 := two_mul_T_even h0
     rw [Function.iterate_succ_apply, pow_succ]
     calc 2 ^ l * 2 * T^[l] (T y) = 2 * (2 ^ l * T^[l] (T y)) := by ring
       _ = y := by rw [ih', h2]
 
-/-- **Circuit equation.** A 1-circuit has `a ≥ 1` with `m+1 = 2^k a` and
+/-! ### The circuit equation -/
+
+/-- **Circuit equation.** A 1-circuit has `a ≥ 1` with `m + 1 = 2^k a` and
 `a 2^{k+l} + 1 = a 3^k + 2^l`. -/
 theorem one_circuit_eq {m k l : ℕ} (h : IsOneCircuit m k l) :
     ∃ a, 1 ≤ a ∧ m + 1 = 2 ^ k * a ∧ a * 2 ^ (k + l) + 1 = a * 3 ^ k + 2 ^ l := by
   obtain ⟨hk, hl, hodd, heven, hper⟩ := h
   have hA := odd_run k m hodd
   set x := T^[k] m with hx
-  have hB := even_run l x (fun i hi => by
+  have hB := even_run l x (fun i hi ↦ by
     rw [hx, ← Function.iterate_add_apply, add_comm]; exact heven i hi)
   have hxl : T^[l] x = m := by
     rw [hx, ← Function.iterate_add_apply, add_comm]; exact hper
@@ -101,10 +120,11 @@ theorem one_circuit_eq {m k l : ℕ} (h : IsOneCircuit m k l) :
     rw [this]
     nlinarith [hB, hx1]
 
-/-- **Size and divisibility.** For a 1-circuit, `2^{k+l-1} < 3^k < 2^{k+l}` and
-`(2^{k+l} - 3^k) ∣ 2^l - 1`. -/
-theorem one_circuit_size {m k l : ℕ} (h : IsOneCircuit m k l) :
-    2 ^ (k + l - 1) < 3 ^ k ∧ 3 ^ k < 2 ^ (k + l) ∧ (2 ^ l - 1) % (2 ^ (k + l) - 3 ^ k) = 0 := by
+/-- Size and divisibility, all three conclusions at once; see `one_circuit_size_lower`,
+`one_circuit_size` and `one_circuit_mod_eq_zero`. -/
+private theorem one_circuit_size_aux {m k l : ℕ} (h : IsOneCircuit m k l) :
+    2 ^ (k + l - 1) < 3 ^ k ∧ 3 ^ k < 2 ^ (k + l) ∧
+      (2 ^ l - 1) % (2 ^ (k + l) - 3 ^ k) = 0 := by
   obtain ⟨a, ha, -, E⟩ := one_circuit_eq h
   obtain ⟨hk, hl, -⟩ := h
   have h2l : 2 ≤ 2 ^ l := by
@@ -131,6 +151,20 @@ theorem one_circuit_size {m k l : ℕ} (h : IsOneCircuit m k l) :
       omega
     rw [this]; exact Nat.mul_mod_left a D
 
+/-- For a 1-circuit, `2^{k+l-1} < 3^k`. -/
+theorem one_circuit_size_lower {m k l : ℕ} (h : IsOneCircuit m k l) :
+    2 ^ (k + l - 1) < 3 ^ k :=
+  (one_circuit_size_aux h).1
+
+/-- **Size.** For a 1-circuit, `3^k < 2^{k+l}`. -/
+theorem one_circuit_size {m k l : ℕ} (h : IsOneCircuit m k l) : 3 ^ k < 2 ^ (k + l) :=
+  (one_circuit_size_aux h).2.1
+
+/-- **Divisibility.** For a 1-circuit, `(2^{k+l} - 3^k) ∣ 2^l - 1`. -/
+theorem one_circuit_mod_eq_zero {m k l : ℕ} (h : IsOneCircuit m k l) :
+    (2 ^ l - 1) % (2 ^ (k + l) - 3 ^ k) = 0 :=
+  (one_circuit_size_aux h).2.2
+
 /-- Uniqueness of the exponent `L` with `2^{L-1} < 3^k < 2^L`. -/
 theorem exp_unique {k c L : ℕ} (hc1 : 2 ^ (c - 1) ≤ 3 ^ k) (hc2 : 3 ^ k < 2 ^ c) (hc : 1 ≤ c)
     (hL1 : 2 ^ (L - 1) < 3 ^ k) (hL2 : 3 ^ k < 2 ^ L) : c = L := by
@@ -141,6 +175,8 @@ theorem exp_unique {k c L : ℕ} (hc1 : 2 ^ (c - 1) ≤ 3 ^ k) (hc2 : 3 ^ k < 2 
   · have : 2 ^ L ≤ 2 ^ (c - 1) := Nat.pow_le_pow_right (by norm_num) (by omega)
     omega
 
+/-! ### The certificate -/
+
 /-- Kernel-checkable certificate for one `k`: `candL k` is the exponent `L` with
 `2^{L-1} ≤ 3^k < 2^L`, and `(2^L - 3^k) ∤ 2^{L-k} - 1`. -/
 def circOK (k : ℕ) : Bool :=
@@ -149,7 +185,9 @@ def circOK (k : ℕ) : Bool :=
 
 /-- If `circOK k` holds, there is no 1-circuit with `k` odd steps. -/
 theorem circOK_sound {m k l : ℕ} (h : IsOneCircuit m k l) (hk : circOK k = true) : False := by
-  obtain ⟨s1, s2, s3⟩ := one_circuit_size h
+  have s1 := one_circuit_size_lower h
+  have s2 := one_circuit_size h
+  have s3 := one_circuit_mod_eq_zero h
   simp only [circOK, Bool.and_eq_true, Nat.ble_eq, Nat.blt_eq, bne_iff_ne, ne_eq] at hk
   obtain ⟨⟨⟨c1, c2⟩, c3⟩, c4⟩ := hk
   have hc : 1 ≤ candL k := by unfold candL; omega
@@ -175,17 +213,18 @@ theorem circRange_sound (lo : ℕ) : ∀ n, circRange lo n = true → ∀ k, lo 
     · have : k = lo + n := by omega
       subst this; exact h.2
 
-
 /-- `CircRange lo hi`: `circOK k` holds for all `lo ≤ k < hi`. -/
 def CircRange (lo hi : ℕ) : Prop := ∀ k, lo ≤ k → k < hi → circOK k = true
 
-theorem circRange_nil (hi : ℕ) : CircRange hi hi := fun k h1 h2 => absurd h2 (by omega)
+theorem circRange_nil (hi : ℕ) : CircRange hi hi := fun k h1 h2 ↦ absurd h2 (by omega)
 
 theorem circRange_cons {lo n hi : ℕ} (h : circRange lo n = true) (hr : CircRange (lo + n) hi) :
-    CircRange lo hi := fun k h1 h2 => by
+    CircRange lo hi := fun k h1 h2 ↦ by
   rcases Nat.lt_or_ge k (lo + n) with hk | hk
   · exact circRange_sound lo n h k h1 hk
   · exact hr k hk h2
+
+/-! ### Verification for `k < 100000` -/
 
 theorem circBlock_0 : circRange 2 998 = true := by decide +kernel
 theorem circBlock_1 : circRange 1000 1000 = true := by decide +kernel
@@ -290,14 +329,49 @@ theorem circBlock_99 : circRange 99000 1000 = true := by decide +kernel
 
 /-- Kernel-verified: `circOK k` for all `2 ≤ k < 100000`. -/
 theorem circRange_2_100000 : CircRange 2 100000 :=
-  circRange_cons circBlock_0 (circRange_cons circBlock_1 (circRange_cons circBlock_2 (circRange_cons circBlock_3 (circRange_cons circBlock_4 (circRange_cons circBlock_5 (circRange_cons circBlock_6 (circRange_cons circBlock_7 (circRange_cons circBlock_8 (circRange_cons circBlock_9 (circRange_cons circBlock_10 (circRange_cons circBlock_11 (circRange_cons circBlock_12 (circRange_cons circBlock_13 (circRange_cons circBlock_14 (circRange_cons circBlock_15 (circRange_cons circBlock_16 (circRange_cons circBlock_17 (circRange_cons circBlock_18 (circRange_cons circBlock_19 (circRange_cons circBlock_20 (circRange_cons circBlock_21 (circRange_cons circBlock_22 (circRange_cons circBlock_23 (circRange_cons circBlock_24 (circRange_cons circBlock_25 (circRange_cons circBlock_26 (circRange_cons circBlock_27 (circRange_cons circBlock_28 (circRange_cons circBlock_29 (circRange_cons circBlock_30 (circRange_cons circBlock_31 (circRange_cons circBlock_32 (circRange_cons circBlock_33 (circRange_cons circBlock_34 (circRange_cons circBlock_35 (circRange_cons circBlock_36 (circRange_cons circBlock_37 (circRange_cons circBlock_38 (circRange_cons circBlock_39 (circRange_cons circBlock_40 (circRange_cons circBlock_41 (circRange_cons circBlock_42 (circRange_cons circBlock_43 (circRange_cons circBlock_44 (circRange_cons circBlock_45 (circRange_cons circBlock_46 (circRange_cons circBlock_47 (circRange_cons circBlock_48 (circRange_cons circBlock_49 (circRange_cons circBlock_50 (circRange_cons circBlock_51 (circRange_cons circBlock_52 (circRange_cons circBlock_53 (circRange_cons circBlock_54 (circRange_cons circBlock_55 (circRange_cons circBlock_56 (circRange_cons circBlock_57 (circRange_cons circBlock_58 (circRange_cons circBlock_59 (circRange_cons circBlock_60 (circRange_cons circBlock_61 (circRange_cons circBlock_62 (circRange_cons circBlock_63 (circRange_cons circBlock_64 (circRange_cons circBlock_65 (circRange_cons circBlock_66 (circRange_cons circBlock_67 (circRange_cons circBlock_68 (circRange_cons circBlock_69 (circRange_cons circBlock_70 (circRange_cons circBlock_71 (circRange_cons circBlock_72 (circRange_cons circBlock_73 (circRange_cons circBlock_74 (circRange_cons circBlock_75 (circRange_cons circBlock_76 (circRange_cons circBlock_77 (circRange_cons circBlock_78 (circRange_cons circBlock_79 (circRange_cons circBlock_80 (circRange_cons circBlock_81 (circRange_cons circBlock_82 (circRange_cons circBlock_83 (circRange_cons circBlock_84 (circRange_cons circBlock_85 (circRange_cons circBlock_86 (circRange_cons circBlock_87 (circRange_cons circBlock_88 (circRange_cons circBlock_89 (circRange_cons circBlock_90 (circRange_cons circBlock_91 (circRange_cons circBlock_92 (circRange_cons circBlock_93 (circRange_cons circBlock_94 (circRange_cons circBlock_95 (circRange_cons circBlock_96 (circRange_cons circBlock_97 (circRange_cons circBlock_98 (circRange_cons circBlock_99 (circRange_nil 100000))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+  circRange_cons circBlock_0 <| circRange_cons circBlock_1 <| circRange_cons circBlock_2 <|
+    circRange_cons circBlock_3 <| circRange_cons circBlock_4 <| circRange_cons circBlock_5 <|
+    circRange_cons circBlock_6 <| circRange_cons circBlock_7 <| circRange_cons circBlock_8 <|
+    circRange_cons circBlock_9 <| circRange_cons circBlock_10 <| circRange_cons circBlock_11 <|
+    circRange_cons circBlock_12 <| circRange_cons circBlock_13 <| circRange_cons circBlock_14 <|
+    circRange_cons circBlock_15 <| circRange_cons circBlock_16 <| circRange_cons circBlock_17 <|
+    circRange_cons circBlock_18 <| circRange_cons circBlock_19 <| circRange_cons circBlock_20 <|
+    circRange_cons circBlock_21 <| circRange_cons circBlock_22 <| circRange_cons circBlock_23 <|
+    circRange_cons circBlock_24 <| circRange_cons circBlock_25 <| circRange_cons circBlock_26 <|
+    circRange_cons circBlock_27 <| circRange_cons circBlock_28 <| circRange_cons circBlock_29 <|
+    circRange_cons circBlock_30 <| circRange_cons circBlock_31 <| circRange_cons circBlock_32 <|
+    circRange_cons circBlock_33 <| circRange_cons circBlock_34 <| circRange_cons circBlock_35 <|
+    circRange_cons circBlock_36 <| circRange_cons circBlock_37 <| circRange_cons circBlock_38 <|
+    circRange_cons circBlock_39 <| circRange_cons circBlock_40 <| circRange_cons circBlock_41 <|
+    circRange_cons circBlock_42 <| circRange_cons circBlock_43 <| circRange_cons circBlock_44 <|
+    circRange_cons circBlock_45 <| circRange_cons circBlock_46 <| circRange_cons circBlock_47 <|
+    circRange_cons circBlock_48 <| circRange_cons circBlock_49 <| circRange_cons circBlock_50 <|
+    circRange_cons circBlock_51 <| circRange_cons circBlock_52 <| circRange_cons circBlock_53 <|
+    circRange_cons circBlock_54 <| circRange_cons circBlock_55 <| circRange_cons circBlock_56 <|
+    circRange_cons circBlock_57 <| circRange_cons circBlock_58 <| circRange_cons circBlock_59 <|
+    circRange_cons circBlock_60 <| circRange_cons circBlock_61 <| circRange_cons circBlock_62 <|
+    circRange_cons circBlock_63 <| circRange_cons circBlock_64 <| circRange_cons circBlock_65 <|
+    circRange_cons circBlock_66 <| circRange_cons circBlock_67 <| circRange_cons circBlock_68 <|
+    circRange_cons circBlock_69 <| circRange_cons circBlock_70 <| circRange_cons circBlock_71 <|
+    circRange_cons circBlock_72 <| circRange_cons circBlock_73 <| circRange_cons circBlock_74 <|
+    circRange_cons circBlock_75 <| circRange_cons circBlock_76 <| circRange_cons circBlock_77 <|
+    circRange_cons circBlock_78 <| circRange_cons circBlock_79 <| circRange_cons circBlock_80 <|
+    circRange_cons circBlock_81 <| circRange_cons circBlock_82 <| circRange_cons circBlock_83 <|
+    circRange_cons circBlock_84 <| circRange_cons circBlock_85 <| circRange_cons circBlock_86 <|
+    circRange_cons circBlock_87 <| circRange_cons circBlock_88 <| circRange_cons circBlock_89 <|
+    circRange_cons circBlock_90 <| circRange_cons circBlock_91 <| circRange_cons circBlock_92 <|
+    circRange_cons circBlock_93 <| circRange_cons circBlock_94 <| circRange_cons circBlock_95 <|
+    circRange_cons circBlock_96 <| circRange_cons circBlock_97 <| circRange_cons circBlock_98 <|
+    circRange_cons circBlock_99 <| circRange_nil 100000
 
-/-- **Main result.** Every 1-circuit with fewer than `100000` odd steps is the trivial one, `m = 1`. -/
+/-- **Main result.** Every 1-circuit with fewer than `100000` odd steps is the trivial one,
+`m = 1`. -/
 theorem one_circuit_eq_one {m k l : ℕ} (h : IsOneCircuit m k l) (hk : k < 100000) : m = 1 := by
   rcases Nat.lt_or_ge k 2 with hk2 | hk2
   · have hk1 : k = 1 := by have := h.1; omega
     subst hk1
-    obtain ⟨s1, s2, -⟩ := one_circuit_size h
+    have s1 := one_circuit_size_lower h
+    have s2 := one_circuit_size h
     have e := exp_unique (c := 2) (k := 1) (by norm_num) (by norm_num) (by norm_num) s1 s2
     have hl : l = 1 := by omega
     subst hl
@@ -306,13 +380,15 @@ theorem one_circuit_eq_one {m k l : ℕ} (h : IsOneCircuit m k l) (hk : k < 1000
     omega
   · exact (circOK_sound h (circRange_2_100000 k hk2 hk)).elim
 
-/-- Contrapositive: a 1-circuit with `m > 1` has at least `100000` odd steps. -/
+/-- A 1-circuit with `m > 1` has at least `100000` odd steps. -/
 theorem one_circuit_k_ge {m k l : ℕ} (h : IsOneCircuit m k l) (hm : 1 < m) : 100000 ≤ k := by
   by_contra hc
   have := one_circuit_eq_one h (by omega)
   omega
 
-/-- Non-vacuity: the trivial cycle `1 → 2 → 1` is a 1-circuit with `k = l = 1`. -/
+/-! ### Examples -/
+
+-- The trivial cycle `1 → 2 → 1` is a 1-circuit with `k = l = 1`.
 example : IsOneCircuit 1 1 1 := by
   refine ⟨le_rfl, le_rfl, ?_, ?_, ?_⟩
   · intro i hi; interval_cases i; decide
@@ -320,13 +396,3 @@ example : IsOneCircuit 1 1 1 := by
   · decide
 
 end Collatz
-
-#print axioms Collatz.odd_run
-#print axioms Collatz.even_run
-#print axioms Collatz.one_circuit_eq
-#print axioms Collatz.one_circuit_size
-#print axioms Collatz.exp_unique
-#print axioms Collatz.circOK_sound
-#print axioms Collatz.circRange_2_100000
-#print axioms Collatz.one_circuit_eq_one
-#print axioms Collatz.one_circuit_k_ge

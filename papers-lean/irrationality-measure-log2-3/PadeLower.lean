@@ -1,14 +1,36 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import PadeAssembly
 
 /-!
-# Explicit lower bound for `|E1|` (conjunct (iv) of `SignApprox`)
+# A lower bound for the first linear form of `Vq_n`
 
-For `n = 2m+1`, `E1 = ∫_1^{4/3} Vq_n(u)/u^{5n+1} du ≤ 0`, and
-`1 ≤ (-E1)·2^{26+37m}` (`negE1_lower`), because on `[11/10, 9/8]` the negated integrand is
-`≥ ρ^n/3` with `ρ = (1/10)^4(3/4)^2(5/8)^3(3/8)(8/9)^5` (`log2 ρ ≈ -18.42`), and
-`2^19ρ ≥ 1`, `2^37ρ^2 ≥ 1`, `2^7 ≥ 120`.
-Consequently (`form1_lower`) `1 ≤ |Q_n(2log2-log3) - P1_n|·2^{26+37m}`: conjunct (iv) with
-`b = 37`, `c ≥ 26`.
+For `n = 2m + 1` the integral `E1 = ∫_1^{4/3} Vq_n(u)/u^{5n+1} du` is `≤ 0` (`PadeSign`). In this
+file we prove the explicit lower bound `1 ≤ (-E1) · 2^{26 + 37m}`. On `[11/10, 9/8]` the negated
+integrand is at least `ρ^n/3` with `ρ = (1/10)^4 (3/4)^2 (5/8)^3 (3/8) (8/9)^5`
+(`log₂ ρ ≈ -18.42`), and `2^19 ρ ≥ 1`, `2^37 ρ^2 ≥ 1`, `2^7 ≥ 120`. Consequently the first
+integer linear form of `PadeAssembly` satisfies
+`1 ≤ |Q_n (2 log 2 - log 3) - P1_n| · 2^{26 + 37m}`, which is the lower-bound condition of
+`SignSplit.SignApprox` for this family.
+
+## Main definitions
+
+- `ρ`: the rate `(1/10)^4 (3/4)^2 (5/8)^3 (3/8) (8/9)^5`.
+
+## Main results
+
+- `neg_integrand_ge`: for `n = 2m + 1` and `u ∈ [11/10, 9/8]`, `-Vq_n(u)/u^{5n+1} ≥ ρ^n/3`.
+- `negE1_lower`: `1 ≤ (-E1) · 2^{26 + 37m}`.
+- `form1_lower`: `1 ≤ |Q_n (2 log 2 - log 3) - P1_n| · 2^{26 + 37m}`.
+
+## References
+
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, Séminaire de Théorie des
+  Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
+- M. Hata, *Rational approximations to π and some other numbers*, Acta Arith. 63 (1993), 335–349.
 -/
 
 open Polynomial
@@ -16,7 +38,10 @@ open Polynomial
 namespace Collatz.PadeLower
 open PadeArith PadeArithQ PadeSign PadeAssembly
 
-/-- `ρ = (1/10)^4 (3/4)^2 (5/8)^3 (3/8) (8/9)^5`, the per-step lower rate of `-g` on `[11/10,9/8]`. -/
+/-! ### The integrand on `[11/10, 9/8]` -/
+
+/-- `ρ = (1/10)^4 (3/4)^2 (5/8)^3 (3/8) (8/9)^5`, the lower rate of the negated integrand on
+`[11/10, 9/8]`. -/
 noncomputable def ρ : ℝ := (1/10:ℝ)^4*(3/4)^2*(5/8)^3*(3/8)*(8/9)^5
 
 /-- For `n = 2m+1`: `-Vq_n(u) = (u-1)^{4n}(3-2u)^{2n}(4-3u)^{3n}(6-5u)^{n+1}`. -/
@@ -63,17 +88,20 @@ theorem neg_integrand_ge (m : ℕ) (u : ℝ) (h1 : 11/10 ≤ u) (h2 : u ≤ 9/8)
     div_inv_eq_mul, gen, ρ]
   norm_num
 
-/-- `ρ^{2m+1}/120 · 2^{26+37m} ≥ 1` (exact rational arithmetic). -/
-theorem numerics (m : ℕ) : 1 ≤ ρ^(2*m+1) / 120 * 2^(26 + 37*m) := by
+/-- `ρ^{2m+1}/120 · 2^{26+37m} ≥ 1`. -/
+theorem one_le_rho_pow_mul_two_pow (m : ℕ) : 1 ≤ ρ^(2*m+1) / 120 * 2^(26 + 37*m) := by
   have h1 : 1 ≤ (2:ℝ)^19 * ρ := by unfold ρ; norm_num
   have h2 : 1 ≤ (2:ℝ)^37 * ρ^2 := by unfold ρ; norm_num
-  have gen : ∀ r t : ℝ, r^(2*m+1) / 120 * t^(26 + 37*m) = (t^7/120) * (t^19 * r) * (t^37 * r^2)^m := by
+  have gen : ∀ r t : ℝ, r^(2*m+1) / 120 * t^(26 + 37*m) =
+      (t^7/120) * (t^19 * r) * (t^37 * r^2)^m := by
     intro r t; ring
   rw [gen]
   have h3 : 1 ≤ ((2:ℝ)^37 * ρ^2)^m := one_le_pow₀ h2
   have h4 : (1:ℝ) ≤ 2^7/120 := by norm_num
   calc (1:ℝ) = 1 * 1 * 1 := by ring
     _ ≤ _ := by gcongr
+
+/-! ### Lower bounds for `-E1` and the first form -/
 
 /-- For `n = 2m+1`: `1 ≤ (-∫_1^{4/3} Vq_n(u)/u^{5n+1} du)·2^{26+37m}`. -/
 theorem negE1_lower (m : ℕ) :
@@ -104,12 +132,12 @@ theorem negE1_lower (m : ℕ) :
   have htot : ρ^(2*m+1) / 120 ≤ -∫ u in (1:ℝ)..(4/3), g u := by
     rw [← intervalIntegral.integral_neg, ← hsplit1, ← hsplit2]
     linarith
-  have hnum := numerics m
+  have hnum := one_le_rho_pow_mul_two_pow m
   have h2pos : (0:ℝ) < 2^(26 + 37*m) := by positivity
   calc (1:ℝ) ≤ ρ^(2*m+1) / 120 * 2^(26 + 37*m) := hnum
     _ ≤ _ := mul_le_mul_of_nonneg_right htot h2pos.le
 
-/-- Conjunct (iv): `1 ≤ |Q_n(2log2-log3) - P1_n|·2^{26+37m}` for `n = 2m+1`. -/
+/-- For `n = 2m+1`, `1 ≤ |Q_n (2 log 2 - log 3) - P1_n| · 2^{26+37m}`. -/
 theorem form1_lower (m : ℕ) :
     1 ≤ |(Qn (2*m+1):ℝ) * (2*Real.log 2 - Real.log 3) - P1n (2*m+1)| * 2^(26 + 37*m) := by
   rw [← form1_eq]
@@ -124,7 +152,3 @@ theorem form1_lower (m : ℕ) :
       exact le_mul_of_one_le_left (by linarith) hD
 
 end Collatz.PadeLower
-
-#print axioms Collatz.PadeLower.neg_integrand_ge
-#print axioms Collatz.PadeLower.negE1_lower
-#print axioms Collatz.PadeLower.form1_lower

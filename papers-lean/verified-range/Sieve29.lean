@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import Sieve25
 import Sieve29Part0
 import Sieve29Part1
@@ -65,18 +70,21 @@ import Sieve29Part62
 import Sieve29Part63
 
 /-!
-# Verified descent below `2^20 · 280 = 35 · 2^23 = 293601280`
+# Verified descent below `2^20 · 280 = 293601280`
 
-Assembles the 64 kernel-certificate files `Sieve29Part0..63` (919 `decide +kernel` blocks of the
-unchanged residue-tree sieve `sv` of `Sieve.lean`, with `lo = 2^25`, `K = 20`, `N = 280`,
-fuel 400, forced-bit patterns mod `2^14`; generator `Scratch/sieve_gen/gen29.py`, all `2^14`
-patterns pre-simulated in Python with fuel 400) into `DescRange (2^25) (2^20 * 280)`, and
-combines it with `Sieve25`/`PublishedBounds` `descRange_25` to get `DescRange 2 (2^20 * 280)`: every `m` with
-`2 ≤ m < 293601280` has a `T`-iterate below `m`.  Kernel reduction only (`decide +kernel`).
+In this file we assemble the 64 certificate files `Sieve29Part0`, …, `Sieve29Part63` into
+`DescRange (2^25) (2^20 · 280)`, and combine it with `descRange_25`. The certificates are 919
+`decide +kernel` checks of the sieve `sv` of `Sieve.lean`, with `lo = 2^25`, `K = 20`, `N = 280`,
+fuel 400, and forced-bit patterns modulo `2^14`.
 
-Classical and mathematically routine (the literature has verified far beyond `2^68`).  The
-threshold `293601280 ≈ 17.5 · 2^24` is chosen because it is just above the `≈ 17.04 · 2^24`
-needed to pass the Farey pair `24727/15601` (Crandall 1978's bound, `Crandall.lean`).
+The bound `293601280 ≈ 17.5 · 2^24` is just above the `≈ 17.04 · 2^24` needed for the Farey pair
+`24727/15601`, which gives Crandall's bound in `Crandall.lean`.
+
+## Main results
+
+- `descRange_25_29`: every `m` with `2^25 ≤ m < 2^20 · 280` has a `T`-iterate below `m`.
+- `descRange_29`: every `m` with `2 ≤ m < 2^20 · 280` has a `T`-iterate below `m`.
+- `min_orbit_ge_29`: the minimum `m > 1` of a `T`-orbit satisfies `2^20 · 280 ≤ m`.
 -/
 
 namespace Collatz
@@ -168,8 +176,3 @@ theorem min_orbit_ge_29 {m : ℕ} (hm : 1 < m) (hmin : ∀ j, m ≤ T^[j] m) : 2
   min_orbit_ge_of_descRange descRange_29 hm hmin
 
 end Collatz
-
-#print axioms Collatz.sieve29_roots
-#print axioms Collatz.descRange_25_29
-#print axioms Collatz.descRange_29
-#print axioms Collatz.min_orbit_ge_29

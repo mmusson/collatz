@@ -1,35 +1,58 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import FareyBigCond
 
 /-!
-# Type-II transference, simultaneous approximations → `IrrMeasHyp`
+# Transference from simultaneous approximations
 
-`SimApprox a c d Q x y`: integer sequences with `|Q_n| ≤ 2^{c+an}`,
-`|Q_n log 2 − x_n|·2^{⌊n/d⌋} ≤ 2^c`, `|Q_n log 3 − y_n|·2^{⌊n/d⌋} ≤ 2^c` and
-`Δ_n = x_n y_{n+1} − x_{n+1} y_n ≠ 0` for all `n`.  This is a DEFINITION (hypothesis
-interface), not an axiom; it is meant to be discharged by the 4-root family of
-`PadeArith.lean` (T1) plus a sup bound, the integral/finite-sum identity and `Δ_n ≠ 0`
-for all `n`, none of which are formalized (Δ_n ≠ 0 is checked numerically only, n ≤ 29).
-Unlike type-I `SchemeHyp` (needs decay exponent > coefficient exponent, impossible for
-Hata-type families with a ≈ 37 bits and decay < 1 bit per index), this interface allows
-arbitrary `a`.
-* `linForm_lower_of_simApprox`: `1 ≤ 2^{c+1+a} (2^{c+2}(p+q))^{ad} |q log 3 − p log 2|`.
-* `irrMeasHyp_of_simApprox`: if `2^{c+1+a+(c+4)ad} ≤ Q0^t`, `t ≥ 1`, `Q0 ≥ 3`, then
-  `IrrMeasHyp (ad+1+t) Q0`.
-* `few_runs_cycle_trivial_of_simApprox`: CONDITIONAL on `SimApprox`, with `Q0 ≤ K1big` and
-  `8(30+17(ad+t)+2) ≤ 2^16`: every positive `T`-cycle with `≤ 2` odd runs is trivial
-  (classical Steiner 1977 / Simons 2005 statement).
+In this file we show that simultaneous rational approximations to `log 2` and `log 3` with a
+non-vanishing determinant give an explicit irrationality measure of `log 3 / log 2`. The data are
+integer sequences `Q_n, x_n, y_n` with `|Q_n| ≤ 2^{c + an}`,
+`|Q_n log 2 - x_n| · 2^{⌊n/d⌋} ≤ 2^c`, `|Q_n log 3 - y_n| · 2^{⌊n/d⌋} ≤ 2^c` and
+`x_n y_{n+1} - x_{n+1} y_n ≠ 0` for all `n`. Unlike a direct (type I) scheme, the coefficient
+growth `a` may exceed the decay rate.
+
+All results assume the hypothesis `SimApprox`, a definition that is not verified in this library
+for any family. The sign-split variant in `SignSplit` avoids the determinant condition and is
+verified unconditionally.
+
+## Main definitions
+
+- `SimApprox a c d Q x y`: the simultaneous approximation data above.
+
+## Main results
+
+- `linForm_lower_of_simApprox`: `1 ≤ 2^{c+1+a} (2^{c+2} (p + q))^{ad} |q log 3 - p log 2|`.
+- `irrMeasHyp_of_simApprox`: if `2^{c+1+a+(c+4)ad} ≤ Q0^t`, `t ≥ 1` and `Q0 ≥ 3`, then
+  `IrrMeasHyp (ad + 1 + t) Q0`.
+- `few_runs_cycle_trivial_of_simApprox`: under `SimApprox` with `Q0 ≤ K1big` and
+  `8 (30 + 17 (ad + t) + 2) ≤ 2^16`, every positive `T`-cycle with at most two odd runs is trivial.
+
+## References
+
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, Séminaire de Théorie des
+  Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
+- M. Hata, *Rational approximations to π and some other numbers*, Acta Arith. 63 (1993), 335–349.
 -/
 
 namespace Collatz
 
-/-- Type-II simultaneous approximation data for `(log 2, log 3)` (hypothesis interface). -/
+/-! ### The simultaneous approximation hypothesis -/
+
+/-- Simultaneous approximation data for `(log 2, log 3)` with non-vanishing consecutive
+determinants. -/
 def SimApprox (a c d : ℕ) (Q x y : ℕ → ℤ) : Prop := ∀ n : ℕ,
   |(Q n : ℝ)| ≤ 2^(c + a*n) ∧
   |(Q n : ℝ) * Real.log 2 - x n| * 2^(n/d) ≤ 2^c ∧
   |(Q n : ℝ) * Real.log 3 - y n| * 2^(n/d) ≤ 2^c ∧
   x n * y (n+1) - x (n+1) * y n ≠ 0
 
-/-- Lower bound for `|q log 3 − p log 2|` from `SimApprox` (unconditional implication). -/
+/-! ### Transference -/
+
+/-- Under `SimApprox`, `1 ≤ 2^{c+1+a} (2^{c+2} (p+q))^{ad} |q log 3 − p log 2|` for `q ≥ 1`. -/
 theorem linForm_lower_of_simApprox {a c d : ℕ} {Q x y : ℕ → ℤ} (hd : 1 ≤ d)
     (h : SimApprox a c d Q x y) (p q : ℕ) (hq : 1 ≤ q) :
     1 ≤ (2:ℝ)^(c+1+a) * ((2:ℝ)^(c+2) * (p+q))^(a*d) *
@@ -97,7 +120,8 @@ theorem linForm_lower_of_simApprox {a c d : ℕ} {Q x y : ℕ → ℤ} (hd : 1 �
   rw [hid] at hz1
   have hs := hsmall m hnm
   have hQΛ : (1:ℝ)/2 < |(Q m : ℝ)| * |Λ| := by
-    have := abs_sub (Q m * Λ) ((q:ℝ) * ((Q m : ℝ) * Real.log 3 - y m) - p * ((Q m : ℝ) * Real.log 2 - x m))
+    have := abs_sub (Q m * Λ)
+      ((q:ℝ) * ((Q m : ℝ) * Real.log 3 - y m) - p * ((Q m : ℝ) * Real.log 2 - x m))
     rw [abs_mul] at this
     linarith
   have hQ : |(Q m : ℝ)| ≤ 2^(c + a*(n+1)) :=
@@ -123,8 +147,8 @@ theorem linForm_lower_of_simApprox {a c d : ℕ} {Q x y : ℕ → ℤ} (hd : 1 �
   rw [e3]
   nlinarith
 
-
-/-- `SimApprox` gives the irrationality measure `IrrMeasHyp (ad+1+t) Q0` (unconditional implication). -/
+/-- Under `SimApprox`, if `2^{c+1+a+(c+4)ad} ≤ Q0^t` with `t ≥ 1` and `Q0 ≥ 3`, then
+`IrrMeasHyp (ad+1+t) Q0`. -/
 theorem irrMeasHyp_of_simApprox {a c d t Q0 : ℕ} {Q x y : ℕ → ℤ} (hd : 1 ≤ d)
     (h : SimApprox a c d Q x y) (ht : 1 ≤ t) (hQ0 : 3 ≤ Q0)
     (hM : 2^(c+1+a+(c+4)*a*d) ≤ Q0^t) : IrrMeasHyp (a*d+1+t) Q0 := by
@@ -189,18 +213,17 @@ theorem irrMeasHyp_of_simApprox {a c d t Q0 : ℕ} {Q x y : ℕ → ℤ} (hd : 1
       nlinarith
     nlinarith
 
-/-- **CONDITIONAL on `SimApprox`**: `≤ 2`-run `T`-cycles are trivial. -/
+/-! ### Cycles with at most two odd runs -/
+
+/-- Under `SimApprox` and explicit side conditions, every positive `T`-cycle with at most two odd
+runs is trivial. -/
 theorem few_runs_cycle_trivial_of_simApprox {a c d t Q0 : ℕ} {Q x y : ℕ → ℤ} (hd : 1 ≤ d)
     (h : SimApprox a c d Q x y) (ht : 1 ≤ t) (hQ0 : 3 ≤ Q0) (hQK : Q0 ≤ K1big)
     (hM : 2^(c+1+a+(c+4)*a*d) ≤ Q0^t) (hside : 8 * (30 + 17 * (a*d+t) + 2) ≤ 2^16)
     {z L : ℕ} (hz : 0 < z) (hL : 0 < L) (hc : CollatzProof.T^[L] z = z) (hr : oddRuns L z ≤ 2) :
     z = 1 ∨ z = 2 := by
   have hμ : a*d+1+t - 1 = a*d+t := by omega
-  exact few_runs_cycle_trivial_of_irrMeas_big (by omega) (by omega) hQK (by rw [hμ]; exact hside)
+  exact few_runs_cycle_trivial_of_irrMeas_K1big (by omega) (by omega) hQK (by rw [hμ]; exact hside)
     (irrMeasHyp_of_simApprox hd h ht hQ0 hM) hz hL hc hr
 
 end Collatz
-
-#print axioms Collatz.linForm_lower_of_simApprox
-#print axioms Collatz.irrMeasHyp_of_simApprox
-#print axioms Collatz.few_runs_cycle_trivial_of_simApprox

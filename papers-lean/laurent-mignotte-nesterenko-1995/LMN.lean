@@ -1,64 +1,86 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import Collatz.StateOfArt
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 import Mathlib.Analysis.SpecialFunctions.Exp
 
 /-!
-# The ≤2-run exclusion CONDITIONAL on a transcribed Baker-type (LMN / Laurent) bound
+# Cycles with at most two odd runs, from a lower bound for linear forms in two logarithms
 
-**CONDITIONAL.** Everything after `growth_LMN` assumes `LMNHyp Cst c0 m0`, a transcription of
-the explicit two-logarithm lower bound of Laurent–Mignotte–Nesterenko (1995, J. Number Theory
-55, Cor. 2) / Laurent (2008, Acta Arith. 133, Cor. 1, Table 1), specialised to
-`Λ = k log 3 − L log 2`.  It is a **published theorem, not formalized here**.  Provenance of
-the constants (repaired `MRuns`/`RunGrowth`): the Laurent08 instance `(25.2, 0.21, 20)` is corroborated by a
-secondary source only: arXiv:2609.23899 e-print TeX (lines ~877-914, an application of
-Laurent 2008 Cor. 1 with `m = 20`, `C1 = 25.2`, `c0 = 0.21`, inside a section-2 proof); the
-original was not consulted.  The LMN95 instance `(24.34, 0.14, 21)` is from memory, unverified.
-arXiv:1811.00654 Lemma 2.7 quotes Laurent 2008 Theorem 2 and does not verify either corollary's
-constants.  The constants **still need verification** against the originals.  Every
-theorem below is vacuous if the transcription is false; the parametric box
-`Cst ≤ 51/2`, `c0 ≤ 1`, `0 ≤ m0 ≤ 21` tolerates small errors in the constants.  (The proof never
-uses `0 ≤ Cst`; the hypothesis is kept only for the stated interface.)
+Laurent, Mignotte and Nesterenko, and later Laurent, give explicit lower bounds for linear forms
+in two logarithms. Specialised to `Λ = k log 3 − L log 2`, such a bound gives
+`2^L ≤ 2^(1 + 51(⌊log₂ k⌋ + 21)²) (2^L − 3^k)` for `k ≥ 2^20` and `3^k < 2^L`. This quasi-polynomial
+gap is enough for the hypothesis `TwoCircHyp 100000` of `LinForm`, and hence for the 1- and
+2-circuit theorems of Steiner and Simons for every `k`: every positive `T`-cycle point whose
+window has at most two odd runs is `1` or `2`.
 
-* `gap_of_LMN`: `LMNHyp` ⇒ for `k ≥ 2^20`, `3^k < 2^L`:
-  `2^L ≤ 2^(1 + 51(⌊log₂ k⌋+21)²) (2^L − 3^k)`.
-* `twoCircAt_of_LMN`, `twoCircHyp_of_LMN`: ⇒ `TwoCircHyp 100000` (the range `[10^5, 2^20)` is
-  covered unconditionally by `twoCirc_of_gap gapBelow_225644606`).
-* `few_runs_cycle_trivial_of_LMN`: ⇒ every positive `T`-cycle point with `≤ 2` odd runs is 1 or 2.
-* `state_of_the_art_of_LMN`: ⇒ `state_of_the_art` with `≥ 3` odd runs for every `k`.
-* Named instances `…_of_LMN95` `(24.34, 0.14, 21)` and `…_of_Laurent08` `(25.2, 0.21, 20)`.
+The lower bound itself is not formalized. It is stated as the hypothesis `LMNHyp Cst c0 m0`, and
+all results after `growth_LMN` assume it. The results are stated for a box of constants
+`Cst ≤ 51/2`, `c0 ≤ 1`, `0 ≤ m0 ≤ 21`, which contains the constants `(24.34, 0.14, 21)` of
+Laurent–Mignotte–Nesterenko (Cor. 2) and `(25.2, 0.21, 20)` of Laurent (Cor. 1, `m = 20`) and
+tolerates small transcription errors. These constants should be checked against the original
+papers before relying on the named instances.
 
-**Why not `LinFormHyp`.** Baker/LMN-type bounds have the quasi-polynomial shape
-`|Λ| ≥ exp(−C (log k)²)`; they do **not** imply the polynomial `LinFormHyp K c μ`
-(`2^L ≤ 2^c k^μ (2^L − 3^k)`) for large `k`, since `(log k)²` eventually beats `μ log k`.
-`TwoCircHyp` only needs an exponential-type gap `≳ (3/4)^{k/2}`, which any quasi-polynomial
-bound gives for large `k`; so this file targets `TwoCircHyp` directly.  This supersedes
-`LinFormHyp` as the literature-faithful conditional input (the old theorems are kept).
+A bound of this quasi-polynomial shape, `|Λ| ≥ exp(−C (log k)²)`, does not imply the polynomial
+hypothesis `LinFormHyp K c μ` of `LinForm` for large `k`, since `(log k)²` eventually exceeds
+`μ log k`. The hypothesis `TwoCircHyp` only needs a gap of size about `(3/4)^{k/2}`, so this file
+targets `TwoCircHyp` directly. Nothing here bounds the number of odd runs of a general cycle.
 
-The result is classical (Steiner 1977 / Simons 2005 modulo LMN 1995); nothing here bounds the
-number of odd runs of a general cycle.
+## Main definitions
+
+- `LMNHyp Cst c0 m0`: the two-logarithm lower bound for `k log 3 − L log 2` with constants
+  `Cst`, `c0`, `m0`.
+
+## Main results
+
+- `gap_of_LMN`: under `LMNHyp`, for `k ≥ 2^20` and `3^k < 2^L`,
+  `2^L ≤ 2^(1 + 51(⌊log₂ k⌋ + 21)²) (2^L − 3^k)`.
+- `twoCircAt_of_LMN`, `twoCircHyp_of_LMN`: under `LMNHyp`, the inequality of `TwoCircHyp` holds
+  for `k ≥ 2^20`, and `TwoCircHyp 100000` holds (the range `[10^5, 2^20)` is covered
+  unconditionally by `gapBelow_225644606`).
+- `few_runs_cycle_trivial_of_LMN`: under `LMNHyp`, every positive `T`-cycle point with at most two
+  odd runs is `1` or `2`.
+- `state_of_the_art_of_LMN`: under `LMNHyp`, the conclusion of `state_of_the_art` holds with at
+  least three odd runs.
+- `few_runs_cycle_trivial_of_LMN95`, `few_runs_cycle_trivial_of_Laurent08`: the instances with
+  the constants of the two papers.
+
+## References
+
+- M. Laurent, M. Mignotte, Yu. Nesterenko, *Formes linéaires en deux logarithmes et déterminants
+  d'interpolation*, J. Number Theory 55 (1995), 285–321.
+- M. Laurent, *Linear forms in two logarithms and interpolation determinants II*, Acta Arith. 133
+  (2008), 325–348.
+- R. P. Steiner, *A theorem on the Syracuse problem*, in Proc. 7th Manitoba Conference on
+  Numerical Mathematics and Computing (1977), 553–559.
+- J. L. Simons, *On the nonexistence of 2-cycles for the 3x+1 problem*, Math. Comp. 74 (2005),
+  1565–1572.
 -/
 
 namespace Collatz
+
 open CollatzProof
 
-/-- **CONDITIONAL INPUT (a definition, not an axiom).** Transcription of the
-Laurent–Mignotte–Nesterenko (1995, Cor. 2) / Laurent (2008, Cor. 1) explicit lower bound for
+/-! ### The hypothesis -/
+
+/-- The explicit lower bound of Laurent–Mignotte–Nesterenko (Cor. 2) and Laurent (Cor. 1) for
 `Λ = k log 3 − L log 2`, specialised to `D = 1`, `α₁ = 2` (`log A₁ = max(h(2), log 2, 1) = 1`,
 omitted as a factor), `α₂ = 3` (`log A₂ = max(h(3), log 3, 1) = log 3`),
 `b' = b₁/(D log A₂) + b₂/(D log A₁) = L / log 3 + k`:
 for all `k, L ≥ 1`, `−Cst · max(log b' + c0, m0)² · log 3 ≤ log |k log 3 − L log 2|`.
-(The published bound's third max-entry `1/2` is dropped; harmless when `m0 ≥ 1/2`.)
-Published, **not formalized here**; constants not checked against the originals (see the
-module docstring for provenance of each instance); any theorem using it is vacuous if it is
-false.  **Robustness:** the ≤2-run conclusions survive any constant `Cst ≤ 3000`
-(`expGap_of_LMN_wide`, `ExpGap.lean`; about 119× Laurent08's `25.2`), so moderate errors in the
-transcribed constants are harmless (this reduces, but does not remove, the provenance caveat). -/
+The third entry `1/2` of the published maximum is dropped, which is harmless when `m0 ≥ 1/2`.
+This is a hypothesis; it is not proved here. -/
 def LMNHyp (Cst c0 m0 : ℝ) : Prop :=
   ∀ k L : ℕ, 0 < k → 0 < L →
     -Cst * (max (Real.log ((L:ℝ) / Real.log 3 + k) + c0) m0)^2 * Real.log 3
       ≤ Real.log |(k:ℝ) * Real.log 3 - (L:ℝ) * Real.log 2|
 
-/-- Growth: `8 (1 + 51 (ℓ+21)²) ≤ 2^ℓ` for `ℓ ≥ 20` (unconditional). -/
+/-! ### The integer gap -/
+
+/-- `8 (1 + 51 (ℓ + 21)²) ≤ 2^ℓ` for `ℓ ≥ 20`. -/
 theorem growth_LMN (ℓ : ℕ) (h : 20 ≤ ℓ) : 8 * (1 + 51 * (ℓ + 21)^2) ≤ 2^ℓ := by
   induction ℓ, h using Nat.le_induction with
   | base => norm_num
@@ -66,7 +88,8 @@ theorem growth_LMN (ℓ : ℕ) (h : 20 ≤ ℓ) : 8 * (1 + 51 * (ℓ + 21)^2) �
     have : (n+1+21)^2 ≤ 2*(n+21)^2 := by nlinarith
     rw [pow_succ 2 n]; nlinarith
 
-/-- Core of `gap_of_LMN`, with `ℓ` an arbitrary natural such that `k < 2^(ℓ+1)`. -/
+/-- The gap of `gap_of_LMN`, with `ℓ` any natural number such that `k < 2^(ℓ+1)`. The
+hypothesis `0 ≤ Cst` is not used. -/
 theorem gap_of_LMN_core {Cst c0 m0 : ℝ} (_hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2) (hc0 : c0 ≤ 1)
     (hm0 : 0 ≤ m0) (hm1 : m0 ≤ 21) (H : LMNHyp Cst c0 m0) {k L ℓ : ℕ} (hk0 : k ≠ 0)
     (hkl : k < 2^(ℓ+1)) (hL : 3^k < 2^L) :
@@ -176,15 +199,18 @@ theorem gap_of_LMN_core {Cst c0 m0 : ℝ} (_hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2)
       simpa [a, b, P, mul_assoc] using hreal
     exact_mod_cast hcast
 
-/-- **CONDITIONAL on `LMNHyp`** (see its docstring): explicit integer gap for `k ≥ 2^20`. -/
+/-- Under `LMNHyp`, for `k ≥ 2^20` and `3^k < 2^L`,
+`2^L ≤ 2^(1 + 51(⌊log₂ k⌋ + 21)²) (2^L − 3^k)`. -/
 theorem gap_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2) (hc0 : c0 ≤ 1)
     (hm0 : 0 ≤ m0) (hm1 : m0 ≤ 21) (H : LMNHyp Cst c0 m0) {k L : ℕ} (hk : 2^20 ≤ k)
     (hL : 3^k < 2^L) :
     2^L ≤ 2^(1 + 51 * (Nat.log 2 k + 21)^2) * (2^L - 3^k) :=
-  gap_of_LMN_core hC0 hC hc0 hm0 hm1 H (by omega) (Nat.lt_pow_succ_log_self (by norm_num) k) hL
+  gap_of_LMN_core hC0 hC hc0 hm0 hm1 H (by omega) (Nat.lt_pow_succ_log_self (by norm_num) k)
+    hL
 
-/-- **CONDITIONAL on `LMNHyp`** (unverified transcription of a published theorem; vacuous if
-false): the `TwoCircHyp` inequality holds at every `k ≥ 2^20`. -/
+/-! ### Circuits and cycles with few odd runs -/
+
+/-- Under `LMNHyp`, the inequality of `TwoCircHyp` holds at every `k ≥ 2^20`. -/
 theorem twoCircAt_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2) (hc0 : c0 ≤ 1)
     (hm0 : 0 ≤ m0) (hm1 : m0 ≤ 21) (H : LMNHyp Cst c0 m0) {k : ℕ} (hk : 2^20 ≤ k) :
     TwoCircAt k := by
@@ -205,7 +231,8 @@ theorem twoCircAt_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2)
     rw [hh, Nat.div_div_eq_div_mul]
     exact (Nat.le_div_iff_mul_le (by norm_num)).2 (by omega)
   have s4 : 2^E * 3^h ≤ 2^k :=
-    calc 2^E * 3^h ≤ 2^(h/4) * 3^h := Nat.mul_le_mul_right _ (Nat.pow_le_pow_right (by norm_num) hE)
+    calc 2^E * 3^h ≤ 2^(h/4) * 3^h :=
+          Nat.mul_le_mul_right _ (Nat.pow_le_pow_right (by norm_num) hE)
       _ = 3^h * 2^(h/4) := mul_comm _ _
       _ ≤ 4^h := s2
       _ ≤ 2^k := s3
@@ -217,8 +244,8 @@ theorem twoCircAt_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2)
     _ ≤ 2 * 2^k * (2^L - 3^k) := by gcongr
     _ = 2^(k+1) * (2^L - 3^k) := by ring
 
-/-- **CONDITIONAL on `LMNHyp`** (unverified transcription of a published theorem; vacuous if
-false): `TwoCircHyp 100000`.  `[10^5, 2^20)` is covered unconditionally by `gapBelow_225644606`. -/
+/-- Under `LMNHyp`, `TwoCircHyp 100000` holds. The range `[10^5, 2^20)` is covered
+unconditionally by `gapBelow_225644606`. -/
 theorem twoCircHyp_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2) (hc0 : c0 ≤ 1)
     (hm0 : 0 ≤ m0) (hm1 : m0 ≤ 21) (H : LMNHyp Cst c0 m0) : TwoCircHyp 100000 := by
   intro k L hk hL
@@ -226,9 +253,8 @@ theorem twoCircHyp_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2
   · exact twoCirc_of_gap gapBelow_225644606 hk (by omega) hL
   · exact twoCircAt_of_LMN hC0 hC hc0 hm0 hm1 H h L hL
 
-/-- **CONDITIONAL on `LMNHyp`** (unverified transcription of LMN 1995 / Laurent 2008; vacuous if
-false): every positive `T`-cycle point (any phase, any period `L > 0`) whose window has `≤ 2`
-odd runs is `1` or `2`.  Classical (Steiner 1977 / Simons 2005 modulo LMN). -/
+/-- Under `LMNHyp`, every positive `T`-cycle point (at any phase, for any period `L > 0`) whose
+window has at most two odd runs is `1` or `2`. -/
 theorem few_runs_cycle_trivial_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2)
     (hc0 : c0 ≤ 1) (hm0 : 0 ≤ m0) (hm1 : m0 ≤ 21) (H : LMNHyp Cst c0 m0) {x L : ℕ}
     (hx : 0 < x) (hL : 0 < L) (hc : T^[L] x = x) (hr : oddRuns L x ≤ 2) : x = 1 ∨ x = 2 :=
@@ -236,9 +262,8 @@ theorem few_runs_cycle_trivial_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : 
   few_runs_cycle_trivial_core hx hL hc hr (fun _ _ _ h _ => one_circuit_eq_one_of_hyp HH h)
     (fun _ _ _ _ _ h _ => two_circuit_eq_one_of_hyp HH h)
 
-/-- **CONDITIONAL on `LMNHyp`** (unverified transcription of LMN 1995 / Laurent 2008; vacuous if
-false): the conclusion of `state_of_the_art` with the final disjunction strengthened to
-`≥ 3` odd runs.  Classical. -/
+/-- Under `LMNHyp`, the conclusion of `state_of_the_art` holds with its final disjunction
+strengthened to at least three odd runs. -/
 theorem state_of_the_art_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2)
     (hc0 : c0 ≤ 1) (hm0 : 0 ≤ m0) (hm1 : m0 ≤ 21) (H : LMNHyp Cst c0 m0)
     (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
@@ -254,30 +279,20 @@ theorem state_of_the_art_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : Cst �
   rcases few_runs_cycle_trivial_of_LMN hC0 hC hc0 hm0 hm1 H (x := m) (by omega) h4 h5
     (by omega) with e | e <;> omega
 
-/-- Named instance, **CONDITIONAL** on `LMNHyp 24.34 0.14 21` (LMN 1995 Cor. 2 constants
-from memory, unverified). -/
+/-! ### Instances with published constants -/
+
+/-- Under `LMNHyp 24.34 0.14 21` (the constants of Laurent–Mignotte–Nesterenko, Cor. 2), every
+positive `T`-cycle point with at most two odd runs is `1` or `2`. -/
 theorem few_runs_cycle_trivial_of_LMN95 (H : LMNHyp 24.34 0.14 21) {x L : ℕ}
     (hx : 0 < x) (hL : 0 < L) (hc : T^[L] x = x) (hr : oddRuns L x ≤ 2) : x = 1 ∨ x = 2 :=
   few_runs_cycle_trivial_of_LMN (by norm_num) (by norm_num) (by norm_num) (by norm_num)
     (by norm_num) H hx hL hc hr
 
-/-- Named instance, **CONDITIONAL** on `LMNHyp 25.2 0.21 20` (Laurent 2008 Cor. 1, `m = 20`;
-corroborated by a secondary source: arXiv:2609.23899 e-print TeX (lines ~877-914, application
-of Laurent 2008 Cor. 1 with `m = 20`, `C1 = 25.2`, `c0 = 0.21`, inside a section-2 proof);
-original not consulted). -/
+/-- Under `LMNHyp 25.2 0.21 20` (the constants of Laurent, Cor. 1 with `m = 20`), every positive
+`T`-cycle point with at most two odd runs is `1` or `2`. -/
 theorem few_runs_cycle_trivial_of_Laurent08 (H : LMNHyp 25.2 0.21 20) {x L : ℕ}
     (hx : 0 < x) (hL : 0 < L) (hc : T^[L] x = x) (hr : oddRuns L x ≤ 2) : x = 1 ∨ x = 2 :=
   few_runs_cycle_trivial_of_LMN (by norm_num) (by norm_num) (by norm_num) (by norm_num)
     (by norm_num) H hx hL hc hr
 
 end Collatz
-
-#print axioms Collatz.growth_LMN
-#print axioms Collatz.gap_of_LMN_core
-#print axioms Collatz.gap_of_LMN
-#print axioms Collatz.twoCircAt_of_LMN
-#print axioms Collatz.twoCircHyp_of_LMN
-#print axioms Collatz.few_runs_cycle_trivial_of_LMN
-#print axioms Collatz.state_of_the_art_of_LMN
-#print axioms Collatz.few_runs_cycle_trivial_of_LMN95
-#print axioms Collatz.few_runs_cycle_trivial_of_Laurent08

@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import RunsTail
 import RunsBridge
 import Collatz.CycleBasic
@@ -5,32 +10,55 @@ import Sieve24
 import Merge
 
 /-!
-# C-level run bounds (`CRuns`)
+# Run bounds for cycles of the Collatz map
 
-**Status: Unconditional, CLASSICAL** (Steiner 1977 / Simons 2005 / Simons–de Weger 2005, via
-the in-house `PadeSup`/`FewRunsUncond`/`RunsTail` proofs `few_runs_cycle_trivial_uncond`, `runs_ge_18_uncond`), restated
-for the classical map `C`.
+In this file we restate the run bounds of `RunsTail` for the Collatz map `C`, in terms of an
+intrinsic invariant of the cycle: the number of odd runs equals the number of cycle elements
+`≡ 1 (mod 4)`. Indeed an odd `x` has `T x` even iff `x ≡ 1 (mod 4)`, even→odd and odd→even
+transitions are equinumerous on a cycle, and the intermediate `C`-values `3x + 1` are even.
 
-Intrinsic invariant: along a cycle, the number of odd runs equals the number of cycle elements
-`≡ 1 (mod 4)` (an odd `x` has `T x` even iff `x ≡ 1 mod 4`; even→odd and odd→even transitions
-are equinumerous on a cycle; the intermediate `C`-values `3x+1` are even, hence never `≡ 1`).
+The main result is that a nontrivial positive `C`-cycle has at least `18` elements `≡ 1 (mod 4)`
+in every window of length a period, at least `29` unless it has fewer than `225644606` odd
+elements, and at least `42` if it has at least `10^11` odd elements. Equivalently, a positive
+`C`-cycle with at most `17` elements `≡ 1 (mod 4)` is the trivial cycle.
 
-* `orbCount f P j n` generic orbit filter count; `orbCount_succ`, `orbCount_add` (cocycle),
-  `orbCount_shift` (cyclic shift invariance on an `f`-cycle).
-* `t4`, `c4`, `codd`: counts of `T`-iterates `≡1 (4)`, `C`-iterates `≡1 (4)`, odd `C`-iterates.
-* `T_even_iff_mod4`, `oddRuns_eq_t4` (on a `T`-cycle, `oddRuns L x = t4 L x`), `count_shift_C`.
-* `lift_joint` / `iterate_C_add_oddSteps` / `c4_add_oddSteps` / `codd_add_oddSteps`:
-  `C^{j+S_j(n)} n = T^j n` with matching counts; `exists_iterate_T_of_C_exact`.
-* `C_cycle_runs_ge_18`, `C_cycle_few_runs_trivial`: main C-level statements.
-* `cycle_runstart_merge_ge`: naming alias of `Merge.cycle_localmin_ge` (`Merge` repair).
+## Main definitions
+
+- `orbCount f P j n`: the number of `i < j` with `P (f^i n)`.
+- `t4 j n`, `c4 j n`, `codd j n`: the number of `T`-iterates `≡ 1 (mod 4)`, of `C`-iterates
+  `≡ 1 (mod 4)` and of odd `C`-iterates among the first `j`.
+
+## Main results
+
+- `orbCount_add`, `orbCount_shift`: `orbCount` is a cocycle and is invariant under cyclic shifts
+  on an `f`-cycle.
+- `oddRuns_eq_t4`: on a `T`-cycle, `oddRuns L x = t4 L x`.
+- `iterate_C_add_oddSteps`, `c4_add_oddSteps`, `codd_add_oddSteps`: `C^{j + S_j(n)} n = T^j n`,
+  with matching counts.
+- `exists_iterate_T_of_C_exact`: if `C^{i-1} x` is even, then `C^i x = T^j x` with
+  `j + S_j(x) = i`.
+- `C_cycle_runs_ge_18`, `C_cycle_runs_ge_29`, `C_cycle_runs_ge_42`: the run bounds for `C`-cycles.
+- `C_cycle_few_runs_trivial`: a positive `C`-cycle with at most `17` elements `≡ 1 (mod 4)` per
+  window is trivial.
+
+## References
+
+- R. P. Steiner, *A theorem on the Syracuse problem*, in Proc. 7th Manitoba Conference on
+  Numerical Mathematics and Computing (1977), 553–559.
+- J. L. Simons, *On the nonexistence of 2-cycles for the 3x+1 problem*, Math. Comp. 74 (2005),
+  1565–1572.
+- J. L. Simons, B. M. M. de Weger, *Theoretical and computational bounds for m-cycles of the
+  3n+1-problem*, Acta Arith. 117 (2005), 51–70.
 -/
 
 namespace Collatz
 open CollatzProof
 
-/-- generic filter count along the orbit of `f`. -/
+/-! ### Counting along an orbit -/
+
+/-- The number of `i < j` such that `P (f^i n)`. -/
 def orbCount (f : ℕ → ℕ) (P : ℕ → Prop) [DecidablePred P] (j n : ℕ) : ℕ :=
-  ((Finset.range j).filter (fun i => P (f^[i] n))).card
+  ((Finset.range j).filter (fun i ↦ P (f^[i] n))).card
 
 theorem orbCount_eq_sum (f : ℕ → ℕ) (P : ℕ → Prop) [DecidablePred P] (j n : ℕ) :
     orbCount f P j n = ∑ i ∈ Finset.range j, if P (f^[i] n) then 1 else 0 := by
@@ -45,7 +73,7 @@ theorem orbCount_succ (f : ℕ → ℕ) (P : ℕ → Prop) [DecidablePred P] (j 
 theorem orbCount_zero (f : ℕ → ℕ) (P : ℕ → Prop) [DecidablePred P] (n : ℕ) :
     orbCount f P 0 n = 0 := by simp [orbCount]
 
-/-- cocycle -/
+/-- `orbCount` is a cocycle along the orbit. -/
 theorem orbCount_add (f : ℕ → ℕ) (P : ℕ → Prop) [DecidablePred P] (a b n : ℕ) :
     orbCount f P (a+b) n = orbCount f P a n + orbCount f P b (f^[a] n) := by
   induction a generalizing n with
@@ -54,7 +82,7 @@ theorem orbCount_add (f : ℕ → ℕ) (P : ℕ → Prop) [DecidablePred P] (a b
     rw [show a + 1 + b = (a+b) + 1 by omega, orbCount_succ, orbCount_succ, ih,
       Function.iterate_succ_apply]; omega
 
-/-- shift invariance on a cycle -/
+/-- On an `f`-cycle, `orbCount` is invariant under a shift by one step. -/
 theorem orbCount_shift_one (f : ℕ → ℕ) (P : ℕ → Prop) [DecidablePred P] {ℓ m : ℕ}
     (hc : f^[ℓ] m = m) : orbCount f P ℓ (f m) = orbCount f P ℓ m := by
   have h1 := orbCount_add f P ℓ 1 m
@@ -64,6 +92,7 @@ theorem orbCount_shift_one (f : ℕ → ℕ) (P : ℕ → Prop) [DecidablePred P
   simp only [Function.iterate_one] at h2
   omega
 
+/-- On an `f`-cycle, `orbCount` is invariant under cyclic shifts. -/
 theorem orbCount_shift (f : ℕ → ℕ) (P : ℕ → Prop) [DecidablePred P] {ℓ m : ℕ}
     (hc : f^[ℓ] m = m) (t : ℕ) : orbCount f P ℓ (f^[t] m) = orbCount f P ℓ m := by
   induction t generalizing m with
@@ -73,17 +102,27 @@ theorem orbCount_shift (f : ℕ → ℕ) (P : ℕ → Prop) [DecidablePred P] {�
       rw [← Function.iterate_succ_apply, Function.iterate_succ_apply', hc]
     rw [Function.iterate_succ_apply, ih hc', orbCount_shift_one f P hc]
 
-def t4 (j n : ℕ) : ℕ := ((Finset.range j).filter (fun i => T^[i] n % 4 = 1)).card
-def c4 (j n : ℕ) : ℕ := ((Finset.range j).filter (fun i => C^[i] n % 4 = 1)).card
-def codd (j n : ℕ) : ℕ := ((Finset.range j).filter (fun i => C^[i] n % 2 = 1)).card
+/-! ### Elements congruent to `1` modulo `4` -/
 
-theorem t4_eq (j n : ℕ) : t4 j n = orbCount T (fun x => x % 4 = 1) j n := rfl
-theorem c4_eq (j n : ℕ) : c4 j n = orbCount C (fun x => x % 4 = 1) j n := rfl
-theorem codd_eq (j n : ℕ) : codd j n = orbCount C (fun x => x % 2 = 1) j n := rfl
+/-- The number of `i < j` with `T^i n ≡ 1 (mod 4)`. -/
+def t4 (j n : ℕ) : ℕ := ((Finset.range j).filter (fun i ↦ T^[i] n % 4 = 1)).card
+
+/-- The number of `i < j` with `C^i n ≡ 1 (mod 4)`. -/
+def c4 (j n : ℕ) : ℕ := ((Finset.range j).filter (fun i ↦ C^[i] n % 4 = 1)).card
+
+/-- The number of `i < j` with `C^i n` odd. -/
+def codd (j n : ℕ) : ℕ := ((Finset.range j).filter (fun i ↦ C^[i] n % 2 = 1)).card
+
+theorem t4_eq (j n : ℕ) : t4 j n = orbCount T (fun x ↦ x % 4 = 1) j n := rfl
+theorem c4_eq (j n : ℕ) : c4 j n = orbCount C (fun x ↦ x % 4 = 1) j n := rfl
+theorem codd_eq (j n : ℕ) : codd j n = orbCount C (fun x ↦ x % 2 = 1) j n := rfl
+
+/-- An odd `x` has `T x` even iff `x ≡ 1 (mod 4)`. -/
 
 theorem T_even_iff_mod4 {x : ℕ} (hx : x % 2 = 1) : T x % 2 = 0 ↔ x % 4 = 1 := by
   rw [T_of_odd hx]; omega
 
+/-- On a `T`-cycle, the number of odd runs equals the number of elements `≡ 1 (mod 4)`. -/
 theorem oddRuns_eq_t4 {L x : ℕ} (hc : T^[L] x = x) : oddRuns L x = t4 L x := by
   let p : ℕ → ℕ := fun i => T^[i] x % 2
   let f : ℕ → ℕ := fun i => if T^[i] x % 4 = 1 then 1 else 0
@@ -114,13 +153,11 @@ theorem oddRuns_eq_t4 {L x : ℕ} (hc : T^[L] x = x) : oddRuns L x = t4 L x := b
   change _ = ∑ i ∈ Finset.range L, f i
   omega
 
-theorem count_shift_C {ℓ m : ℕ} (hc : C^[ℓ] m = m) (P : ℕ → Prop) [DecidablePred P] (t : ℕ) :
-    ((Finset.range ℓ).filter (fun i => P (C^[i] (C^[t] m)))).card =
-      ((Finset.range ℓ).filter (fun i => P (C^[i] m))).card :=
-  orbCount_shift C P hc t
+/-! ### Lifting `T`-orbits to `C`-orbits -/
 
-/-- Joint lifting: C-length `j + oddSteps j n` realises `T^[j]` and the counts. -/
-theorem lift_joint (j n : ℕ) :
+/-- Joint lifting: `C^{j + S_j(n)} n = T^j n`, with matching counts; see
+`iterate_C_add_oddSteps`, `c4_add_oddSteps` and `codd_add_oddSteps`. -/
+private theorem lift_joint_aux (j n : ℕ) :
     C^[j + oddSteps j n] n = T^[j] n ∧ c4 (j + oddSteps j n) n = t4 j n ∧
       codd (j + oddSteps j n) n = oddSteps j n := by
   induction j generalizing n with
@@ -149,13 +186,17 @@ theorem lift_joint (j n : ℕ) :
       refine ⟨trivial, trivial, ?_⟩
       simp [oddSteps, hn]; omega
 
-theorem iterate_C_add_oddSteps (j n : ℕ) : C^[j + oddSteps j n] n = T^[j] n := (lift_joint j n).1
-theorem c4_add_oddSteps (j n : ℕ) : c4 (j + oddSteps j n) n = t4 j n := (lift_joint j n).2.1
+theorem iterate_C_add_oddSteps (j n : ℕ) : C^[j + oddSteps j n] n = T^[j] n :=
+  (lift_joint_aux j n).1
+
+theorem c4_add_oddSteps (j n : ℕ) : c4 (j + oddSteps j n) n = t4 j n :=
+  (lift_joint_aux j n).2.1
+
 theorem codd_add_oddSteps (j n : ℕ) : codd (j + oddSteps j n) n = oddSteps j n :=
-  (lift_joint j n).2.2
+  (lift_joint_aux j n).2.2
 
 /-- **Exact lifting.** If `i = 0` or `C^{i-1} x` is even, then `C^i x = T^j x` with
-`j + oddSteps j x = i` exactly. -/
+`j + S_j(x) = i`. -/
 theorem exists_iterate_T_of_C_exact (i x : ℕ) (hi : ∀ i', i = i' + 1 → C^[i'] x % 2 = 0) :
     ∃ j, j + oddSteps j x = i ∧ T^[j] x = C^[i] x := by
   induction i using Nat.strong_induction_on generalizing x with
@@ -186,6 +227,8 @@ theorem exists_iterate_T_of_C_exact (i x : ℕ) (hi : ∀ i', i = i' + 1 → C^[
           · simp only [oddSteps, hx, T_eq_C_C_of_odd hx]; omega
           · rw [Function.iterate_succ_apply, T_eq_C_C_of_odd hx, hT, ← iterate_C_two,
               ← Function.iterate_add_apply]
+
+/-! ### The odd orbit minimum of a `C`-cycle -/
 
 /-- Variant of `exists_min_odd_T_cycle_aux` that also exports `C^[ℓ] m = m`. -/
 theorem exists_min_odd_T_cycle_aux' (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ)
@@ -220,18 +263,16 @@ theorem exists_min_odd_T_cycle_aux' (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0
   obtain ⟨i, hi⟩ := exists_iterate_T_eq_iterate_C j m
   rw [hi]; exact h2 i
 
-/-- **C-level run theorem (classical, restated for `C`).** A nontrivial positive `C`-cycle
-`C^ℓ n = n` has at least 18 iterates `≡ 1 (mod 4)` among `n, C n, …, C^{ℓ-1} n`
-(this count equals the number of odd runs in the window); at least 29 unless it has fewer
-than 225644606 odd iterates in the window; at least 42 if it has at least `10^11` odd
-iterates.
+/-! ### Run bounds for `C`-cycles -/
 
-Proof bookkeeping: the identification `c4 ℓ n = oddRuns L m` is made at the odd orbit minimum
-`m` of the cycle, with `L` the matching `T`-length (`L + S_L(m) = ℓ`, i.e. the window of `ℓ`
-`C`-steps starting at `m` is exactly `L` `T`-steps).  `ℓ` need not be the minimal period: if
+/-- The three run bounds for `C`-cycles at once; see `C_cycle_runs_ge_18`, `C_cycle_runs_ge_29`
+and `C_cycle_runs_ge_42`.
+
+The identification `c4 ℓ n = oddRuns L m` is made at the odd orbit minimum `m` of the cycle, with
+`L` the matching `T`-length (`L + S_L(m) = ℓ`). Here `ℓ` need not be the minimal period: if
 `ℓ = t · (minimal period)`, both counts `c4 ℓ n` and `codd ℓ n` are `t` times their values at the
-minimal period, so the bounds are weakest (and still valid) at the minimal period. -/
-theorem C_cycle_runs_ge_18 {n ℓ : ℕ} (hn : 0 < n) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
+minimal period, so the bounds are weakest at the minimal period. -/
+private theorem C_cycle_runs_ge_18_aux {n ℓ : ℕ} (hn : 0 < n) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
     (hne : ¬ (n = 1 ∨ n = 2 ∨ n = 4)) :
     18 ≤ c4 ℓ n ∧ (29 ≤ c4 ℓ n ∨ codd ℓ n < 225644606) ∧ (10^11 ≤ codd ℓ n → 42 ≤ c4 ℓ n) := by
   obtain ⟨m, hmpos, hodd, hmℓ, hmin, -, t, ht⟩ := exists_min_odd_T_cycle_aux' n hn ℓ hℓ h
@@ -259,39 +300,47 @@ theorem C_cycle_runs_ge_18 {n ℓ : ℕ} (hn : 0 < n) (hℓ : 0 < ℓ) (h : C^[�
     exact hne (ht ▸ iterate_C_one_mem t)
   have h24 := min_orbit_ge_24 h1 hmin
   rw [ec4, ecodd]
-  exact runs_ge_18_uncond hodd h24 hmin hL hc
+  exact ⟨runs_ge_18_uncond hodd h24 hmin hL hc, runs_ge_29_uncond hodd h24 hmin hL hc,
+    runs_ge_42_uncond hodd h24 hmin hL hc⟩
 
-/-- **Corollary (C-form of the `PadeSup`/`FewRunsUncond`/`RunsTail` run bounds).** A positive `C`-cycle with at most 17
-iterates `≡ 1 (mod 4)` per window of length `ℓ` is the trivial cycle. -/
+/-- A nontrivial positive `C`-cycle `C^ℓ n = n` has at least `18` iterates `≡ 1 (mod 4)` among
+`n, C n, …, C^{ℓ-1} n`; this count equals the number of odd runs in the window. -/
+theorem C_cycle_runs_ge_18 {n ℓ : ℕ} (hn : 0 < n) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
+    (hne : ¬ (n = 1 ∨ n = 2 ∨ n = 4)) : 18 ≤ c4 ℓ n :=
+  (C_cycle_runs_ge_18_aux hn hℓ h hne).1
+
+/-- A nontrivial positive `C`-cycle `C^ℓ n = n` has at least `29` iterates `≡ 1 (mod 4)` among
+`n, C n, …, C^{ℓ-1} n`, unless it has fewer than `225644606` odd iterates there. -/
+theorem C_cycle_runs_ge_29 {n ℓ : ℕ} (hn : 0 < n) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
+    (hne : ¬ (n = 1 ∨ n = 2 ∨ n = 4)) : 29 ≤ c4 ℓ n ∨ codd ℓ n < 225644606 :=
+  (C_cycle_runs_ge_18_aux hn hℓ h hne).2.1
+
+/-- A nontrivial positive `C`-cycle `C^ℓ n = n` with at least `10^11` odd iterates among
+`n, C n, …, C^{ℓ-1} n` has at least `42` iterates `≡ 1 (mod 4)` there. -/
+theorem C_cycle_runs_ge_42 {n ℓ : ℕ} (hn : 0 < n) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
+    (hne : ¬ (n = 1 ∨ n = 2 ∨ n = 4)) (hk : 10^11 ≤ codd ℓ n) : 42 ≤ c4 ℓ n :=
+  (C_cycle_runs_ge_18_aux hn hℓ h hne).2.2 hk
+
+/-- A positive `C`-cycle with at most `17` iterates `≡ 1 (mod 4)` per window of length `ℓ` is the
+trivial cycle. -/
 theorem C_cycle_few_runs_trivial {n ℓ : ℕ} (hn : 0 < n) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
     (hr : c4 ℓ n ≤ 17) : n = 1 ∨ n = 2 ∨ n = 4 := by
   by_contra hne
-  have := (C_cycle_runs_ge_18 hn hℓ h hne).1
+  have := C_cycle_runs_ge_18 hn hℓ h hne
   omega
 
+/-! ### Examples -/
+
+-- The trivial cycle `1 → 4 → 2 → 1` has one element `≡ 1 (mod 4)`.
 example : c4 3 1 = 1 := by decide
+
+-- The trivial cycle has one odd element.
 example : codd 3 1 = 1 := by decide
+
+-- The trivial cycle has `C`-period `3`.
 example : C^[3] 1 = 1 := by decide
+
+-- On the trivial `T`-cycle, the run count equals the count of elements `≡ 1 (mod 4)`.
 example : t4 2 1 = 1 ∧ oddRuns 2 1 = 1 := by decide
 
-/-- **Alias of `cycle_localmin_ge`** (`Merge` naming repair). `x` is NOT assumed to be a local
-minimum: only a point of a `T`-cycle that is an odd run start (`x+1 = 2^k b`, `k ≥ 1`, `b` odd)
-whose run is followed by at least 2 even steps (`3^k b ≡ 1 mod 4`). Conclusion `2X0+1 ≤ x`.
-It does not raise the cycle-minimum floor (still `min_orbit_ge_24`). -/
-theorem cycle_runstart_merge_ge {X0 x L k b : ℕ}
-    (HX : ∀ m, 1 < m → (∀ j, m ≤ T^[j] m) → X0 ≤ m)
-    (hL : 0 < L) (hc : T^[L] x = x) (hk : 1 ≤ k) (hb : b % 2 = 1)
-    (hn : x + 1 = 2^k * b) (h4 : (3^k * b) % 4 = 1) : 2 * X0 + 1 ≤ x :=
-  cycle_localmin_ge HX hL hc hk hb hn h4
-
 end Collatz
-
-#print axioms Collatz.C_cycle_runs_ge_18
-#print axioms Collatz.C_cycle_few_runs_trivial
-#print axioms Collatz.oddRuns_eq_t4
-#print axioms Collatz.exists_iterate_T_of_C_exact
-#print axioms Collatz.lift_joint
-#print axioms Collatz.count_shift_C
-#print axioms Collatz.T_even_iff_mod4
-#print axioms Collatz.exists_min_odd_T_cycle_aux'
-#print axioms Collatz.cycle_runstart_merge_ge

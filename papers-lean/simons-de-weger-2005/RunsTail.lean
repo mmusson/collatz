@@ -1,32 +1,56 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import FewRunsUncond
 import RunsLog
 import IrrMeasure
 import Collatz.StateOfArt
 
 /-!
-# The unconditional log₂3 measure applied to the run-count tail
+# Run bounds for cycles with many odd steps
 
-**Status: Unconditional, CLASSICAL** (Simons–de Weger 2005 m-cycle method at verified range
-`2^24`, tail via the in-house Padé measure of `PadeSup`/`FewRunsUncond`). A general cycle may have
-arbitrarily many odd runs, and no method here bounds the odd-run count of a general cycle.
+The run bounds of `RunsLog` and `FareyBig` hold for cycles with fewer than `K1big` odd steps. In
+this file we treat the remaining range `k ≥ K1big` with an effective irrationality measure of
+`log₂ 3`, obtained from the Padé witness `signApprox_Vq` of `FewRunsUncond`. It gives the linear
+form bound `2^L ≤ 4 k^341 (2^L − 3^k)` for `k ≥ 2^100`, and then the Simons–de Weger bound
+`runs_bound_of_min` shows that such a cycle has at least `200` odd runs.
 
-* `linFormHyp_uncond : LinFormHyp (2^100) 2 341`: for `k ≥ 2^100`, `3^k < 2^L`,
-  `2^L ≤ 4 k^341 (2^L − 3^k)` (from `signApprox_Vq` → `IrrMeasHyp 342 (2^100)`).
-* `two_pow_tail`: `5(351+341e)·8^199 < 3·5^199·2^e` for `e ≥ 167`.
-* `runs_tail_uncond`: odd orbit-minimum `m` of a `T`-cycle, `k = S_L(m) ≥ K1big` ⇒
-  `oddRuns L m ≥ 200`. This removes the "or `k ≥ K1big`" escape clause of `runs_bounds_big`.
-* `runs_ge_18_uncond`, `runs_ge_3_uncond`, `state_of_the_art_uncond`,
-  `nontrivial_C_cycle_runs_uncond`: every nontrivial positive `C`-cycle has an odd
-  `T`-orbit minimum `m ≥ 2^24` with `≥ 18` odd runs per lap (and in every period window),
-  `≥ 29` when `k ≥ 225644606`, `≥ 42` when `k ≥ 10^11`.
+Together with the earlier ranges, every nontrivial positive `C`-cycle has an odd `T`-orbit minimum
+`m ≥ 2^24` with at least `18` odd runs per lap (and in every period window), at least `29` when
+`k ≥ 225644606`, and at least `42` when `k ≥ 10^11`. A general cycle may still have arbitrarily
+many odd runs; nothing here bounds the number of odd runs of a general cycle.
+
+## Main results
+
+- `linFormHyp_uncond`: `LinFormHyp (2^100) 2 341`, i.e. for `k ≥ 2^100` and `3^k < 2^L`,
+  `2^L ≤ 4 k^341 (2^L − 3^k)`.
+- `two_pow_tail`: `5(351 + 341e)·8^199 < 3·5^199·2^e` for `e ≥ 167`.
+- `runs_tail_uncond`: the odd orbit minimum `m` of a `T`-cycle with `S_L(m) ≥ K1big` has
+  `oddRuns L m ≥ 200`.
+- `runs_ge_18_uncond`, `runs_ge_29_uncond`, `runs_ge_42_uncond`: for an odd `m ≥ 2^24`, minimal on
+  its `T`-orbit, and every period `L`, `oddRuns L m ≥ 18`; `≥ 29` unless `S_L(m) < 225644606`;
+  and `≥ 42` if `S_L(m) ≥ 10^11`.
+- `state_of_the_art_uncond`, `nontrivial_C_cycle_runs_uncond`: the corresponding statements for
+  cycles of the Collatz map `C`.
+
+## References
+
+- J. L. Simons, B. M. M. de Weger, *Theoretical and computational bounds for m-cycles of the
+  3n+1-problem*, Acta Arith. 117 (2005), 51–70.
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, Séminaire de Théorie des
+  Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
 -/
 
 namespace Collatz
 open CollatzProof
 
-/-- **Unconditional** polynomial linear-form bound: for `k ≥ 2^100` and `3^k < 2^L`,
-`2^L ≤ 2^2·k^341·(2^L − 3^k)`. Instantiates `irrMeasHyp_of_signApprox` with the `PadeSup`/`FewRunsUncond` witness
-`signApprox_Vq` (`IrrMeasHyp 342 (2^100)`), then `linFormHyp_of_irrMeas`. -/
+/-! ### A linear form bound -/
+
+/-- Polynomial linear form bound: for `k ≥ 2^100` and `3^k < 2^L`,
+`2^L ≤ 2^2·k^341·(2^L − 3^k)`. It instantiates `irrMeasHyp_of_signApprox` with the witness
+`signApprox_Vq` of `FewRunsUncond`, then applies `linFormHyp_of_irrMeas`. -/
 theorem linFormHyp_uncond : LinFormHyp (2^100) 2 341 := by
   have h := irrMeasHyp_of_signApprox (a := 74) (b := 37) (c := 46) (d := 2) (t := 119)
     (Q0 := 2^100) (by norm_num) signApprox_Vq (by norm_num) (by norm_num)
@@ -34,7 +58,9 @@ theorem linFormHyp_uncond : LinFormHyp (2^100) 2 341 := by
   have h2 := linFormHyp_of_irrMeas (by norm_num) (by norm_num) h
   exact h2
 
-/-- Abstract induction step for `two_pow_tail` (kept separate to avoid unfolding big numerals). -/
+/-! ### Cycles with many odd steps -/
+
+/-- The induction step of `two_pow_tail`, kept separate to avoid unfolding large numerals. -/
 theorem tail_step {u v w : ℕ} (h1 : v ≤ u) (ih : u < w) : u + v < w * 2 := by omega
 
 /-- `5(351+341e)·8^199 < 3·5^199·2^e` for every `e ≥ 167` (base case by `norm_num`, margin
@@ -50,10 +76,10 @@ theorem two_pow_tail (e : ℕ) (he : 167 ≤ e) : 5 * (351 + 341*e) * 8^199 < 3 
     rw [e1, pow_succ 2 e, ← mul_assoc]
     exact tail_step h1 ih
 
-/-- **Unconditional, CLASSICAL.** If `m` is odd and minimal on its
-`T`-orbit, `L > 0`, `T^[L] m = m`, and `k = S_L(m) ≥ K1big`, then `m`'s cycle has at least
-`200` odd runs in the window `L`. Proof: gap `2^L ≤ 2^{2+341(e+1)}(2^L−3^k)` with
-`e = ⌊log₂ k⌋ ≥ 167` from `linFormHyp_uncond`, then `runs_bound_of_min` and `two_pow_tail`. -/
+/-- If `m` is odd and minimal on its `T`-orbit, `L > 0`, `T^[L] m = m` and `k = S_L(m) ≥ K1big`,
+then the cycle of `m` has at least `200` odd runs in the window `L`. The proof uses the gap
+`2^L ≤ 2^{2+341(e+1)}(2^L − 3^k)` with `e = ⌊log₂ k⌋ ≥ 167` from `linFormHyp_uncond`, then
+`runs_bound_of_min` and `two_pow_tail`. -/
 theorem runs_tail_uncond {m L : ℕ} (hodd : m % 2 = 1) (hmin : ∀ j, m ≤ T^[j] m) (hL : 0 < L)
     (hc : T^[L] m = m) (hK : K1big ≤ oddSteps L m) : 200 ≤ oddRuns L m := by
   by_contra hr
@@ -108,27 +134,50 @@ theorem runs_tail_uncond {m L : ℕ} (hodd : m % 2 = 1) (hmin : ∀ j, m ≤ T^[
   rw [e5] at s2; rw [e8] at s3
   omega
 
-/-- **Unconditional, CLASSICAL.** For odd `m ≥ 2^24`, minimal on its
-`T`-orbit, and any `L > 0` with `T^[L] m = m`: `oddRuns L m ≥ 18`; `≥ 29` unless
-`S_L(m) < 225644606`; and `≥ 42` whenever `S_L(m) ≥ 10^11`. No range restriction on `k`. -/
-theorem runs_ge_18_uncond {m L : ℕ} (hodd : m % 2 = 1) (h24 : 2^24 ≤ m)
+/-! ### Run bounds for every number of odd steps -/
+
+/-- The three run bounds at once; see `runs_ge_18_uncond`, `runs_ge_29_uncond` and
+`runs_ge_42_uncond`. -/
+private theorem runs_ge_18_uncond_aux {m L : ℕ} (hodd : m % 2 = 1) (h24 : 2^24 ≤ m)
     (hmin : ∀ j, m ≤ T^[j] m) (hL : 0 < L) (hc : T^[L] m = m) :
     18 ≤ oddRuns L m ∧ (29 ≤ oddRuns L m ∨ oddSteps L m < 225644606) ∧
       (10^11 ≤ oddSteps L m → 42 ≤ oddRuns L m) := by
-  obtain ⟨A, B⟩ := runs_bounds_big hodd h24 hmin hL hc
+  have A := runs_ge_29_K1big hodd h24 hmin hL hc
+  have B := runs_ge_18_K1big hodd h24 hmin hL hc
   rcases le_or_gt K1big (oddSteps L m) with hK | hK
   · have := runs_tail_uncond hodd hmin hL hc hK
     exact ⟨by omega, Or.inl (by omega), fun _ => by omega⟩
-  · refine ⟨by omega, by omega, fun h => runs_ge_42 hodd hmin hL hc h hK⟩
+  · refine ⟨by omega, by omega, fun h ↦ runs_ge_42 hodd hmin hL hc h hK⟩
 
-/-- **Unconditional window version:** under the hypotheses of `runs_ge_18_uncond`,
-`3 ≤ oddRuns L m` for every period `L > 0`. -/
+/-- For an odd `m ≥ 2^24`, minimal on its `T`-orbit, and every `L > 0` with `T^[L] m = m`,
+`oddRuns L m ≥ 18`. -/
+theorem runs_ge_18_uncond {m L : ℕ} (hodd : m % 2 = 1) (h24 : 2^24 ≤ m)
+    (hmin : ∀ j, m ≤ T^[j] m) (hL : 0 < L) (hc : T^[L] m = m) : 18 ≤ oddRuns L m :=
+  (runs_ge_18_uncond_aux hodd h24 hmin hL hc).1
+
+/-- For an odd `m ≥ 2^24`, minimal on its `T`-orbit, and every `L > 0` with `T^[L] m = m`,
+`oddRuns L m ≥ 29` or `S_L(m) < 225644606`. -/
+theorem runs_ge_29_uncond {m L : ℕ} (hodd : m % 2 = 1) (h24 : 2^24 ≤ m)
+    (hmin : ∀ j, m ≤ T^[j] m) (hL : 0 < L) (hc : T^[L] m = m) :
+    29 ≤ oddRuns L m ∨ oddSteps L m < 225644606 :=
+  (runs_ge_18_uncond_aux hodd h24 hmin hL hc).2.1
+
+/-- For an odd `m ≥ 2^24`, minimal on its `T`-orbit, and every `L > 0` with `T^[L] m = m`, if
+`S_L(m) ≥ 10^11` then `oddRuns L m ≥ 42`. -/
+theorem runs_ge_42_uncond {m L : ℕ} (hodd : m % 2 = 1) (h24 : 2^24 ≤ m)
+    (hmin : ∀ j, m ≤ T^[j] m) (hL : 0 < L) (hc : T^[L] m = m) (hk : 10^11 ≤ oddSteps L m) :
+    42 ≤ oddRuns L m :=
+  (runs_ge_18_uncond_aux hodd h24 hmin hL hc).2.2 hk
+
+/-- Under the hypotheses of `runs_ge_18_uncond`, `3 ≤ oddRuns L m` for every period `L > 0`. -/
 theorem runs_ge_3_uncond {m L : ℕ} (hodd : m % 2 = 1) (h24 : 2^24 ≤ m)
     (hmin : ∀ j, m ≤ T^[j] m) (hL : 0 < L) (hc : T^[L] m = m) : 3 ≤ oddRuns L m := by
-  have := (runs_ge_18_uncond hodd h24 hmin hL hc).1; omega
+  have := runs_ge_18_uncond hodd h24 hmin hL hc; omega
 
-/-- **Unconditional state of the art (CLASSICAL).** The conclusion of
-`state_of_the_art` with its final disjunction replaced by `18 ≤ oddRuns L m` (hence `≥ 3`). -/
+/-! ### Cycles of the Collatz map -/
+
+/-- The conclusion of `state_of_the_art` with its final disjunction replaced by
+`18 ≤ oddRuns L m`. -/
 theorem state_of_the_art_uncond (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
     (hne : n ≠ 1 ∧ n ≠ 2 ∧ n ≠ 4) :
     ∃ m L a b, m % 2 = 1 ∧ 2^24 ≤ m ∧ m ≤ n ∧ 0 < L ∧ T^[L] m = m ∧ (∀ j, m ≤ T^[j] m) ∧
@@ -137,12 +186,12 @@ theorem state_of_the_art_uncond (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < �
   obtain ⟨m, L, a, b, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12, -⟩ :=
     state_of_the_art n hn ℓ hℓ h hne
   exact ⟨m, L, a, b, h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12,
-    (runs_ge_18_uncond h1 h2 h6 h4 h5).1⟩
+    runs_ge_18_uncond h1 h2 h6 h4 h5⟩
 
-/-- **Unconditional, per lap (CLASSICAL).** A positive `C`-cycle point
-`n ∉ {1,2,4}` yields an odd `T`-orbit minimum `m`, `2^24 ≤ m ≤ n`, with minimal period `P`,
-such that the lap has `≥ 18` odd runs, `≥ 29` unless `S_P(m) < 225644606`, `≥ 62` unless
-`S_P(m) ≥ 190537`, and `≥ 42` whenever `S_P(m) ≥ 10^11`. -/
+/-- A positive `C`-cycle point `n ∉ {1, 2, 4}` yields an odd `T`-orbit minimum `m` with
+`2^24 ≤ m ≤ n` and minimal period `P`, such that the lap has at least `18` odd runs, at least
+`29` unless `S_P(m) < 225644606`, at least `62` unless `S_P(m) ≥ 190537`, and at least `42`
+whenever `S_P(m) ≥ 10^11`. -/
 theorem nontrivial_C_cycle_runs_uncond (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ)
     (h : C^[ℓ] n = n) (hne : n ≠ 1 ∧ n ≠ 2 ∧ n ≠ 4) :
     ∃ m, m % 2 = 1 ∧ 2^24 ≤ m ∧ m ≤ n ∧ (∀ j, m ≤ T^[j] m) ∧
@@ -155,18 +204,13 @@ theorem nontrivial_C_cycle_runs_uncond (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ 
       (10^11 ≤ oddSteps (Function.minimalPeriod T m) m →
         42 ≤ oddRuns (Function.minimalPeriod T m) m) := by
   obtain ⟨m, h1, h2, h3, h6, hP, hPc, -, -, h62⟩ :=
-    state_of_the_art_runs_minimalPeriod_big n hn ℓ hℓ h hne
-  obtain ⟨a1, a2, a3⟩ := runs_ge_18_uncond h1 h2 h6 hP hPc
-  exact ⟨m, h1, h2, h3, h6, hP, hPc, a1, a2, h62, a3⟩
+    state_of_the_art_runs_minimalPeriod_K1big n hn ℓ hℓ h hne
+  exact ⟨m, h1, h2, h3, h6, hP, hPc, runs_ge_18_uncond h1 h2 h6 hP hPc,
+    runs_ge_29_uncond h1 h2 h6 hP hPc, h62, fun hk ↦ runs_ge_42_uncond h1 h2 h6 hP hPc hk⟩
 
-/-- Sanity: the unconditional linear-form bound is available as a term. -/
+/-! ### Examples -/
+
+-- The linear form bound is available as a term.
 example : LinFormHyp (2^100) 2 341 := linFormHyp_uncond
 
 end Collatz
-#print axioms Collatz.linFormHyp_uncond
-#print axioms Collatz.two_pow_tail
-#print axioms Collatz.runs_tail_uncond
-#print axioms Collatz.runs_ge_18_uncond
-#print axioms Collatz.runs_ge_3_uncond
-#print axioms Collatz.state_of_the_art_uncond
-#print axioms Collatz.nontrivial_C_cycle_runs_uncond

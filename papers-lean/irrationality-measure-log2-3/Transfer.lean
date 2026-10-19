@@ -1,24 +1,47 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import Mathlib.Tactic
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 /-!
-# Cramer-type transference (wall (b) interface), part 1
+# Cramer-type transference for linear forms in two logarithms
 
-Classical (Rhin / Hata style) elimination argument, **no Collatz content**:
+In this file we formalize the elimination argument of Rhin and Hata. If three linearly
+independent integer linear forms `x₁ + x₂ λ₂ + x₃ λ₃` are all at most `ε` in absolute value and
+their coefficients `x₂, x₃` are at most `H`, then `1 ≤ 4 H^2 |k λ₃ - L λ₂|` for all integers
+`0 < k` and `|k|, |L| ≤ M` with `8 H M ε ≤ 1`. We also give the bridge from a lower bound on
+`L log 2 - k log 3` to a lower bound on `2^L - 3^k`.
 
-* `det3`, Cramer identities `cramer1/2/3`, `det3_pair_ne_zero`: if `det3 u v w ≠ 0` and
-  `b ≠ 0` then one of `det3 u v b`, `det3 v w b`, `det3 w u b` is nonzero.
-* `elim_identity`, `elim_bound`, `transfer`: three linearly independent integer linear forms
-  `x₁ + x₂ λ₂ + x₃ λ₃` that are all `≤ ε` in absolute value, with coefficients `x₂, x₃` of size
-  `≤ H`, give `1 ≤ 4 H² |k λ₃ − L λ₂|` for all integers `0 < k`, `|k|,|L| ≤ M` with
-  `8 H M ε ≤ 1`.
-* `one_sub_exp_neg_ge`, `linForm_pos`, `gap_of_linForm`: the exp/log bridge from a lower
-  bound on `L log 2 − k log 3` to a lower bound on `2^L − 3^k`.
+## Main definitions
 
-All unconditional.
+- `Z3`: integer triples.
+- `det3 u v w`: the `3 × 3` determinant with rows `u, v, w`.
+- `form λ₂ λ₃ x`: the real linear form `x₁ + x₂ λ₂ + x₃ λ₃`.
+
+## Main results
+
+- `cramer1`, `cramer2`, `cramer3`: Cramer's identities.
+- `det3_pair_ne_zero`: if `det3 u v w ≠ 0` and `b ≠ 0`, then one of `det3 u v b`, `det3 v w b`,
+  `det3 w u b` is nonzero.
+- `elim_identity`, `elim_bound`: elimination of the constant coefficient with
+  `b = (0, -L, k)`.
+- `transfer`: the transference bound `1 ≤ 4 H^2 |k λ₃ - L λ₂|`.
+- `linForm_pos`, `gap_of_linForm`: if `3^k < 2^L` and `0 < δ ≤ min 1 (L log 2 - k log 3)`, then
+  `2^L δ ≤ 2 (2^L - 3^k)`.
+
+## References
+
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, Séminaire de Théorie des
+  Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
+- M. Hata, *Rational approximations to π and some other numbers*, Acta Arith. 63 (1993), 335–349.
 -/
 
 namespace Collatz.Transfer
+
+/-! ### Determinants and Cramer's rule -/
 
 /-- Integer triples `(x₁, x₂, x₃)`. -/
 abbrev Z3 := ℤ × ℤ × ℤ
@@ -26,8 +49,6 @@ abbrev Z3 := ℤ × ℤ × ℤ
 /-- The `3×3` determinant with rows `u, v, w`. -/
 def det3 (u v w : Z3) : ℤ :=
   u.1*(v.2.1*w.2.2 - v.2.2*w.2.1) - u.2.1*(v.1*w.2.2 - v.2.2*w.1) + u.2.2*(v.1*w.2.1 - v.2.1*w.1)
-
-example : det3 (1,0,0) (0,1,0) (0,0,1) = 1 := by decide
 
 /-- Cramer identity (first coordinate): `det(u,v,w)·b = Σ det(row replaced by b)·row`. -/
 theorem cramer1 (u v w b : Z3) :
@@ -63,6 +84,8 @@ theorem det3_pair_ne_zero {u v w b : Z3} (h : det3 u v w ≠ 0) (hb : b ≠ 0) :
   simp only [zero_mul, add_zero, mul_eq_zero] at c1 c2 c3
   rw [Prod.mk.injEq, Prod.mk.injEq]
   exact ⟨c1.resolve_left h, c2.resolve_left h, c3.resolve_left h⟩
+
+/-! ### Elimination -/
 
 /-- The real linear form `x₁ + x₂ λ₂ + x₃ λ₃`. -/
 def form (l2 l3 : ℝ) (x : Z3) : ℝ := x.1 + x.2.1 * l2 + x.2.2 * l3
@@ -117,7 +140,7 @@ theorem elim_bound {l2 l3 ε H M : ℝ} {u v : Z3} {L k : ℤ} (hd : det3 u v (0
     _ ≤ (ε * (2*H*M) + ε * (2*H*M)) + 2*H^2 * |Λ| := by gcongr
     _ = 4*H*M*ε + 2*H^2*|Λ| := by ring
 
-/-- **Transfer theorem.** Three linearly independent integer forms with `|F| ≤ ε` and
+/-- Transfer theorem: three linearly independent integer forms with `|F| ≤ ε` and
 `|x₂|,|x₃| ≤ H`, and integers `0 < k`, `|k|,|L| ≤ M` with `8HMε ≤ 1`, give
 `1 ≤ 4H²|kλ₃ − Lλ₂|`. -/
 theorem transfer {l2 l3 ε H M : ℝ} {u v w : Z3} {L k : ℤ} (hdet : det3 u v w ≠ 0)
@@ -138,7 +161,7 @@ theorem transfer {l2 l3 ε H M : ℝ} {u v w : Z3} {L k : ℤ} (hdet : det3 u v 
     · exact elim_bound h Fw Fu ⟨Hw1, Hw2, Hu1, Hu2⟩ hk hL
   nlinarith
 
-/-! ## T2: exp/log bridge -/
+/-! ### From linear forms to `2^L - 3^k` -/
 
 /-- `0 < δ ≤ 1`, `δ ≤ x` ⇒ `δ/2 ≤ 1 − e^{−x}`. -/
 theorem one_sub_exp_neg_ge {x δ : ℝ} (hδ : 0 < δ) (hδ1 : δ ≤ 1) (hx : δ ≤ x) :
@@ -175,12 +198,9 @@ theorem gap_of_linForm {k L : ℕ} (_h : 3^k < 2^L) {δ : ℝ} (hδ : 0 < δ) (h
   rw [e]
   nlinarith
 
-end Collatz.Transfer
+/-! ### Examples -/
 
-#print axioms Collatz.Transfer.det3_pair_ne_zero
-#print axioms Collatz.Transfer.elim_identity
-#print axioms Collatz.Transfer.elim_bound
-#print axioms Collatz.Transfer.transfer
-#print axioms Collatz.Transfer.one_sub_exp_neg_ge
-#print axioms Collatz.Transfer.linForm_pos
-#print axioms Collatz.Transfer.gap_of_linForm
+-- The determinant of the identity matrix is `1`.
+example : det3 (1,0,0) (0,1,0) (0,0,1) = 1 := by decide
+
+end Collatz.Transfer

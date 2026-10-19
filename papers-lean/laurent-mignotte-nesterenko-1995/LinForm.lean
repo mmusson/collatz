@@ -1,54 +1,76 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import OneCircuit
 import TwoCircuit
 import Mathlib.Data.Nat.Log
 
 /-!
-# Conditional all-`k` 1- and 2-circuit theorems from a linear-forms hypothesis
+# The 1- and 2-circuit theorems for all `k` from a linear-forms hypothesis
 
-**CONDITIONAL.**  Everything in the second half of this file assumes an *unformalized*
-hypothesis about how well `log 3 / log 2` can be approximated by rationals (a lower bound on
-`2^L − 3^k`).  Such bounds are true in the literature (Rhin 1987 and later effective
-irrationality measures of `log 3/log 2`), but they are **not proved here**.  These are
-therefore *not* unconditional Steiner (1977) / Simons (2005) theorems.
+The kernel certificates of `OneCircuit` and `TwoCircuit` rule out nontrivial 1-circuits and
+2-circuits with fewer than `100000` odd steps. This file extends both results to all `k`, assuming
+a lower bound on `2^L − 3^k`, that is, an effective irrationality measure for `log 3 / log 2`.
+Such bounds are known (Rhin, and later work), but they are not proved here: every result about
+circuits in this file assumes the hypothesis `TwoCircHyp 100000` or `LinFormHyp K₀ c μ`.
 
-* `TwoCircHyp K0`: for all `k ≥ K0` and `L` with `3^k < 2^L`,
-  `2^L (2^{⌊k/2⌋+1} + 3^{⌊k/2⌋}) ≤ 2^{k+1} (2^L − 3^k)`, i.e. roughly
+The hypothesis `TwoCircHyp K₀` is tailored to the circuit argument. The hypothesis
+`LinFormHyp K₀ c μ` is a polynomial irrationality measure stated in integers, and we show that it
+implies `TwoCircHyp 100000` when `K₀ ≤ 100000` and `8(c + 17μ + 2) ≤ 2^16`, for example for
+`c = 100`, `μ = 14`. Whether `LinFormHyp 100000 100 14` follows from the published measures is not
+checked here. The hypothesis `LinFormHyp 0 c μ` is false for `μ ≥ 1` (`linFormHyp_zero_false`),
+so only instances with large `K₀` are meaningful.
+
+The circuit theorems here are stated for sequences that start at the beginning of an odd run.
+Versions for arbitrary cycle points are `few_runs_cycle_trivial_of_linForm` and
+`few_runs_cycle_trivial_of_linForm_100000` in `RunsBridge`.
+
+## Main definitions
+
+- `TwoCircHyp K₀`: for `k ≥ K₀` and `3^k < 2^L`,
+  `2^L (2^{⌊k/2⌋+1} + 3^{⌊k/2⌋}) ≤ 2^{k+1} (2^L − 3^k)`, roughly
   `2^L − 3^k ≥ 2^L (√3/2)^k / 2`.
-* T1: `TwoCircHyp 100000 ⇒` every 1-circuit and every 2-circuit has `m = 1` (all `k`),
-  combining with the kernel certificates for `k < 10^5`.
-* `LinFormHyp K0 c μ`: for `k ≥ K0` and `3^k < 2^L`, `2^L ≤ 2^c k^μ (2^L − 3^k)`
-  (a polynomial irrationality measure, stated in integers).
-* T2: if `K0 ≤ 100000` and `8(c + 17μ + 2) ≤ 2^16`, then `LinFormHyp K0 c μ ⇒ TwoCircHyp 100000`.
-  Example: `μ = 14`, `c = 100`.
+- `LinFormHyp K₀ c μ`: for `k ≥ K₀` and `3^k < 2^L`, `2^L ≤ 2^c k^μ (2^L − 3^k)`.
 
-**Caveats.**
-* `LinFormHyp K0 c μ` is **false** for `K0 = 0` whenever `μ ≥ 1`: at `k = 0`, `L = 1` we have
-  `3^0 < 2^1` but the right side is `2^c · 0^μ · 1 = 0 < 2` (`linFormHyp_zero_false`).  So
-  small-`K0` instances are vacuous as hypotheses; the intended instance is `K0 = 100000`,
-  e.g. `LinFormHyp 100000 100 14`.
-* The constants `(c, μ) = (100, 14)` are only checked against the **numeric side condition**
-  `8(c+17μ+2) ≤ 2^16`.  Nobody has checked against the literature (Rhin 1987, Wu–Wang 2014,
-  Hata) [`IrrMeasureReal`: Wu–Wang 2014, J. Number Theory, DOI 10.1016/j.jnt.2014.03.007, 'On the irrationality measure of log 3', concerns log 3, NOT log 3/log 2] that `LinFormHyp 100000 100 14` actually holds.  That is the subject of the next
-  scoping round.
-* The circuit theorems here are **phased** (the sequence starts at an odd-run start).  The
-  rotation-free, cycle-level versions are in `RunsBridge.lean`
-  (`few_runs_cycle_trivial_of_linForm`, `few_runs_cycle_trivial_of_linForm_100000`).
+## Main results
+
+- `one_circuit_eq_one_of_hyp`, `two_circuit_eq_one_of_hyp`: under `TwoCircHyp 100000`, every
+  1-circuit and every 2-circuit has `m = 1`.
+- `twoCircHyp_of_linForm`: `LinFormHyp K₀ c μ` implies `TwoCircHyp 100000` when `K₀ ≤ 100000` and
+  `8(c + 17μ + 2) ≤ 2^16`.
+- `one_circuit_eq_one_of_linForm`, `two_circuit_eq_one_of_linForm`: under such a `LinFormHyp`,
+  every 1-circuit and every 2-circuit has `m = 1`.
+- `linFormHyp_zero_false`: `LinFormHyp 0 c μ` fails for `μ ≥ 1`.
+
+## References
+
+- R. P. Steiner, *A theorem on the Syracuse problem*, in Proc. 7th Manitoba Conference on
+  Numerical Mathematics and Computing (1977), 553–559.
+- J. L. Simons, *On the nonexistence of 2-cycles for the 3x+1 problem*, Math. Comp. 74 (2005),
+  1565–1572.
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, in Séminaire de Théorie
+  des Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
 -/
 
 namespace Collatz
+
 open CollatzProof
 
-/-- **Unproved hypothesis** (tailored linear-form lower bound). For all `k ≥ K0` and all `L`
-with `3^k < 2^L`: `2^L (2^{⌊k/2⌋+1} + 3^{⌊k/2⌋}) ≤ 2^{k+1} (2^L − 3^k)`.
-NOT proved; it follows from known effective irrationality measures of `log 3/log 2`
-(Rhin 1987 and later), which are not formalized. Theorems using it are conditional. -/
+/-! ### Circuits under a tailored linear-form bound -/
+
+/-- A linear-form lower bound tailored to circuits: for all `k ≥ K0` and all `L` with
+`3^k < 2^L`, `2^L (2^{⌊k/2⌋+1} + 3^{⌊k/2⌋}) ≤ 2^{k+1} (2^L − 3^k)`. It follows from effective
+irrationality measures of `log 3 / log 2`, which are not formalized here. -/
 def TwoCircHyp (K0 : ℕ) : Prop :=
   ∀ k L : ℕ, K0 ≤ k → 3^k < 2^L → 2^L * (2^(k/2+1) + 3^(k/2)) ≤ 2^(k+1) * (2^L - 3^k)
 
-/-- CONDITIONAL on `TwoCircHyp 100000`: no 1-circuit with `k ≥ 100000`. -/
+/-- Under `TwoCircHyp 100000`, there is no 1-circuit with `k ≥ 100000`. -/
 theorem one_circuit_false_of_hyp {m k l : ℕ} (H : TwoCircHyp 100000) (h : IsOneCircuit m k l)
     (hk : 100000 ≤ k) : False := by
-  obtain ⟨-, s2, s3⟩ := one_circuit_size h
+  have s2 := one_circuit_size h
+  have s3 := one_circuit_mod_eq_zero h
   have hl := h.2.1
   have hQ : 2 ≤ 2^l := by
     calc 2 = 2^1 := by norm_num
@@ -72,14 +94,14 @@ theorem one_circuit_false_of_hyp {m k l : ℕ} (H : TwoCircHyp 100000) (h : IsOn
   have a3 : P * (Q - 1) < P * Q := Nat.mul_lt_mul_of_pos_left (by omega) hP
   omega
 
-/-- CONDITIONAL on `TwoCircHyp 100000`: every 1-circuit has `m = 1` (no bound on `k`). -/
-theorem one_circuit_eq_one_of_hyp {m k l : ℕ} (H : TwoCircHyp 100000) (h : IsOneCircuit m k l) :
-    m = 1 := by
+/-- Under `TwoCircHyp 100000`, every 1-circuit has `m = 1`, with no bound on `k`. -/
+theorem one_circuit_eq_one_of_hyp {m k l : ℕ} (H : TwoCircHyp 100000)
+    (h : IsOneCircuit m k l) : m = 1 := by
   rcases Nat.lt_or_ge k 100000 with hk | hk
   · exact one_circuit_eq_one h hk
   · exact (one_circuit_false_of_hyp H h hk).elim
 
-/-- CONDITIONAL on `TwoCircHyp 100000`: no 2-circuit with `k2 ≤ k1`, `k1+k2 ≥ 100000`. -/
+/-- Under `TwoCircHyp 100000`, there is no 2-circuit with `k2 ≤ k1` and `k1 + k2 ≥ 100000`. -/
 theorem two_circuit_false_of_hyp_le {m k1 l1 k2 l2 : ℕ} (H : TwoCircHyp 100000)
     (h : IsTwoCircuit m k1 l1 k2 l2) (hk : k2 ≤ k1) (hK : 100000 ≤ k1 + k2) : False := by
   have hsz := two_circuit_size hk h
@@ -96,7 +118,7 @@ theorem two_circuit_false_of_hyp_le {m k1 l1 k2 l2 : ℕ} (H : TwoCircHyp 100000
   rw [Nat.add_sub_cancel] at hH
   nlinarith
 
-/-- CONDITIONAL on `TwoCircHyp 100000`: every 2-circuit has `m = 1` (no bound on `k`). -/
+/-- Under `TwoCircHyp 100000`, every 2-circuit has `m = 1`, with no bound on `k`. -/
 theorem two_circuit_eq_one_of_hyp {m k1 l1 k2 l2 : ℕ} (H : TwoCircHyp 100000)
     (h : IsTwoCircuit m k1 l1 k2 l2) : m = 1 := by
   rcases Nat.lt_or_ge (k1 + k2) 100000 with hk | hk
@@ -105,10 +127,10 @@ theorem two_circuit_eq_one_of_hyp {m k1 l1 k2 l2 : ℕ} (H : TwoCircHyp 100000)
     · exact (two_circuit_false_of_hyp_le H h h21 hk).elim
     · exact (two_circuit_false_of_hyp_le H (two_circuit_rotate h) h12 (by omega)).elim
 
-/-! ## T2: reduction to a polynomial irrationality measure -/
+/-! ### Reduction to a polynomial irrationality measure -/
 
-/-- **Unproved hypothesis** (polynomial irrationality measure of `log 3/log 2`, integer form):
-for `k ≥ K0` and `3^k < 2^L`, `2^L ≤ 2^c k^μ (2^L − 3^k)`. NOT proved here. -/
+/-- A polynomial irrationality measure of `log 3 / log 2` in integer form: for `k ≥ K0` and
+`3^k < 2^L`, `2^L ≤ 2^c k^μ (2^L − 3^k)`. It is not proved here. -/
 def LinFormHyp (K0 c μ : ℕ) : Prop :=
   ∀ k L : ℕ, K0 ≤ k → 3^k < 2^L → 2^L ≤ 2^c * k^μ * (2^L - 3^k)
 
@@ -124,9 +146,11 @@ theorem three_pow_mul_two_pow_le (h : ℕ) : 3^h * 2^(h/4) ≤ 4^h := by
   have e2 : 4^(4*t+s) = 256^t * 4^s := by
     rw [pow_add, pow_mul]; norm_num
   rw [e1, e2]
-  exact Nat.mul_le_mul (Nat.pow_le_pow_left (by norm_num) _) (Nat.pow_le_pow_left (by norm_num) _)
+  exact Nat.mul_le_mul (Nat.pow_le_pow_left (by norm_num) _)
+    (Nat.pow_le_pow_left (by norm_num) _)
 
-/-- Growth: if `8(c + μ(⌊log₂ k⌋+1) + 2) ≤ k` then `2^c k^μ (2^{⌊k/2⌋+1} + 3^{⌊k/2⌋}) < 2^{k+1}`. -/
+/-- If `8(c + μ(⌊log₂ k⌋ + 1) + 2) ≤ k`, then
+`2^c k^μ (2^{⌊k/2⌋+1} + 3^{⌊k/2⌋}) < 2^{k+1}`. -/
 theorem growth {c μ k : ℕ} (hk : 8 * (c + μ * (Nat.log 2 k + 1) + 2) ≤ k) :
     2^c * k^μ * (2^(k/2+1) + 3^(k/2)) < 2^(k+1) := by
   set j := Nat.log 2 k
@@ -173,10 +197,10 @@ theorem log_cond {c μ : ℕ} (h0 : 8 * (c + 17*μ + 2) ≤ 2^16) (k : ℕ) (hk 
       omega
   exact (claim _ hj).trans hjk
 
-/-- CONDITIONAL reduction: `LinFormHyp K0 c μ` with `K0 ≤ 100000` and `8(c+17μ+2) ≤ 2^16`
-implies `TwoCircHyp 100000`. (`LinFormHyp` is an unformalized hypothesis.) -/
-theorem twoCircHyp_of_linForm {K0 c μ : ℕ} (hK0 : K0 ≤ 100000) (h0 : 8 * (c + 17*μ + 2) ≤ 2^16)
-    (H : LinFormHyp K0 c μ) : TwoCircHyp 100000 := by
+/-- `LinFormHyp K0 c μ` with `K0 ≤ 100000` and `8(c + 17μ + 2) ≤ 2^16` implies
+`TwoCircHyp 100000`. -/
+theorem twoCircHyp_of_linForm {K0 c μ : ℕ} (hK0 : K0 ≤ 100000)
+    (h0 : 8 * (c + 17*μ + 2) ≤ 2^16) (H : LinFormHyp K0 c μ) : TwoCircHyp 100000 := by
   intro k L hk h3
   have hL := H k L (by omega) h3
   have hg := growth (log_cond h0 k (by norm_num; omega))
@@ -186,40 +210,42 @@ theorem twoCircHyp_of_linForm {K0 c μ : ℕ} (hK0 : K0 ≤ 100000) (h0 : 8 * (c
     _ = (2^c * k^μ * S) * D := by ring
     _ ≤ 2^(k+1) * D := Nat.mul_le_mul_right _ hg.le
 
-/-- CONDITIONAL on the unformalized `LinFormHyp K0 c μ` (`K0 ≤ 100000`, `8(c+17μ+2) ≤ 2^16`):
-there are no nontrivial 1-circuits and no nontrivial 2-circuits. -/
-theorem no_circuits_of_linForm {K0 c μ : ℕ} (hK0 : K0 ≤ 100000) (h0 : 8 * (c + 17*μ + 2) ≤ 2^16)
-    (H : LinFormHyp K0 c μ) :
-    (∀ m k l, IsOneCircuit m k l → m = 1) ∧
-      (∀ m k1 l1 k2 l2, IsTwoCircuit m k1 l1 k2 l2 → m = 1) :=
-  have H' := twoCircHyp_of_linForm hK0 h0 H
-  ⟨fun _ _ _ h => one_circuit_eq_one_of_hyp H' h,
-   fun _ _ _ _ _ h => two_circuit_eq_one_of_hyp H' h⟩
+/-- Under `LinFormHyp K0 c μ` with `K0 ≤ 100000` and `8(c + 17μ + 2) ≤ 2^16`, every 1-circuit
+has `m = 1`. -/
+theorem one_circuit_eq_one_of_linForm {K0 c μ : ℕ} (hK0 : K0 ≤ 100000)
+    (h0 : 8 * (c + 17*μ + 2) ≤ 2^16) (H : LinFormHyp K0 c μ) {m k l : ℕ}
+    (h : IsOneCircuit m k l) : m = 1 :=
+  one_circuit_eq_one_of_hyp (twoCircHyp_of_linForm hK0 h0 H) h
 
-/-- Numeric side condition for `μ = 14`, `c = 100`. -/
-example : 8 * (100 + 17*14 + 2) ≤ 2^16 := by norm_num
+/-- Under `LinFormHyp K0 c μ` with `K0 ≤ 100000` and `8(c + 17μ + 2) ≤ 2^16`, every 2-circuit
+has `m = 1`. -/
+theorem two_circuit_eq_one_of_linForm {K0 c μ : ℕ} (hK0 : K0 ≤ 100000)
+    (h0 : 8 * (c + 17*μ + 2) ≤ 2^16) (H : LinFormHyp K0 c μ) {m k1 l1 k2 l2 : ℕ}
+    (h : IsTwoCircuit m k1 l1 k2 l2) : m = 1 :=
+  two_circuit_eq_one_of_hyp (twoCircHyp_of_linForm hK0 h0 H) h
 
-/-- `LinFormHyp 0 c μ` is **false** for `μ ≥ 1` (take `k = 0`, `L = 1`).  Small-`K0`
-instances are vacuous hypotheses; use `K0 = 100000`. -/
+/-- `LinFormHyp 0 c μ` is false for `μ ≥ 1` (take `k = 0`, `L = 1`), so instances with small
+`K0` are vacuous as hypotheses. -/
 theorem linFormHyp_zero_false {c μ : ℕ} (hμ : 1 ≤ μ) : ¬ LinFormHyp 0 c μ := by
   intro H
   have := H 0 1 le_rfl (by norm_num)
   rw [zero_pow (by omega)] at this
   simp at this
 
-/-- Named instance, CONDITIONAL on the unformalized `LinFormHyp 100000 100 14` (constants not
-checked against the literature): no nontrivial 1-circuits or 2-circuits (phased statement;
-see `RunsBridge.few_runs_cycle_trivial_of_linForm_100000` for the cycle-level form). -/
-theorem no_circuits_of_linForm_100000 (H : LinFormHyp 100000 100 14) :
-    (∀ m k l, IsOneCircuit m k l → m = 1) ∧
-      (∀ m k1 l1 k2 l2, IsTwoCircuit m k1 l1 k2 l2 → m = 1) :=
-  no_circuits_of_linForm le_rfl (by norm_num) H
+/-- Under `LinFormHyp 100000 100 14`, every 1-circuit has `m = 1`. -/
+theorem one_circuit_eq_one_of_linForm_100000 (H : LinFormHyp 100000 100 14) {m k l : ℕ}
+    (h : IsOneCircuit m k l) : m = 1 :=
+  one_circuit_eq_one_of_linForm le_rfl (by norm_num) H h
+
+/-- Under `LinFormHyp 100000 100 14`, every 2-circuit has `m = 1`. -/
+theorem two_circuit_eq_one_of_linForm_100000 (H : LinFormHyp 100000 100 14)
+    {m k1 l1 k2 l2 : ℕ} (h : IsTwoCircuit m k1 l1 k2 l2) : m = 1 :=
+  two_circuit_eq_one_of_linForm le_rfl (by norm_num) H h
+
+/-! ### Examples -/
+
+-- The numeric side condition holds for `μ = 14`, `c = 100`.
+example : 8 * (100 + 17*14 + 2) ≤ 2^16 := by norm_num
+
 
 end Collatz
-
-#print axioms Collatz.twoCircHyp_of_linForm
-#print axioms Collatz.no_circuits_of_linForm
-#print axioms Collatz.one_circuit_eq_one_of_hyp
-#print axioms Collatz.two_circuit_eq_one_of_hyp
-#print axioms Collatz.linFormHyp_zero_false
-#print axioms Collatz.no_circuits_of_linForm_100000

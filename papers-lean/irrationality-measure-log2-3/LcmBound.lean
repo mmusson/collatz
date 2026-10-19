@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import Mathlib.Data.Nat.Choose.Factorization
 import Mathlib.Data.Nat.Choose.Central
 import Mathlib.Data.Nat.Choose.Sum
@@ -5,19 +10,34 @@ import Mathlib.Tactic
 import PadeArith
 
 /-!
-# `lcm(1,…,N) ≤ 4^N` (classical Chebyshev-type bound)
+# The bound `lcm(1, …, N) ≤ 4^N`
 
-Mathlib (this toolchain) has no such bound (grep for lcm + centralBinom/four_pow found nothing).
-* `Lc_dvd`: for `a ≤ b`, `lcm(1..b+a) ∣ lcm(1..b) · C(b+a, a)` (per prime: a prime power
-  `p^e ∈ (b, b+a]` forces a carry at digit `e` in `a + b` base `p`, Kummer via
-  `Nat.factorization_choose'`, and `p^{e-1} ≤ b`).
-* `Lc_le_four_pow`: `lcm(1..N) ≤ 4^N` (strong induction, `C(2m,m), C(2m+1,m) ≤ 4^m`).
-* `Dn_le`: `D_n = 2^{3n} 3^{2n} lcm(1..5n) ≤ 73728^n` for the T1 family.
+In this file we prove the classical Chebyshev-type bound `lcm(1, …, N) ≤ 4^N` by strong induction,
+using the divisibility `lcm(1, …, b + a) ∣ lcm(1, …, b) · C(b + a, a)` for `a ≤ b` together with
+`C(2m, m), C(2m + 1, m) ≤ 4^m`. As an application we bound the common denominator `D_n` of the
+Padé linear forms of `PadeArith` by `73728^n`.
+
+## Main definitions
+
+- `Lc N`: `lcm(1, …, N)`.
+
+## Main results
+
+- `Lc_dvd`: for `a ≤ b`, `lcm(1, …, b + a) ∣ lcm(1, …, b) · C(b + a, a)`; a prime power
+  `p^e ∈ (b, b + a]` forces a carry at digit `e` when adding `a` and `b` in base `p` (Kummer).
+- `Lc_le_four_pow`: `lcm(1, …, N) ≤ 4^N`.
+- `Dn_le`: `D_n = 2^{3n} 3^{2n} lcm(1, …, 5n) ≤ 73728^n`.
+
+## References
+
+- M. Hata, *Rational approximations to π and some other numbers*, Acta Arith. 63 (1993), 335–349.
 -/
 
 namespace Collatz.LcmBound
 
-/-- `lcm(1,…,N)`. -/
+/-! ### Divisibility of `lcm(1, …, N)` -/
+
+/-- `lcm(1, …, N)`. -/
 def Lc (N : ℕ) : ℕ := (Finset.Icc 1 N).lcm id
 
 theorem dvd_Lc {j N : ℕ} (h1 : 1 ≤ j) (h2 : j ≤ N) : j ∣ Lc N := by
@@ -29,6 +49,7 @@ theorem Lc_ne_zero (N : ℕ) : Lc N ≠ 0 := by
   rw [Ne, Finset.lcm_eq_zero_iff]
   simp
 
+/-- For `a ≤ b`, `lcm(1, …, b + a)` divides `lcm(1, …, b) · C(b + a, a)`. -/
 theorem Lc_dvd (a b : ℕ) (hab : a ≤ b) : Lc (b+a) ∣ Lc b * Nat.choose (b+a) a := by
   unfold Lc
   apply Finset.lcm_dvd
@@ -72,7 +93,9 @@ theorem Lc_dvd (a b : ℕ) (hab : a ≤ b) : Lc (b+a) ∣ Lc b * Nat.choose (b+a
       omega
     omega
 
-/-- **Classical (Chebyshev-type)**: `lcm(1,…,N) ≤ 4^N`. -/
+/-! ### The bound `lcm(1, …, N) ≤ 4^N` -/
+
+/-- Chebyshev-type bound: `lcm(1, …, N) ≤ 4^N`. -/
 theorem Lc_le_four_pow (N : ℕ) : Lc N ≤ 4^N := by
   induction N using Nat.strong_induction_on with
   | _ N ih =>
@@ -98,10 +121,9 @@ theorem Lc_le_four_pow (N : ℕ) : Lc N ≤ 4^N := by
           _ ≤ 4^(m+1) * 4^m := Nat.mul_le_mul (ih (m+1) (by omega)) (Nat.choose_middle_le_pow m)
           _ = 4^(2*m+1) := by ring
 
-/-- `lcm(1,…,N) = Finset lcm` form as used in `PadeArith.Lcm5`: `lcm(1..5n) ≤ 4^{5n}`. -/
-theorem lcm_Icc_le_four_pow (N : ℕ) : (Finset.Icc 1 N).lcm id ≤ 4^N := Lc_le_four_pow N
+/-! ### The denominator of the Padé linear forms -/
 
-/-- The T1 denominator is at most `73728^n = (2^3·3^2·4^5)^n`. -/
+/-- The common denominator `D_n` of `PadeArith` is at most `73728^n = (2^3 · 3^2 · 4^5)^n`. -/
 theorem Dn_le (n : ℕ) : PadeArith.Dn n ≤ 73728^n := by
   unfold PadeArith.Dn
   have h : PadeArith.Lcm5 n ≤ 4^(5*n) := Lc_le_four_pow (5*n)
@@ -111,7 +133,3 @@ theorem Dn_le (n : ℕ) : PadeArith.Dn n ≤ 73728^n := by
     _ = 73728^n := by rw [pow_mul, pow_mul, pow_mul, ← mul_pow, ← mul_pow]; norm_num
 
 end Collatz.LcmBound
-
-#print axioms Collatz.LcmBound.Lc_dvd
-#print axioms Collatz.LcmBound.Lc_le_four_pow
-#print axioms Collatz.LcmBound.Dn_le

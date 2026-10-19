@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import Sieve24
 import Sieve25Part0
 import Sieve25Part1
@@ -11,14 +16,16 @@ import Sieve25Part7
 /-!
 # Verified descent below `2^25`
 
-Assembles the eight kernel-certificate files `Sieve25Part0..7` (299 `decide +kernel` blocks of
-the unchanged residue-tree sieve `sv` of `Sieve.lean`, with `lo = 2^24`, `K = 20`, `N = 32`,
-fuel 400, forced-bit patterns mod `2^14`; about 14 min kernel CPU in total) into
-`DescRange (2^24) (2^25)`, and combines it with `FareyDecomp`/`Sieve` `descRange_24` to get `DescRange 2 (2^25)`:
-every `m ∈ [2, 2^25)` has a `T`-iterate below `m`. Kernel reduction only (`decide +kernel`).
+In this file we assemble the eight certificate files `Sieve25Part0`, …, `Sieve25Part7` into
+`DescRange (2^24) (2^25)`, and combine it with `descRange_24`. The certificates are 299
+`decide +kernel` checks of the sieve `sv` of `Sieve.lean`, with `lo = 2^24`, `K = 20`, `N = 32`,
+fuel 400, and forced-bit patterns modulo `2^14`.
 
-Classical and mathematically routine (the literature has verified far beyond `2^68`); used for the
-published-bound formalizations in `PublishedBounds.lean`.
+## Main results
+
+- `descRange_24_25`: every `m` with `2^24 ≤ m < 2^25` has a `T`-iterate below `m`.
+- `descRange_25`: every `m` with `2 ≤ m < 2^25` has a `T`-iterate below `m`.
+- `min_orbit_ge_25`: the minimum `m > 1` of a `T`-orbit satisfies `2^25 ≤ m`.
 -/
 
 namespace Collatz
@@ -49,8 +56,3 @@ theorem min_orbit_ge_25 {m : ℕ} (hm : 1 < m) (hmin : ∀ j, m ≤ T^[j] m) : 2
   min_orbit_ge_of_descRange descRange_25 hm hmin
 
 end Collatz
-
-#print axioms Collatz.sieve25_roots
-#print axioms Collatz.descRange_24_25
-#print axioms Collatz.descRange_25
-#print axioms Collatz.min_orbit_ge_25

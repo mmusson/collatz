@@ -1,27 +1,49 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import MRuns
 import Mathlib.Dynamics.PeriodicPts.Defs
 
 /-!
-# Window-free (every period, hence per-lap) versions of the m-run bounds
+# Run bounds for every period of a cycle
 
-**CLASSICAL** (Simons–de Weger 2005 m-cycle method, finite-range instance at verified range
-`2^24`).
+The bounds of `state_of_the_art_runs` in `MRuns` concern a single, existentially chosen window
+`L`. In this file we prove them for every `L > 0` with `T^[L] m = m`, and in particular for the
+minimal period `L = Function.minimalPeriod T m`, i.e. per lap. Thus no nontrivial cycle has, per
+lap, at most `17` odd runs and fewer than `225644606` odd steps. This is a finite instance of the
+Simons–de Weger `m`-cycle method with verified range `2^24`.
 
-`state_of_the_art_runs` (MRuns.lean) bounds `oddRuns L m` only for an existentially chosen
-window `L`.  Here the bounds are proved for **every** `L > 0` with `T^[L] m = m`
-(`runs_bounds_of_min_window`, `state_of_the_art_runs_all`), and in particular for
-`L = Function.minimalPeriod T m`, i.e. per lap (`state_of_the_art_runs_minimalPeriod`).
-The same is done for the result **CONDITIONAL** on the unformalized `LMNHyp`.
+The results `runs_ge_14_of_min_window_of_LMN`, `state_of_the_art_runs_all_of_LMN`,
+`state_of_the_art_runs_minimalPeriod_of_LMN` and `state_of_the_art_runs_minimalPeriod_of_Laurent08`
+assume the hypothesis `LMNHyp` of `LMN`, which is not proved here. Under it, every period window
+has at least `14` odd runs.
+
+## Main results
+
+- `runs_ge_18_of_min_window`, `runs_ge_62_of_min_window`: for an odd `m ≥ 2^24`, minimal on its
+  `T`-orbit, and every period `L > 0`, `oddRuns L m ≥ 18` or `oddSteps L m ≥ 225644606`, and
+  `oddRuns L m ≥ 62` or `oddSteps L m ≥ 190537`.
+- `state_of_the_art_runs_all`: every nontrivial `C`-cycle has such an odd minimum `m`.
+- `state_of_the_art_runs_minimalPeriod`: the same bounds at the minimal period of `m`.
+- `runs_ge_14_of_min_window_of_LMN`: under `LMNHyp`, `oddRuns L m ≥ 14` for every period `L`.
+
+## References
+
+- J. L. Simons, B. M. M. de Weger, *Theoretical and computational bounds for m-cycles of the
+  3n+1-problem*, Acta Arith. 117 (2005), 51–70.
+- M. Laurent, *Linear forms in two logarithms and interpolation determinants II*, Acta Arith. 133
+  (2008), 325–348.
 -/
 
 namespace Collatz
 open CollatzProof
 
-/-- **Window-free core (unconditional).** For an odd `m ≥ 2^24` that is minimal on its `T`-orbit,
-and **any** `L > 0` with `T^[L] m = m`:
-(`oddRuns L m ≥ 18` or `oddSteps L m ≥ 225644606`) and
-(`oddRuns L m ≥ 62` or `oddSteps L m ≥ 190537`). -/
-theorem runs_bounds_of_min_window {m L : ℕ} (hodd : m % 2 = 1) (h24 : 2^24 ≤ m)
+/-! ### Bounds for every period -/
+
+/-- Both bounds at once; see `runs_ge_18_of_min_window` and `runs_ge_62_of_min_window`. -/
+private theorem runs_bounds_of_min_window_aux {m L : ℕ} (hodd : m % 2 = 1) (h24 : 2^24 ≤ m)
     (hmin : ∀ j, m ≤ T^[j] m) (hL : 0 < L) (hc : T^[L] m = m) :
     (18 ≤ oddRuns L m ∨ 225644606 ≤ oddSteps L m) ∧
     (62 ≤ oddRuns L m ∨ 190537 ≤ oddSteps L m) := by
@@ -48,15 +70,28 @@ theorem runs_bounds_of_min_window {m L : ℕ} (hodd : m % 2 = 1) (h24 : 2^24 ≤
   have : 5^r * 190537 ≤ 5^r * k := Nat.mul_le_mul_left _ hk2
   omega
 
-/-- **Window-free core, CONDITIONAL on `LMNHyp`** (unformalized transcription of LMN 1995 /
-Laurent 2008; vacuous if false): under the hypotheses of `runs_bounds_of_min_window`,
-`oddRuns L m ≥ 14` for **every** period `L > 0`. -/
-theorem runs_bounds_of_min_window_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2)
+/-- For an odd `m ≥ 2^24` that is minimal on its `T`-orbit and every `L > 0` with
+`T^[L] m = m`: `oddRuns L m ≥ 18` or `oddSteps L m ≥ 225644606`. -/
+theorem runs_ge_18_of_min_window {m L : ℕ} (hodd : m % 2 = 1) (h24 : 2^24 ≤ m)
+    (hmin : ∀ j, m ≤ T^[j] m) (hL : 0 < L) (hc : T^[L] m = m) :
+    18 ≤ oddRuns L m ∨ 225644606 ≤ oddSteps L m :=
+  (runs_bounds_of_min_window_aux hodd h24 hmin hL hc).1
+
+/-- For an odd `m ≥ 2^24` that is minimal on its `T`-orbit and every `L > 0` with
+`T^[L] m = m`: `oddRuns L m ≥ 62` or `oddSteps L m ≥ 190537`. -/
+theorem runs_ge_62_of_min_window {m L : ℕ} (hodd : m % 2 = 1) (h24 : 2^24 ≤ m)
+    (hmin : ∀ j, m ≤ T^[j] m) (hL : 0 < L) (hc : T^[L] m = m) :
+    62 ≤ oddRuns L m ∨ 190537 ≤ oddSteps L m :=
+  (runs_bounds_of_min_window_aux hodd h24 hmin hL hc).2
+
+/-- Assume `LMNHyp Cst c0 m0` with `0 ≤ Cst ≤ 51/2`, `c0 ≤ 1` and `0 ≤ m0 ≤ 21`. Then for an odd
+`m ≥ 2^24` that is minimal on its `T`-orbit, `oddRuns L m ≥ 14` for every period `L > 0`. -/
+theorem runs_ge_14_of_min_window_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2)
     (hc0 : c0 ≤ 1) (hm0 : 0 ≤ m0) (hm1 : m0 ≤ 21) (H : LMNHyp Cst c0 m0)
     {m L : ℕ} (hodd : m % 2 = 1) (h24 : 2^24 ≤ m)
     (hmin : ∀ j, m ≤ T^[j] m) (hL : 0 < L) (hc : T^[L] m = m) :
     14 ≤ oddRuns L m := by
-  obtain ⟨hA, -⟩ := runs_bounds_of_min_window hodd h24 hmin hL hc
+  have hA := runs_ge_18_of_min_window hodd h24 hmin hL hc
   by_contra hcon
   push Not at hcon
   have h24' : (16777216 : ℕ) ≤ m := by norm_num at h24; exact h24
@@ -87,10 +122,12 @@ theorem runs_bounds_of_min_window_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : 
   have : A * (749 * 5^r) = 5^r * (749 * A) := by ring
   omega
 
-/-- **Unconditional, every window.** A positive `C`-cycle point `n ∉ {1,2,4}` yields an odd
-`m`, `2^24 ≤ m ≤ n`, `T`-periodic and minimal on its `T`-orbit, such that for **every** `L > 0`
-with `T^[L] m = m`: (`oddRuns L m ≥ 18` or `oddSteps L m ≥ 225644606`) and
-(`oddRuns L m ≥ 62` or `oddSteps L m ≥ 190537`).  Classical. -/
+/-! ### Cycles of the Collatz map -/
+
+/-- A positive `C`-cycle point `n ∉ {1, 2, 4}` yields an odd `m` with `2^24 ≤ m ≤ n`,
+`T`-periodic and minimal on its `T`-orbit, such that for every `L > 0` with `T^[L] m = m`:
+`oddRuns L m ≥ 18` or `oddSteps L m ≥ 225644606`, and `oddRuns L m ≥ 62` or
+`oddSteps L m ≥ 190537`. -/
 theorem state_of_the_art_runs_all (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
     (hne : n ≠ 1 ∧ n ≠ 2 ∧ n ≠ 4) :
     ∃ m, m % 2 = 1 ∧ 2^24 ≤ m ∧ m ≤ n ∧ (∃ L, 0 < L ∧ T^[L] m = m) ∧ (∀ j, m ≤ T^[j] m) ∧
@@ -99,12 +136,13 @@ theorem state_of_the_art_runs_all (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 <
         (62 ≤ oddRuns L m ∨ 190537 ≤ oddSteps L m) := by
   obtain ⟨m, L0, h1, h2, h3, h4, h5, h6, -⟩ := state_of_the_art_runs n hn ℓ hℓ h hne
   exact ⟨m, h1, h2, h3, ⟨L0, h4, h5⟩, h6,
-    fun L hL hc => runs_bounds_of_min_window h1 h2 h6 hL hc⟩
+    fun L hL hc ↦
+      ⟨runs_ge_18_of_min_window h1 h2 h6 hL hc, runs_ge_62_of_min_window h1 h2 h6 hL hc⟩⟩
 
-/-- **Unconditional, per lap.** As `state_of_the_art_runs_all`, specialised to the minimal
-period `P = Function.minimalPeriod T m > 0`: (`oddRuns P m ≥ 18` or `oddSteps P m ≥ 225644606`)
-and (`oddRuns P m ≥ 62` or `oddSteps P m ≥ 190537`).  So no nontrivial cycle has, per lap,
-`≤ 17` odd runs and `< 225,644,606` odd steps.  Classical. -/
+/-- `state_of_the_art_runs_all` at the minimal period `P = Function.minimalPeriod T m > 0`:
+`oddRuns P m ≥ 18` or `oddSteps P m ≥ 225644606`, and `oddRuns P m ≥ 62` or
+`oddSteps P m ≥ 190537`. So no nontrivial cycle has, per lap, at most `17` odd runs and fewer than
+`225644606` odd steps. -/
 theorem state_of_the_art_runs_minimalPeriod (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ)
     (h : C^[ℓ] n = n) (hne : n ≠ 1 ∧ n ≠ 2 ∧ n ≠ 4) :
     ∃ m, m % 2 = 1 ∧ 2^24 ≤ m ∧ m ≤ n ∧ (∀ j, m ≤ T^[j] m) ∧
@@ -119,8 +157,8 @@ theorem state_of_the_art_runs_minimalPeriod (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (
   have hPc : T^[Function.minimalPeriod T m] m = m := Function.iterate_minimalPeriod
   exact ⟨m, h1, h2, h3, h6, hP, hPc, hall _ hP hPc⟩
 
-/-- **CONDITIONAL on `LMNHyp`, every window.** The conclusion of `state_of_the_art_runs_all`
-plus `oddRuns L m ≥ 14` for every period `L > 0`. -/
+/-- Under `LMNHyp` (with the constraints of `runs_ge_14_of_min_window_of_LMN`), the conclusion of
+`state_of_the_art_runs_all` holds together with `oddRuns L m ≥ 14` for every period `L > 0`. -/
 theorem state_of_the_art_runs_all_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2)
     (hc0 : c0 ≤ 1) (hm0 : 0 ≤ m0) (hm1 : m0 ≤ 21) (H : LMNHyp Cst c0 m0)
     (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
@@ -130,12 +168,13 @@ theorem state_of_the_art_runs_all_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC
         (18 ≤ oddRuns L m ∨ 225644606 ≤ oddSteps L m) ∧
         (62 ≤ oddRuns L m ∨ 190537 ≤ oddSteps L m) ∧ 14 ≤ oddRuns L m := by
   obtain ⟨m, h1, h2, h3, hper, h6, hall⟩ := state_of_the_art_runs_all n hn ℓ hℓ h hne
-  exact ⟨m, h1, h2, h3, hper, h6, fun L hL hc =>
+  exact ⟨m, h1, h2, h3, hper, h6, fun L hL hc ↦
     ⟨(hall L hL hc).1, (hall L hL hc).2,
-      runs_bounds_of_min_window_LMN hC0 hC hc0 hm0 hm1 H h1 h2 h6 hL hc⟩⟩
+      runs_ge_14_of_min_window_of_LMN hC0 hC hc0 hm0 hm1 H h1 h2 h6 hL hc⟩⟩
 
-/-- **CONDITIONAL on `LMNHyp`, per lap**: at `P = Function.minimalPeriod T m`,
-`oddRuns P m ≥ 14` together with the unconditional per-lap disjunctions. -/
+/-- Under `LMNHyp` (with the constraints of `runs_ge_14_of_min_window_of_LMN`), at the minimal
+period `P = Function.minimalPeriod T m`, `oddRuns P m ≥ 14` together with the per-lap bounds of
+`state_of_the_art_runs_minimalPeriod`. -/
 theorem state_of_the_art_runs_minimalPeriod_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst)
     (hC : Cst ≤ 51/2) (hc0 : c0 ≤ 1) (hm0 : 0 ≤ m0) (hm1 : m0 ≤ 21) (H : LMNHyp Cst c0 m0)
     (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
@@ -150,9 +189,10 @@ theorem state_of_the_art_runs_minimalPeriod_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 �
   obtain ⟨m, h1, h2, h3, h6, hP, hPc, hA, hB⟩ :=
     state_of_the_art_runs_minimalPeriod n hn ℓ hℓ h hne
   exact ⟨m, h1, h2, h3, h6, hP, hPc, hA, hB,
-    runs_bounds_of_min_window_LMN hC0 hC hc0 hm0 hm1 H h1 h2 h6 hP hPc⟩
+    runs_ge_14_of_min_window_of_LMN hC0 hC hc0 hm0 hm1 H h1 h2 h6 hP hPc⟩
 
-/-- Per-lap instance, **CONDITIONAL** on `LMNHyp 25.2 0.21 20` (Laurent 2008, see `LMN.lean`). -/
+/-- `state_of_the_art_runs_minimalPeriod_of_LMN` under `LMNHyp 25.2 0.21 20`, the constants of
+Laurent (2008, Cor. 1, `m = 20`). -/
 theorem state_of_the_art_runs_minimalPeriod_of_Laurent08 (H : LMNHyp 25.2 0.21 20)
     (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
     (hne : n ≠ 1 ∧ n ≠ 2 ∧ n ≠ 4) :
@@ -167,11 +207,3 @@ theorem state_of_the_art_runs_minimalPeriod_of_Laurent08 (H : LMNHyp 25.2 0.21 2
     (by norm_num) (by norm_num) H n hn ℓ hℓ h hne
 
 end Collatz
-
-#print axioms Collatz.runs_bounds_of_min_window
-#print axioms Collatz.runs_bounds_of_min_window_LMN
-#print axioms Collatz.state_of_the_art_runs_all
-#print axioms Collatz.state_of_the_art_runs_minimalPeriod
-#print axioms Collatz.state_of_the_art_runs_all_of_LMN
-#print axioms Collatz.state_of_the_art_runs_minimalPeriod_of_LMN
-#print axioms Collatz.state_of_the_art_runs_minimalPeriod_of_Laurent08

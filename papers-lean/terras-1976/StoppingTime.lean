@@ -1,43 +1,65 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import Collatz.CycleInvariance
 import OneCircuit
 import Collatz.CycleBasic
 import Mathlib.Tactic
 
 /-!
-# Terras stopping time and the "Bucket 2" finite range
+# Terras stopping times
 
-Notation: `S_j = oddSteps j n`, `ρ_j = rho j n`, so that `2^j T^j(n) = 3^{S_j} n + ρ_j`
+The stopping time of `n` under the Terras map `T` is the first `t ≥ 1` at which the affine
+coefficient `3^{S_t(n)}/2^t` of `T^t` drops below `1`. In this file we prove a sharp bound on the
+remainder `ρ_t(n)` at the stopping time, deduce that a point which does not descend at its stopping
+time lies in an explicit finite range, and apply this to the minimum of a nontrivial cycle.
+
+We also prove Terras periodicity: the first `k` parities of the orbit of `n`, and hence the
+stopping-time data up to step `k`, depend only on `n mod 2^k`.
+
+## Main results
+
+- `oddSteps_succ_right`, `rho_succ_right`: the recursions for appending one step on the right,
+  `S_{j+1} = S_j + (T^j n mod 2)` and `ρ_{j+1} = 3ρ_j + 2^j` or `ρ_j`.
+- `rho_le_of_prefix`: if `2^i < 3^{S_i(n)}` for all `1 ≤ i < t` and `3^{S_t(n)} < 2^t`, then
+  `2ρ_t(n) ≤ S_t(n)·2^t`.
+- `nondescending_bound`: under the same hypotheses, `n ≤ T^t n` forces
+  `2n(2^t − 3^{S_t}) ≤ S_t·2^t`.
+- `exists_stopping`: if `3^{S_L(n)} < 2^L` with `L > 0`, a stopping time `1 ≤ t ≤ L` exists.
+- `cycle_min_stopping_bound`: the minimum of a `T`-cycle satisfies the bound of
+  `nondescending_bound` at its stopping time.
+- `nontrivial_C_cycle_stopping`: every nontrivial positive `C`-cycle has an odd minimum
+  `m ≥ 2^17` whose stopping time `2 ≤ t ≤ L` satisfies `2^{t−1} < 3^s < 2^t` with `s = S_t(m)`,
+  and `2m(2^t − 3^s) ≤ s·2^t`.
+- `oddSteps_modEq`, `stopping_data_modEq`: if `n ≡ n' (mod 2^k)` then `S_j(n) = S_j(n')` for
+  `j ≤ k`; in particular the stopping-time hypotheses at `t` agree for `n` and `n'` when
+  `n ≡ n' (mod 2^t)`.
+
+## Notation
+
+`S_j(n) = oddSteps j n` and `ρ_j(n) = rho j n`, so that `2^j T^j(n) = 3^{S_j(n)} n + ρ_j(n)`
 (`affine_T_iterate`).
 
-* T1 (`oddSteps_succ_right`, `rho_succ_right`, `rho_le_of_prefix`): the append-one-step
-  recursions `S_{j+1} = S_j + (T^j n mod 2)` and `ρ_{j+1} = 3ρ_j + 2^j` (odd) / `ρ_j` (even),
-  and the **stopping-time remainder bound**: if every proper prefix is expanding
-  (`2^i < 3^{S_i}` for `1 ≤ i < t`) and step `t` is contracting (`3^{S_t} < 2^t`), then
-  `2ρ_t ≤ S_t·2^t`.  This is exponentially sharper than `rho_bound` (`ρ ≲ 2^{t−S}3^S`).
-* T2 (`nondescending_bound`, `exists_stopping`, `cycle_min_stopping_bound`,
-  `nontrivial_C_cycle_stopping`): a point that does not descend at its stopping time `t`
-  satisfies `2n(2^t − 3^{S_t}) ≤ S_t 2^t` (the "Bucket 2" range of our notes,
-  Terras 1976 Thm 2.1–2.2), and every nontrivial `C`-cycle has an odd minimum `m ≥ 2^17`
-  whose Terras stopping time `2 ≤ t ≤ L` satisfies `2^{t−1} < 3^s < 2^t`
-  (i.e. `s = ⌊t/log₂3⌋ (= ⌊t·log₃2⌋)`), `s ≤ S_L(m)`, and that bound.
-* T3b (`T_modEq_step`, `oddSteps_modEq`, `stopping_data_modEq`): Terras periodicity — the
-  parity vector of length `k`, hence `S_j` for `j ≤ k` and the stopping-time data at `t`,
-  depend only on `n mod 2^k`.
+## References
 
-Classical (Terras 1976) plus our notes (stopping-time-notes.tex, Prop "Bucket 2");
-formalized here for the first time.
+- R. Terras, *A stopping time problem on the positive integers*, Acta Arith. 30 (1976),
+  241–252.
 -/
 
 namespace Collatz
+
 open CollatzProof
 
-example : rho 4 3 = 5 ∧ oddSteps 4 3 = 2 := by decide
+/-! ### Appending one step on the right -/
 
 /-- Append one step on the right: `S_{j+1}(n) = S_j(n) + (T^j n mod 2)`. -/
 theorem oddSteps_succ_right (j n : ℕ) : oddSteps (j+1) n = oddSteps j n + (T^[j] n) % 2 := by
   rw [oddSteps_add j 1 n]; simp [oddSteps]
 
-/-- Append one step on the right: `ρ_{j+1}(n) = 3ρ_j(n) + 2^j` if `T^j n` is odd, else `ρ_j(n)`. -/
+/-- Append one step on the right: `ρ_{j+1}(n) = 3ρ_j(n) + 2^j` if `T^j n` is odd, else
+`ρ_j(n)`. -/
 theorem rho_succ_right (j n : ℕ) :
     rho (j+1) n = if (T^[j] n) % 2 = 1 then 3 * rho j n + 2^j else rho j n := by
   have E1 := affine_T_iterate j n
@@ -59,8 +81,20 @@ theorem rho_succ_right (j n : ℕ) :
         _ = _ := by rw [E1]; ring
     omega
 
-/-- **Stopping-time remainder bound (T1).** If `2^i < 3^{S_i(n)}` for all `1 ≤ i < t` and
-`3^{S_t(n)} < 2^t`, then `2ρ_t(n) ≤ S_t(n)·2^t`. -/
+/-- `S_j(n)` is monotone in `j`. -/
+theorem oddSteps_mono {a b : ℕ} (n : ℕ) (h : a ≤ b) : oddSteps a n ≤ oddSteps b n := by
+  obtain ⟨c, rfl⟩ := Nat.exists_eq_add_of_le h
+  rw [oddSteps_add]; omega
+
+/-- `S_1(m) = 1` for odd `m`. -/
+theorem oddSteps_one_of_odd {m : ℕ} (hm : m % 2 = 1) : oddSteps 1 m = 1 := by
+  simp [oddSteps, hm]
+
+/-! ### The stopping-time remainder bound -/
+
+/-- **Stopping-time remainder bound.** If `2^i < 3^{S_i(n)}` for all `1 ≤ i < t` and
+`3^{S_t(n)} < 2^t`, then `2ρ_t(n) ≤ S_t(n)·2^t`. This is exponentially sharper than the general
+bound `ρ_t ≲ 2^{t−S_t} 3^{S_t}`. -/
 theorem rho_le_of_prefix (n t : ℕ)
     (hpre : ∀ i, 1 ≤ i → i < t → 2^i < 3^(oddSteps i n))
     (hstop : 3^(oddSteps t n) < 2^t) :
@@ -103,8 +137,8 @@ theorem rho_le_of_prefix (n t : ℕ)
       _ = _ := by rw [← hA]; ring
   exact Nat.le_of_mul_le_mul_left this hApos
 
-/-- **Bucket-2 range (T2a).** Under the hypotheses of `rho_le_of_prefix`, if `n ≤ T^t n`
-then `2n·2^t ≤ 2n·3^{S_t} + S_t·2^t`, i.e. `2n(2^t − 3^{S_t}) ≤ S_t·2^t`. -/
+/-- **Range of non-descending points.** Under the hypotheses of `rho_le_of_prefix`, if
+`n ≤ T^t n` then `2n·2^t ≤ 2n·3^{S_t} + S_t·2^t`, i.e. `2n(2^t − 3^{S_t}) ≤ S_t·2^t`. -/
 theorem nondescending_bound (n t : ℕ)
     (hpre : ∀ i, 1 ≤ i → i < t → 2^i < 3^(oddSteps i n))
     (hstop : 3^(oddSteps t n) < 2^t) (hle : n ≤ T^[t] n) :
@@ -116,23 +150,11 @@ theorem nondescending_bound (n t : ℕ)
   have h3 : 2 * n * 3^(oddSteps t n) = 2 * (3^(oddSteps t n) * n) := by ring
   omega
 
-/-- Non-vacuity of `nondescending_bound`: the trivial cycle point `n = 1` with stopping time
-`t = 2` (`S_1 = 1`, `S_2 = 1`, `T^2 1 = 1`) satisfies all hypotheses; the conclusion reads
-`8 ≤ 6 + 4`. -/
-example : 2 * 1 * 2^2 ≤ 2 * 1 * 3^(oddSteps 2 1) + oddSteps 2 1 * 2^2 :=
-  nondescending_bound 1 2
-    (fun i h1 h2 => by obtain rfl : i = 1 := by omega
-                       decide)
-    (by decide) (by decide)
+/-! ### Stopping times of cycle minima -/
 
-/-- `S_j(n)` is monotone in `j`. -/
-theorem oddSteps_mono {a b : ℕ} (n : ℕ) (h : a ≤ b) : oddSteps a n ≤ oddSteps b n := by
-  obtain ⟨c, rfl⟩ := Nat.exists_eq_add_of_le h
-  rw [oddSteps_add]; omega
-
-/-- **Existence of the stopping time (T2b).** If `0 < L` and `3^{S_L(n)} < 2^L`, there is a
-least `t ∈ [1, L]` with `3^{S_t} < 2^t`; all proper prefixes satisfy `2^i < 3^{S_i}`
-(strict, since `2^i` is even and `3^{S_i}` odd). -/
+/-- **Existence of the stopping time.** If `0 < L` and `3^{S_L(n)} < 2^L`, there is a least
+`t ∈ [1, L]` with `3^{S_t} < 2^t`; all proper prefixes satisfy `2^i < 3^{S_i}` (strictly, since
+`2^i` is even and `3^{S_i}` is odd). -/
 theorem exists_stopping (n L : ℕ) (hL : 0 < L) (h : 3^(oddSteps L n) < 2^L) :
     ∃ t, 1 ≤ t ∧ t ≤ L ∧ 3^(oddSteps t n) < 2^t ∧
       ∀ i, 1 ≤ i → i < t → 2^i < 3^(oddSteps i n) := by
@@ -150,21 +172,22 @@ theorem exists_stopping (n L : ℕ) (hL : 0 < L) (h : 3^(oddSteps L n) < 2^L) :
   have h3 := three_pow_mod_two (oddSteps i n)
   omega
 
-/-- Stopping data for a cycle minimum `m > 0` of a `T`-cycle of length `L > 0` (no minimality
-needed): a Terras stopping time `1 ≤ t ≤ L` with the prefix condition kept. -/
+/-- Stopping data for a point `m > 0` of a `T`-cycle of length `L > 0` (minimality is not
+needed): a stopping time `1 ≤ t ≤ L`, with the prefix condition and `2^{t−1} < 3^{S_t}` when
+`t ≥ 2`. -/
 theorem cycle_min_stopping_data {m L : ℕ} (hm : 0 < m) (hL : 0 < L)
     (h : T^[L] m = m) :
     ∃ t, 1 ≤ t ∧ t ≤ L ∧ oddSteps t m ≤ oddSteps L m ∧
       3^(oddSteps t m) < 2^t ∧ (∀ i, 1 ≤ i → i < t → 2^i < 3^(oddSteps i m)) ∧
       (2 ≤ t → 2^(t-1) < 3^(oddSteps t m)) := by
   obtain ⟨t, h1, h2, h3, h4⟩ := exists_stopping m L hL (three_pow_lt_two_pow_of_cycle hm hL h)
-  refine ⟨t, h1, h2, oddSteps_mono m h2, h3, h4, fun ht => ?_⟩
+  refine ⟨t, h1, h2, oddSteps_mono m h2, h3, h4, fun ht ↦ ?_⟩
   exact lt_of_lt_of_le (h4 (t-1) (by omega) (by omega))
     (Nat.pow_le_pow_right (by norm_num) (oddSteps_mono m (by omega)))
 
-/-- **Cycle-minimum stopping bound (T2c).** The minimum `m > 0` of a `T`-cycle of length
-`L > 0` has a stopping time `1 ≤ t ≤ L` with `s = S_t(m) ≤ S_L(m)`, `3^s < 2^t`,
-`2^{t−1} < 3^s` when `t ≥ 2`, and `2m·2^t ≤ 2m·3^s + s·2^t`. -/
+/-- **Stopping bound for cycle minima.** The minimum `m > 0` of a `T`-cycle of length `L > 0`
+has a stopping time `1 ≤ t ≤ L` with `s = S_t(m) ≤ S_L(m)`, `3^s < 2^t`, `2^{t−1} < 3^s` when
+`t ≥ 2`, and `2m·2^t ≤ 2m·3^s + s·2^t`. -/
 theorem cycle_min_stopping_bound {m L : ℕ} (hm : 0 < m) (hL : 0 < L)
     (h : T^[L] m = m) (hmin : ∀ j, m ≤ T^[j] m) :
     ∃ t, 1 ≤ t ∧ t ≤ L ∧ oddSteps t m ≤ oddSteps L m ∧
@@ -173,21 +196,18 @@ theorem cycle_min_stopping_bound {m L : ℕ} (hm : 0 < m) (hL : 0 < L)
   obtain ⟨t, h1, h2, h3, h4, h5, h6⟩ := cycle_min_stopping_data hm hL h
   exact ⟨t, h1, h2, h3, h4, h6, nondescending_bound m t h5 h4 (hmin t)⟩
 
-/-- `S_1(m) = 1` for odd `m`. -/
-theorem oddSteps_one_of_odd {m : ℕ} (hm : m % 2 = 1) : oddSteps 1 m = 1 := by
-  simp [oddSteps, hm]
-
-/-- **Stopping bound for `C`-cycles (T2d).** A nontrivial positive `C`-cycle through `n` has an
-odd minimum `m`, `2^17 ≤ m ≤ n`, on a `T`-cycle of length `L > 0`, whose Terras stopping time
-`t` (with `2 ≤ t ≤ L`) satisfies `2^{t−1} < 3^s < 2^t` (so `s = ⌊t/log₂3⌋ (= ⌊t·log₃2⌋)`),
-`s = S_t(m) ≤ S_L(m)`, and `2m(2^t − 3^s) ≤ s·2^t`. -/
+/-- **Stopping bound for `C`-cycles.** A nontrivial positive `C`-cycle through `n` has an odd
+minimum `m`, `2^17 ≤ m ≤ n`, on a `T`-cycle of length `L > 0`, whose stopping time `t` (with
+`2 ≤ t ≤ L`) satisfies `2^{t−1} < 3^s < 2^t` (so `s = ⌊t·log₃ 2⌋`), `s = S_t(m) ≤ S_L(m)`, and
+`2m(2^t − 3^s) ≤ s·2^t`. -/
 theorem nontrivial_C_cycle_stopping (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ)
     (h : C^[ℓ] n = n) (h1 : n ≠ 1) (h2 : n ≠ 2) (h4 : n ≠ 4) :
     ∃ m L t, m % 2 = 1 ∧ 2^17 ≤ m ∧ m ≤ n ∧ 0 < L ∧ T^[L] m = m ∧ (∀ j, m ≤ T^[j] m) ∧
       2 ≤ t ∧ t ≤ L ∧ oddSteps t m ≤ oddSteps L m ∧
       2^(t-1) < 3^(oddSteps t m) ∧ 3^(oddSteps t m) < 2^t ∧
       2 * m * 2^t ≤ 2 * m * 3^(oddSteps t m) + oddSteps t m * 2^t := by
-  obtain ⟨m, L, hodd, h17, hmn, hL, hc, hmin, -⟩ := nontrivial_C_cycle_bounds' n hn ℓ hℓ h ⟨h1, h2, h4⟩
+  obtain ⟨m, L, hodd, h17, hmn, hL, hc, hmin, -⟩ :=
+    nontrivial_C_cycle_bounds' n hn ℓ hℓ h ⟨h1, h2, h4⟩
   have hm : 0 < m := lt_of_lt_of_le (by norm_num) h17
   obtain ⟨t, ht1, ht2, ht3, ht4, ht5, ht6⟩ := cycle_min_stopping_bound hm hL hc hmin
   have ht : 2 ≤ t := by
@@ -197,8 +217,11 @@ theorem nontrivial_C_cycle_stopping (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0
     rw [oddSteps_one_of_odd hodd] at ht4; norm_num at ht4
   exact ⟨m, L, t, hodd, h17, hmn, hL, hc, hmin, ht, ht2, ht3, ht5 ht, ht4, ht6⟩
 
-/-- One Collatz step respects congruence mod powers of two, losing one bit. -/
-theorem T_modEq_step {m n n' : ℕ} (h : n ≡ n' [MOD 2^(m+1)]) :
+/-! ### Terras periodicity -/
+
+/-- One step respects congruence mod powers of two, losing one bit; both conclusions at once,
+see `T_modEq_step_mod_two` and `T_modEq_step`. -/
+private theorem T_modEq_step_aux {m n n' : ℕ} (h : n ≡ n' [MOD 2^(m+1)]) :
     n % 2 = n' % 2 ∧ T n ≡ T n' [MOD 2^m] := by
   have hp : n % 2 = n' % 2 := Nat.ModEq.of_dvd (Dvd.intro_left _ (pow_succ 2 m).symm) h
   refine ⟨hp, ?_⟩
@@ -224,45 +247,57 @@ theorem T_modEq_step {m n n' : ℕ} (h : n ≡ n' [MOD 2^(m+1)]) :
       linear_combination 3 * this
     exact mul_left_cancel₀ (by norm_num) this
 
-/-- **Terras periodicity (T3b).** If `n ≡ n' (mod 2^k)` then `S_j(n) = S_j(n')` for all `j ≤ k`
-(the first `k` parities agree). -/
+/-- Numbers congruent mod `2^(m+1)` have the same parity. -/
+theorem T_modEq_step_mod_two {m n n' : ℕ} (h : n ≡ n' [MOD 2^(m+1)]) : n % 2 = n' % 2 :=
+  (T_modEq_step_aux h).1
+
+/-- One step respects congruence mod powers of two, losing one bit: if `n ≡ n' (mod 2^(m+1))`
+then `T n ≡ T n' (mod 2^m)`. -/
+theorem T_modEq_step {m n n' : ℕ} (h : n ≡ n' [MOD 2^(m+1)]) : T n ≡ T n' [MOD 2^m] :=
+  (T_modEq_step_aux h).2
+
+/-- **Terras periodicity.** If `n ≡ n' (mod 2^k)` then `S_j(n) = S_j(n')` for all `j ≤ k` (the
+first `k` parities agree). -/
 theorem oddSteps_modEq (k : ℕ) : ∀ {n n' : ℕ}, n ≡ n' [MOD 2^k] →
     ∀ j ≤ k, oddSteps j n = oddSteps j n' := by
   induction k with
-  | zero => intro n n' _ j hj; obtain rfl : j = 0 := by omega
-            rfl
+  | zero =>
+    intro n n' _ j hj
+    obtain rfl : j = 0 := by omega
+    rfl
   | succ m ih =>
     intro n n' h j hj
     rcases j with _ | i
     · rfl
-    · obtain ⟨hp, hT⟩ := T_modEq_step h
+    · have hp := T_modEq_step_mod_two h
+      have hT := T_modEq_step h
       simp only [oddSteps]
       rw [ih hT i (by omega), hp]
 
-
-/-- **Stopping data is periodic mod `2^t` (T3b corollary).** If `n ≡ n' (mod 2^t)`, the
-stopping-time hypotheses (`hpre`, `hstop`) at `t` hold for `n` iff they hold for `n'`. -/
+/-- **Stopping data is periodic mod `2^t`.** If `n ≡ n' (mod 2^t)`, the stopping-time hypotheses
+(`hpre`, `hstop`) at `t` hold for `n` iff they hold for `n'`. -/
 theorem stopping_data_modEq {t n n' : ℕ} (h : n ≡ n' [MOD 2^t]) :
     ((∀ i, 1 ≤ i → i < t → 2^i < 3^(oddSteps i n)) ∧ 3^(oddSteps t n) < 2^t) ↔
     ((∀ i, 1 ≤ i → i < t → 2^i < 3^(oddSteps i n')) ∧ 3^(oddSteps t n') < 2^t) := by
   have e := oddSteps_modEq t h
   constructor
   · rintro ⟨h1, h2⟩
-    exact ⟨fun i a b => (e i b.le) ▸ h1 i a b, (e t le_rfl) ▸ h2⟩
+    exact ⟨fun i a b ↦ (e i b.le) ▸ h1 i a b, (e t le_rfl) ▸ h2⟩
   · rintro ⟨h1, h2⟩
-    exact ⟨fun i a b => (e i b.le).symm ▸ h1 i a b, (e t le_rfl).symm ▸ h2⟩
+    exact ⟨fun i a b ↦ (e i b.le).symm ▸ h1 i a b, (e t le_rfl).symm ▸ h2⟩
+
+/-! ### Examples -/
+
+-- The remainder and the odd-step count of `n = 3` after four steps.
+example : rho 4 3 = 5 ∧ oddSteps 4 3 = 2 := by decide
+
+-- `nondescending_bound` is not vacuous: `n = 1` with stopping time `t = 2` satisfies all
+-- hypotheses, and the conclusion reads `8 ≤ 6 + 4`.
+example : 2 * 1 * 2^2 ≤ 2 * 1 * 3^(oddSteps 2 1) + oddSteps 2 1 * 2^2 :=
+  nondescending_bound 1 2
+    (fun i h1 h2 ↦ by
+      obtain rfl : i = 1 := by omega
+      decide)
+    (by decide) (by decide)
 
 end Collatz
-
-#print axioms Collatz.oddSteps_succ_right
-#print axioms Collatz.rho_succ_right
-#print axioms Collatz.rho_le_of_prefix
-#print axioms Collatz.nondescending_bound
-#print axioms Collatz.oddSteps_mono
-#print axioms Collatz.exists_stopping
-#print axioms Collatz.cycle_min_stopping_data
-#print axioms Collatz.cycle_min_stopping_bound
-#print axioms Collatz.nontrivial_C_cycle_stopping
-#print axioms Collatz.T_modEq_step
-#print axioms Collatz.oddSteps_modEq
-#print axioms Collatz.stopping_data_modEq

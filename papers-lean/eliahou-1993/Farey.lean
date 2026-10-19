@@ -1,44 +1,77 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import RunsBridge
 import Mathlib.Tactic
 
 /-!
-# Farey-neighbour (two-convergent) reduction for `2^L − 3^k`
+# Farey neighbours of `log₂ 3` and lower bounds for `2^L − 3^k`
 
-* **T1** `farey_bound`, `farey_gap`: for Farey neighbours `p/q > log₂3 > p'/q'`
-  (`p q' = p' q + 1`), every `0 < k < q+q'` with `3^k < 2^L` satisfies
-  `3^k 2^p ≤ 3^q 2^L`, hence `2^L (2^p−3^q) ≤ 2^p (2^L−3^k)`.  Pure integer proof.
-* `GapBelow K1 s` (a **proved** property for concrete `K1`): `2^L ≤ 2^s (2^L−3^k)` for all
-  `0 < k < K1`, `3^k < 2^L`.  `gapBelow_of_farey`: one Farey pair plus one bignum check
-  `2^p ≤ 2^s (2^p − 3^q)` gives `GapBelow (q+q') s`.
-* Generic consequences of `GapBelow K1 30`: the `TwoCircHyp` inequality on `[10^5, K1)`
-  (`twoCirc_of_gap`), 1- and 2-circuit exclusion for `k < K1`, few-run cycle exclusion for
-  `S_L < K1`, and `LinFormHyp K1 c μ ⇒ LinFormHyp 10^5 c μ` / `⇒ TwoCircHyp 10^5`.
-* **T2** instance `K1 = 10781274` (pair `(q,p) = (190537, 301994)`,
-  `(q',p') = (10590737, 16785921)`, kernel certificates via `decide +kernel`, exponents above
-  `2^24` split with `pow_add`): **unconditionally**, no nontrivial `T`-cycle (any phase, any
-  period `L`) has `≤ 2` odd runs and `S_L < 10781274` (`few_runs_cycle_trivial_farey`), and
-  such a cycle with `≤ 2` runs would need `L ≥ 17087915` (`period_ge_of_oddSteps`).
-  Larger instances (`K1 = 64497107`, `K1 = 225644606`) are in `FareyStretch.lean`.
-* **T3** (`*_of_linForm_tail`): still **CONDITIONAL** on the unformalized `LinFormHyp`, but now
-  only for `k ≥ 10781274`; the range `[10^5, 10781274)` of that hypothesis is a theorem here
-  (`linFormHyp_range`).  The literature (Rhin 1987; Wu–Wang) makes the tail plausible [`IrrMeasureReal`: Wu–Wang 2014, J. Number Theory, DOI 10.1016/j.jnt.2014.03.007, 'On the irrationality measure of log 3', concerns log 3, NOT log 3/log 2], but its
-  explicit constants `(c, μ) = (100, 14)` are still unchecked.
+If `p/q > log₂ 3 > p'/q'` are Farey neighbours, then no `3^k/2^L < 1` with `0 < k < q + q'` is
+closer to `1` than `3^q/2^p`. This is the continued-fraction reduction used by Eliahou, proved
+here in pure integer arithmetic. One Farey pair together with one large-number check therefore
+gives a uniform gap `2^L ≤ 2^s (2^L − 3^k)` for all `0 < k < q + q'`, the property `GapBelow`.
 
-About `L`: as in `RunsBridge`, `L` may be any period (not necessarily minimal); `oddRuns L x`,
-`oddSteps L x` then count the chosen window (`t` laps give `t` times the per-lap values).
+A gap of the form `GapBelow K₁ 30` yields the hypothesis `TwoCircHyp` of `LinForm` on
+`[10^5, K₁)`, and hence excludes 1- and 2-circuits with fewer than `K₁` odd steps and nontrivial
+`T`-cycles with at most two odd runs and fewer than `K₁` odd steps. We prove `GapBelow 10781274 30`
+from the pair `301994/190537 > log₂ 3 > 16785921/10590737`, with kernel-checked certificates.
+Consequently, a nontrivial `T`-cycle with at most two odd runs needs at least `10781274` odd steps
+and length at least `17087915`, Eliahou's bound. Larger instances are in `FareyStretch`.
 
-This is the classical continued-fraction reduction (Eliahou 1993; Simons–de Weger).
-The unconditional results are finite instances of Steiner (1977) / Simons (2005).
+The last section reduces the hypothesis `LinFormHyp` of `LinForm` to the range `k ≥ 10781274`,
+since the range `[10^5, 10781274)` is proved here. Results in that section assume
+`LinFormHyp 10781274 c μ`, which is not proved here. As in `RunsBridge`, `L` may be any period,
+not necessarily minimal, and `oddRuns L x` and `oddSteps L x` count the chosen window.
+
+## Main definitions
+
+- `GapBelow K₁ s`: for all `0 < k < K₁` and `3^k < 2^L`, `2^L ≤ 2^s (2^L − 3^k)`.
+- `TwoCircAt k`: the inequality of `TwoCircHyp` at a single `k`.
+
+## Main results
+
+- `farey_bound`, `farey_gap`: for Farey neighbours `p/q > log₂ 3 > p'/q'`, every `0 < k < q + q'`
+  with `3^k < 2^L` satisfies `3^k 2^p ≤ 3^q 2^L`, hence `2^L (2^p − 3^q) ≤ 2^p (2^L − 3^k)`.
+- `gapBelow_of_farey`: a Farey pair and the check `2^p ≤ 2^s (2^p − 3^q)` give
+  `GapBelow (q + q') s`.
+- `few_runs_cycle_trivial_of_gap`: under `GapBelow K₁ 30`, a positive `T`-cycle point with at most
+  two odd runs and fewer than `K₁` odd steps is `1` or `2`.
+- `gapBelow_10781274`: `GapBelow 10781274 30`.
+- `few_runs_cycle_trivial_farey`: a positive `T`-cycle point with at most two odd runs and fewer
+  than `10781274` odd steps is `1` or `2`.
+- `period_ge_of_oddSteps`: a positive `T`-cycle with at least `10781274` odd steps has length at
+  least `17087915`.
+- `nontrivial_C_cycle_three_runs_farey`: a nontrivial `C`-cycle gives a `T`-cycle point whose
+  window has either at least three odd runs, or at least `10781274` odd steps and length at least
+  `17087915`.
+- `linFormHyp_of_tail`: `LinFormHyp 10781274 c μ` implies `LinFormHyp 100000 c μ` for `c ≥ 30`.
+
+## References
+
+- S. Eliahou, *The 3x+1 problem: new lower bounds on nontrivial cycle lengths*, Discrete Math.
+  118 (1993), 45–56.
+- R. P. Steiner, *A theorem on the Syracuse problem*, in Proc. 7th Manitoba Conference on
+  Numerical Mathematics and Computing (1977), 553–559.
+- J. L. Simons, *On the nonexistence of 2-cycles for the 3x+1 problem*, Math. Comp. 74 (2005),
+  1565–1572.
+- J. L. Simons, B. M. M. de Weger, *Theoretical and computational bounds for m-cycles of the
+  3n+1 problem*, Acta Arith. 117 (2005), 51–70.
 -/
 
 namespace Collatz
+
 open CollatzProof
 
-/-- **T1 (two-convergent / Farey-neighbour lemma).**  Let `p/q > log₂3 > p'/q'` be Farey
+/-! ### The Farey-neighbour lemma -/
+
+/-- **Farey-neighbour lemma.** Let `p/q > log₂3 > p'/q'` be Farey
 neighbours, in integer form: `p q' = p' q + 1`, `3^q < 2^p`, `2^{p'} < 3^{q'}`.  Then for every
 `0 < k < q + q'` and every `L` with `3^k < 2^L` we have `3^k 2^p ≤ 3^q 2^L`, i.e.
-`3^k/2^L ≤ 3^q/2^p`: no `3^k/2^L < 1` with `k < q+q'` is closer to `1` than `3^q/2^p`.
-Pure `ℕ/ℤ` proof (no reals, no logarithms), via `k = a q + b q'`, `L = a p + b p'`. -/
+`3^k/2^L ≤ 3^q/2^p`: no `3^k/2^L < 1` with `k < q + q'` is closer to `1` than `3^q/2^p`.
+The proof writes `k = a q + b q'` and `L = a p + b p'`. -/
 theorem farey_bound {p q p' q' k L : ℕ} (hdet : p * q' = p' * q + 1) (hA : 3^q < 2^p)
     (hB : 2^p' < 3^q') (hk0 : 0 < k) (hk : k < q + q') (hL : 3^k < 2^L) :
     3^k * 2^p ≤ 3^q * 2^L := by
@@ -110,8 +143,8 @@ theorem farey_bound {p q p' q' k L : ℕ} (hdet : p * q' = p' * q + 1) (hA : 3^q
     have : (k:ℤ) ≥ q + q' := by nlinarith
     omega
 
-/-- **T1 corollary.** Same hypotheses: `2^L (2^p − 3^q) ≤ 2^p (2^L − 3^k)` (ℕ subtraction,
-both differences positive), i.e. `1 − 3^k/2^L ≥ 1 − 3^q/2^p`. -/
+/-- Under the hypotheses of `farey_bound`, `2^L (2^p − 3^q) ≤ 2^p (2^L − 3^k)` (both differences
+are positive), that is, `1 − 3^k/2^L ≥ 1 − 3^q/2^p`. -/
 theorem farey_gap {p q p' q' k L : ℕ} (hdet : p * q' = p' * q + 1) (hA : 3^q < 2^p)
     (hB : 2^p' < 3^q') (hk0 : 0 < k) (hk : k < q + q') (hL : 3^k < 2^L) :
     2^L * (2^p - 3^q) ≤ 2^p * (2^L - 3^k) := by
@@ -121,15 +154,14 @@ theorem farey_gap {p q p' q' k L : ℕ} (hdet : p * q' = p' * q + 1) (hA : 3^q <
   calc 2^L * 2^p - 2^L * 3^q ≤ 2^L * 2^p - 2^p * 3^k := Nat.sub_le_sub_left this _
     _ = 2^p * 2^L - 2^p * 3^k := by rw [mul_comm (2^L)]
 
-
-/-! ## Generic machinery: `GapBelow K1 s` -/
+/-! ### Uniform gaps from a Farey pair -/
 
 /-- `GapBelow K1 s`: for all `0 < k < K1` and `L` with `3^k < 2^L`, `2^L ≤ 2^s (2^L − 3^k)`,
-i.e. `1 − 3^k/2^L ≥ 2^{-s}`.  This is proved (not assumed) for concrete `K1` below. -/
+that is, `1 − 3^k/2^L ≥ 2^{-s}`. It is proved for concrete `K1` below. -/
 def GapBelow (K1 s : ℕ) : Prop :=
   ∀ k L : ℕ, 0 < k → k < K1 → 3^k < 2^L → 2^L ≤ 2^s * (2^L - 3^k)
 
-/-- One Farey pair and one bignum check give `GapBelow (q+q') s`. -/
+/-- One Farey pair and one large-number check give `GapBelow (q + q') s`. -/
 theorem gapBelow_of_farey {p q p' q' s : ℕ} (hdet : p * q' = p' * q + 1) (hA : 3^q < 2^p)
     (hB : 2^p' < 3^q') (hgap : 2^p ≤ 2^s * (2^p - 3^q)) : GapBelow (q + q') s := by
   intro k L hk0 hk hL
@@ -148,7 +180,9 @@ theorem two_pow_succ_le_three_pow {h : ℕ} (hh : 2 ≤ h) : 2^(h+1) ≤ 3^h := 
   | base => norm_num
   | succ n hn ih => rw [pow_succ, pow_succ 3]; omega
 
-/-- Kernel certificate: `2^30 · 3^50000 ≤ 4^50000`. -/
+/-! ### Circuits and cycles under a uniform gap -/
+
+/-- `2^30 · 3^50000 ≤ 4^50000` (checked by the kernel). -/
 theorem cert_base : 2^30 * 3^50000 ≤ 4^50000 := by decide +kernel
 
 /-- From `GapBelow K1 30`: the `TwoCircHyp` inequality holds for `100000 ≤ k < K1`. -/
@@ -164,7 +198,8 @@ theorem twoCirc_of_gap {K1 k L : ℕ} (hG : GapBelow K1 30) (hk : 100000 ≤ k) 
     rw [ht, pow_add, pow_add, ← mul_assoc]
     exact Nat.mul_le_mul cert_base (Nat.pow_le_pow_left (by norm_num) t)
   have s3 : 4^h ≤ 2^k := by
-    rw [show (4:ℕ) = 2^2 by norm_num, ← pow_mul]; exact Nat.pow_le_pow_right (by norm_num) h2h
+    rw [show (4:ℕ) = 2^2 by norm_num, ← pow_mul]
+    exact Nat.pow_le_pow_right (by norm_num) h2h
   have s4 : 2^30 * (2^(h+1) + 3^h) ≤ 2^(k+1) := by
     calc 2^30 * (2^(h+1) + 3^h) ≤ 2^30 * (2 * 3^h) := Nat.mul_le_mul_left _ s1
       _ = 2 * (2^30 * 3^h) := by ring
@@ -187,7 +222,8 @@ def TwoCircAt (k : ℕ) : Prop :=
 /-- No 1-circuit with `k` odd steps if the `TwoCircHyp` inequality holds at `k`. -/
 theorem one_circuit_false_of_at {m k l : ℕ} (H : TwoCircAt k) (h : IsOneCircuit m k l) :
     False := by
-  obtain ⟨-, s2, s3⟩ := one_circuit_size h
+  have s2 := one_circuit_size h
+  have s3 := one_circuit_mod_eq_zero h
   have hl := h.2.1
   have hQ : 2 ≤ 2^l := by
     calc 2 = 2^1 := by norm_num
@@ -235,38 +271,42 @@ theorem two_circuit_false_of_at {m k1 l1 k2 l2 : ℕ} (H : TwoCircAt (k1 + k2))
   · exact two_circuit_false_of_at_le H h h21
   · exact two_circuit_false_of_at_le (by rw [add_comm]; exact H) (two_circuit_rotate h) h12
 
-/-- `GapBelow K1 30` ⇒ every 1-circuit with `k < K1` odd steps has `m = 1`. -/
+/-- Under `GapBelow K1 30`, every 1-circuit with `k < K1` odd steps has `m = 1`. -/
 theorem one_circuit_eq_one_of_gap {K1 m k l : ℕ} (hG : GapBelow K1 30)
     (h : IsOneCircuit m k l) (hk : k < K1) : m = 1 := by
   rcases Nat.lt_or_ge k 100000 with hk' | hk'
   · exact one_circuit_eq_one h hk'
   · exact (one_circuit_false_of_at (fun _ hL => twoCirc_of_gap hG hk' hk hL) h).elim
 
-/-- `GapBelow K1 30` ⇒ every 2-circuit with `k1 + k2 < K1` odd steps has `m = 1`. -/
+/-- Under `GapBelow K1 30`, every 2-circuit with `k1 + k2 < K1` odd steps has `m = 1`. -/
 theorem two_circuit_eq_one_of_gap {K1 m k1 l1 k2 l2 : ℕ} (hG : GapBelow K1 30)
     (h : IsTwoCircuit m k1 l1 k2 l2) (hk : k1 + k2 < K1) : m = 1 := by
   rcases Nat.lt_or_ge (k1 + k2) 100000 with hk' | hk'
   · exact two_circuit_eq_one h hk'
   · exact (two_circuit_false_of_at (fun _ hL => twoCirc_of_gap hG hk' hk hL) h).elim
 
-/-- `GapBelow K1 30` ⇒ a positive `T`-cycle point (any phase, any period `L > 0`) whose window
-has `≤ 2` odd runs and `S_L(x) < K1` odd steps is `1` or `2`. -/
+/-- Under `GapBelow K1 30`, a positive `T`-cycle point (at any phase, for any period `L > 0`)
+whose window has at most two odd runs and fewer than `K1` odd steps is `1` or `2`. -/
 theorem few_runs_cycle_trivial_of_gap {K1 x L : ℕ} (hG : GapBelow K1 30) (hx : 0 < x)
     (hL : 0 < L) (hc : T^[L] x = x) (hr : oddRuns L x ≤ 2) (hk : oddSteps L x < K1) :
     x = 1 ∨ x = 2 :=
   few_runs_cycle_trivial_core hx hL hc hr
-    (fun m k l h e => one_circuit_eq_one_of_gap hG h (by rw [one_circuit_oddSteps h] at e; omega))
+    (fun m k l h e =>
+      one_circuit_eq_one_of_gap hG h (by rw [one_circuit_oddSteps h] at e; omega))
     (fun m k1 l1 k2 l2 h e =>
       two_circuit_eq_one_of_gap hG h (by rw [two_circuit_oddSteps h] at e; omega))
 
-/-- Generic transfer: `2^M < 3^K`, `K ≤ S` and `3^S < 2^L` give `M < L`. (Keeps big
-literals out of `omega`, which would try to evaluate them.) -/
+/-- `2^M < 3^K`, `K ≤ S` and `3^S < 2^L` give `M < L`. Stating this separately keeps large
+literals out of `omega`. -/
 theorem lt_of_pow_certs {K M S L : ℕ} (hc : 2^M < 3^K) (hS : K ≤ S) (h3 : 3^S < 2^L) :
     M < L := by
   have h4 : 3^K ≤ 3^S := Nat.pow_le_pow_right (by norm_num) hS
   exact (Nat.pow_lt_pow_iff_right (by norm_num)).1 (hc.trans_le (h4.trans h3.le))
 
-/-- `GapBelow K1 s`, `s ≤ c`: the `LinFormHyp` inequality holds for all `0 < k < K1`. -/
+/-! ### Restricting `LinFormHyp` to large `k` -/
+
+/-- Under `GapBelow K1 s` with `s ≤ c`, the inequality of `LinFormHyp` holds for all
+`0 < k < K1`. -/
 theorem linFormHyp_range_of_gap {K1 s c μ k L : ℕ} (hG : GapBelow K1 s) (hc : s ≤ c)
     (hk0 : 0 < k) (hk : k < K1) (hL : 3^k < 2^L) : 2^L ≤ 2^c * k^μ * (2^L - 3^k) := by
   have G := hG k L hk0 hk hL
@@ -276,7 +316,7 @@ theorem linFormHyp_range_of_gap {K1 s c μ k L : ℕ} (hG : GapBelow K1 s) (hc :
     _ ≤ 2^c * 1 * (2^L - 3^k) := by rw [mul_one]; exact Nat.mul_le_mul_right _ h1
     _ ≤ 2^c * k^μ * (2^L - 3^k) := Nat.mul_le_mul_right _ (Nat.mul_le_mul_left _ h2)
 
-/-- `GapBelow K1 s`, `s ≤ c`: `LinFormHyp K1 c μ ⇒ LinFormHyp 100000 c μ`. -/
+/-- Under `GapBelow K1 s` with `s ≤ c`, `LinFormHyp K1 c μ` implies `LinFormHyp 100000 c μ`. -/
 theorem linFormHyp_of_tail_gap {K1 s c μ : ℕ} (hG : GapBelow K1 s) (hc : s ≤ c)
     (H : LinFormHyp K1 c μ) : LinFormHyp 100000 c μ := by
   intro k L hk hL
@@ -284,8 +324,8 @@ theorem linFormHyp_of_tail_gap {K1 s c μ : ℕ} (hG : GapBelow K1 s) (hc : s �
   · exact linFormHyp_range_of_gap hG hc (by omega) hK hL
   · exact H k L hK hL
 
-/-- CONDITIONAL (on `LinFormHyp K1 c μ`, i.e. only for `k ≥ K1`): with `GapBelow K1 30` and
-`8(c+17μ+2) ≤ 2^16`, `TwoCircHyp 100000` holds.  No condition `c ≥ 30` is needed. -/
+/-- Under `GapBelow K1 30`, `8(c + 17μ + 2) ≤ 2^16` and `LinFormHyp K1 c μ` (which concerns only
+`k ≥ K1`), `TwoCircHyp 100000` holds. No condition `c ≥ 30` is needed. -/
 theorem twoCircHyp_of_linForm_tail_gap {K1 c μ : ℕ} (hG : GapBelow K1 30)
     (h0 : 8 * (c + 17*μ + 2) ≤ 2^16) (H : LinFormHyp K1 c μ) : TwoCircHyp 100000 := by
   intro k L hk h3
@@ -299,27 +339,32 @@ theorem twoCircHyp_of_linForm_tail_gap {K1 c μ : ℕ} (hG : GapBelow K1 30)
       _ = (2^c * k^μ * S) * D := by ring
       _ ≤ 2^(k+1) * D := Nat.mul_le_mul_right _ hg.le
 
-/-- CONDITIONAL (on `LinFormHyp K1 c μ`): no nontrivial 1- or 2-circuits. -/
-theorem no_circuits_of_linForm_tail_gap {K1 c μ : ℕ} (hG : GapBelow K1 30)
-    (h0 : 8 * (c + 17*μ + 2) ≤ 2^16) (H : LinFormHyp K1 c μ) :
-    (∀ m k l, IsOneCircuit m k l → m = 1) ∧
-      (∀ m k1 l1 k2 l2, IsTwoCircuit m k1 l1 k2 l2 → m = 1) :=
-  have H' := twoCircHyp_of_linForm_tail_gap hG h0 H
-  ⟨fun _ _ _ h => one_circuit_eq_one_of_hyp H' h,
-   fun _ _ _ _ _ h => two_circuit_eq_one_of_hyp H' h⟩
+/-- Under `GapBelow K1 30`, `8(c + 17μ + 2) ≤ 2^16` and `LinFormHyp K1 c μ`, every 1-circuit
+has `m = 1`. -/
+theorem one_circuit_eq_one_of_linForm_tail_gap {K1 c μ : ℕ} (hG : GapBelow K1 30)
+    (h0 : 8 * (c + 17*μ + 2) ≤ 2^16) (H : LinFormHyp K1 c μ) {m k l : ℕ}
+    (h : IsOneCircuit m k l) : m = 1 :=
+  one_circuit_eq_one_of_hyp (twoCircHyp_of_linForm_tail_gap hG h0 H) h
 
-/-- CONDITIONAL (on `LinFormHyp K1 c μ`): every positive `T`-cycle point with `≤ 2` odd runs
-is `1` or `2`. -/
+/-- Under `GapBelow K1 30`, `8(c + 17μ + 2) ≤ 2^16` and `LinFormHyp K1 c μ`, every 2-circuit
+has `m = 1`. -/
+theorem two_circuit_eq_one_of_linForm_tail_gap {K1 c μ : ℕ} (hG : GapBelow K1 30)
+    (h0 : 8 * (c + 17*μ + 2) ≤ 2^16) (H : LinFormHyp K1 c μ) {m k1 l1 k2 l2 : ℕ}
+    (h : IsTwoCircuit m k1 l1 k2 l2) : m = 1 :=
+  two_circuit_eq_one_of_hyp (twoCircHyp_of_linForm_tail_gap hG h0 H) h
+
+/-- Under `GapBelow K1 30`, `8(c + 17μ + 2) ≤ 2^16` and `LinFormHyp K1 c μ`, every positive
+`T`-cycle point with at most two odd runs is `1` or `2`. -/
 theorem few_runs_cycle_trivial_of_linForm_tail_gap {K1 c μ : ℕ} (hG : GapBelow K1 30)
     (h0 : 8 * (c + 17*μ + 2) ≤ 2^16) (H : LinFormHyp K1 c μ) {x L : ℕ} (hx : 0 < x)
     (hL : 0 < L) (hc : T^[L] x = x) (hr : oddRuns L x ≤ 2) : x = 1 ∨ x = 2 :=
-  have HH := no_circuits_of_linForm_tail_gap hG h0 H
-  few_runs_cycle_trivial_core hx hL hc hr (fun m k l h _ => HH.1 m k l h)
-    (fun m k1 l1 k2 l2 h _ => HH.2 m k1 l1 k2 l2 h)
+  few_runs_cycle_trivial_core hx hL hc hr
+    (fun _ _ _ h _ => one_circuit_eq_one_of_linForm_tail_gap hG h0 H h)
+    (fun _ _ _ _ _ h _ => two_circuit_eq_one_of_linForm_tail_gap hG h0 H h)
 
-/-- Generic corollary for `C`-cycles: `GapBelow K1 30` and `2^M < 3^{K1}` ⇒ every nontrivial
-`C`-cycle gives an odd `T`-cycle point `m ≥ 2^17` whose window either has `≥ 3` odd runs or
-has `S_L(m) ≥ K1` and `L > M`. -/
+/-- Under `GapBelow K1 30` and `2^M < 3^{K1}`, every nontrivial `C`-cycle gives an odd `T`-cycle
+point `m ≥ 2^17` whose window either has at least three odd runs, or has at least `K1` odd steps
+and length `L > M`. -/
 theorem nontrivial_C_cycle_three_runs_of_gap {K1 M : ℕ} (hG : GapBelow K1 30)
     (hM : 2^M < 3^K1) (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ)
     (h : C^[ℓ] n = n) (h1 : n ≠ 1) (h2 : n ≠ 2) (h4 : n ≠ 4) :
@@ -332,11 +377,13 @@ theorem nontrivial_C_cycle_three_runs_of_gap {K1 M : ℕ} (hG : GapBelow K1 30)
   rcases Nat.lt_or_ge (oddRuns L m) 3 with hr | hr
   · left
     rcases Nat.lt_or_ge (oddSteps L m) K1 with hk | hk
-    · rcases few_runs_cycle_trivial_of_gap hG (by omega) a4 a5 (by omega) hk with e | e <;> omega
+    · rcases few_runs_cycle_trivial_of_gap hG (by omega) a4 a5 (by omega) hk with e | e <;>
+        omega
     · exact ⟨hk, lt_of_pow_certs hM hk (three_pow_lt_two_pow_of_cycle (by omega) a4 a5)⟩
   · exact Or.inr hr
 
-/-- Generic corollary for `C`-cycles, CONDITIONAL on `LinFormHyp K1 c μ`. -/
+/-- Under `GapBelow K1 30`, `8(c + 17μ + 2) ≤ 2^16` and `LinFormHyp K1 c μ`, every nontrivial
+`C`-cycle gives an odd `T`-cycle point `m ≥ 2^17` whose window has at least three odd runs. -/
 theorem nontrivial_C_cycle_three_runs_of_linForm_tail_gap {K1 c μ : ℕ} (hG : GapBelow K1 30)
     (h0 : 8 * (c + 17*μ + 2) ≤ 2^16) (H : LinFormHyp K1 c μ)
     (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n) (h1 : n ≠ 1) (h2 : n ≠ 2)
@@ -349,63 +396,69 @@ theorem nontrivial_C_cycle_three_runs_of_linForm_tail_gap {K1 c μ : ℕ} (hG : 
   rcases few_runs_cycle_trivial_of_linForm_tail_gap hG h0 H (by omega) a4 a5 (by omega) with
     e | e <;> omega
 
-/-! ## T2: the instance `K1 = 10781274` -/
+/-! ### The instance `K₁ = 10781274` -/
 
 /-- Determinant of the Farey pair `301994/190537 > log₂3 > 16785921/10590737`. -/
 theorem cert_det : 301994 * 10590737 = 16785921 * 190537 + 1 := by norm_num
-/-- `3^190537 < 2^301994` (kernel certificate). -/
+
+/-- `3^190537 < 2^301994` (checked by the kernel). -/
 theorem cert_above : 3^190537 < 2^301994 := by decide +kernel
-/-- `2^301994 ≤ 2^30 (2^301994 − 3^190537)` (kernel certificate). -/
+
+/-- `2^301994 ≤ 2^30 (2^301994 − 3^190537)` (checked by the kernel). -/
 theorem cert_gap : 2^301994 ≤ 2^30 * (2^301994 - 3^190537) := by decide +kernel
+
 theorem cert_below_split : 2^8392960 * 2^8392961 < 3^10590737 := by decide +kernel
-/-- `2^16785921 < 3^10590737` (kernel certificate, exponent split below `2^24`). -/
+
+/-- `2^16785921 < 3^10590737` (checked by the kernel, with the exponent split below `2^24`). -/
 theorem cert_below : 2^16785921 < 3^10590737 := by
   rw [show 16785921 = 8392960 + 8392961 from rfl, pow_add]; exact cert_below_split
 
-/-- **Proved:** `GapBelow 10781274 30`. -/
+/-- `GapBelow 10781274 30`. -/
 theorem gapBelow_10781274 : GapBelow 10781274 30 :=
   gapBelow_of_farey cert_det cert_above cert_below cert_gap
 
-/-- **T2(a).** For `0 < k < 10781274` and `3^k < 2^L`: `2^L ≤ 2^30 (2^L − 3^k)`. -/
+/-- For `0 < k < 10781274` and `3^k < 2^L`: `2^L ≤ 2^30 (2^L − 3^k)`. -/
 theorem gap_farey {k L : ℕ} (hk0 : 0 < k) (hk : k < 10781274) (hL : 3^k < 2^L) :
     2^L ≤ 2^30 * (2^L - 3^k) := gapBelow_10781274 k L hk0 hk hL
 
-/-- **T2(b).** The `TwoCircHyp` inequality holds unconditionally on `[10^5, 10781274)`. -/
+/-- The inequality of `TwoCircHyp` holds on `[10^5, 10781274)`. -/
 theorem twoCirc_range {k L : ℕ} (hk : 100000 ≤ k) (hK : k < 10781274) (hL : 3^k < 2^L) :
     2^L * (2^(k/2+1) + 3^(k/2)) ≤ 2^(k+1) * (2^L - 3^k) :=
   twoCirc_of_gap gapBelow_10781274 hk hK hL
 
-/-- **T2(c).** Every 1-circuit with `k < 10781274` odd steps has `m = 1`. -/
+/-- Every 1-circuit with `k < 10781274` odd steps has `m = 1`. -/
 theorem one_circuit_eq_one_farey {m k l : ℕ} (h : IsOneCircuit m k l) (hk : k < 10781274) :
     m = 1 := one_circuit_eq_one_of_gap gapBelow_10781274 h hk
 
-/-- **T2(c).** Every 2-circuit with `k1 + k2 < 10781274` odd steps has `m = 1`. -/
+/-- Every 2-circuit with `k1 + k2 < 10781274` odd steps has `m = 1`. -/
 theorem two_circuit_eq_one_farey {m k1 l1 k2 l2 : ℕ} (h : IsTwoCircuit m k1 l1 k2 l2)
     (hk : k1 + k2 < 10781274) : m = 1 := two_circuit_eq_one_of_gap gapBelow_10781274 h hk
 
-/-- **T2(c), unconditional, rotation-free.** A positive `T`-cycle point `x` (any phase; `L` any
-period `> 0`, not necessarily minimal) whose window has `≤ 2` odd runs and `S_L(x) < 10781274`
-odd steps is `1` or `2`.  (Finite instance of Steiner 1977 / Simons 2005.) -/
+/-- A positive `T`-cycle point `x` (at any phase, for any period `L > 0`, not necessarily
+minimal) whose window has at most two odd runs and fewer than `10781274` odd steps is `1` or
+`2`. -/
 theorem few_runs_cycle_trivial_farey {x L : ℕ} (hx : 0 < x) (hL : 0 < L) (hc : T^[L] x = x)
     (hr : oddRuns L x ≤ 2) (hk : oddSteps L x < 10781274) : x = 1 ∨ x = 2 :=
   few_runs_cycle_trivial_of_gap gapBelow_10781274 hx hL hc hr hk
 
 theorem cert_eliahou_split : 2^8543957 * 2^8543957 < 3^5390637 * 3^5390637 := by
   decide +kernel
-/-- `2^17087914 < 3^10781274` (kernel certificate). -/
+
+/-- `2^17087914 < 3^10781274` (checked by the kernel). -/
 theorem cert_eliahou : 2^17087914 < 3^10781274 := by
   rw [show 17087914 = 8543957 + 8543957 from rfl, show 10781274 = 5390637 + 5390637 from rfl,
     pow_add, pow_add]; exact cert_eliahou_split
 
-/-- If `S_L(m) ≥ 10781274` on a positive `T`-cycle of length `L`, then `L ≥ 17087915`
-(Eliahou's number). -/
+/-- **Eliahou's bound.** If a positive `T`-cycle of length `L` has at least `10781274` odd steps,
+then `L ≥ 17087915`. -/
 theorem period_ge_of_oddSteps {m L : ℕ} (hm : 0 < m) (hL : 0 < L) (hc : T^[L] m = m)
     (hk : 10781274 ≤ oddSteps L m) : 17087915 ≤ L :=
   lt_of_pow_certs cert_eliahou hk (three_pow_lt_two_pow_of_cycle hm hL hc)
 
-/-- **T2(c), for `C`-cycles, unconditional.** A nontrivial positive `C`-cycle point `n` yields an
-odd `T`-cycle point `m`, `2^17 ≤ m ≤ n`, period `L > 0`, `S_L(m) ≥ 971`,
-(`S_L(m) ≥ 10^4` or `≥ 54` runs), and (`S_L(m) ≥ 10781274` and `L ≥ 17087915`, or `≥ 3` runs). -/
+/-- A nontrivial positive `C`-cycle point `n` yields an odd `T`-cycle point `m` with
+`2^17 ≤ m ≤ n` and period `L > 0` such that `oddSteps L m ≥ 971`; either `oddSteps L m ≥ 10^4` or
+there are at least `54` odd runs; and either `oddSteps L m ≥ 10781274` and `L ≥ 17087915`, or
+there are at least three odd runs. -/
 theorem nontrivial_C_cycle_three_runs_farey (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ)
     (h : C^[ℓ] n = n) (h1 : n ≠ 1) (h2 : n ≠ 2) (h4 : n ≠ 4) :
     ∃ m L, m % 2 = 1 ∧ 2^17 ≤ m ∧ m ≤ n ∧ 0 < L ∧ T^[L] m = m ∧ 971 ≤ oddSteps L m ∧
@@ -413,42 +466,43 @@ theorem nontrivial_C_cycle_three_runs_farey (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (
       ((10781274 ≤ oddSteps L m ∧ 17087915 ≤ L) ∨ 3 ≤ oddRuns L m) :=
   nontrivial_C_cycle_three_runs_of_gap gapBelow_10781274 cert_eliahou n hn ℓ hℓ h h1 h2 h4
 
-/-! ## T3: `LinFormHyp` only matters for `k ≥ 10781274` -/
+/-! ### `LinFormHyp` for `k ≥ 10781274` suffices -/
 
-/-- **T3(a), unconditional.** For `c ≥ 30`, any `μ`: the `LinFormHyp` inequality
+/-- For `c ≥ 30` and any `μ`, the inequality of `LinFormHyp`
 `2^L ≤ 2^c k^μ (2^L − 3^k)` holds for all `0 < k < 10781274` with `3^k < 2^L`. -/
 theorem linFormHyp_range {c μ k L : ℕ} (hc : 30 ≤ c) (hk0 : 0 < k) (hk : k < 10781274)
     (hL : 3^k < 2^L) : 2^L ≤ 2^c * k^μ * (2^L - 3^k) :=
   linFormHyp_range_of_gap gapBelow_10781274 hc hk0 hk hL
 
-/-- **T3(b).** `LinFormHyp 10781274 c μ ⇒ LinFormHyp 100000 c μ` (for `c ≥ 30`). -/
+/-- For `c ≥ 30`, `LinFormHyp 10781274 c μ` implies `LinFormHyp 100000 c μ`. -/
 theorem linFormHyp_of_tail {c μ : ℕ} (hc : 30 ≤ c) (H : LinFormHyp 10781274 c μ) :
     LinFormHyp 100000 c μ := linFormHyp_of_tail_gap gapBelow_10781274 hc H
 
-/-- **T3(c), CONDITIONAL** on the unformalized `LinFormHyp 10781274 c μ`:
-`8(c+17μ+2) ≤ 2^16` ⇒ `TwoCircHyp 100000`. -/
+/-- Under `LinFormHyp 10781274 c μ` and `8(c + 17μ + 2) ≤ 2^16`, `TwoCircHyp 100000` holds. -/
 theorem twoCircHyp_of_linForm_tail {c μ : ℕ} (h0 : 8 * (c + 17*μ + 2) ≤ 2^16)
     (H : LinFormHyp 10781274 c μ) : TwoCircHyp 100000 :=
   twoCircHyp_of_linForm_tail_gap gapBelow_10781274 h0 H
 
-/-- **T3(d), CONDITIONAL** on the unformalized `LinFormHyp 10781274 c μ`: no nontrivial 1- or
-2-circuits. -/
-theorem no_circuits_of_linForm_tail {c μ : ℕ} (h0 : 8 * (c + 17*μ + 2) ≤ 2^16)
-    (H : LinFormHyp 10781274 c μ) :
-    (∀ m k l, IsOneCircuit m k l → m = 1) ∧
-      (∀ m k1 l1 k2 l2, IsTwoCircuit m k1 l1 k2 l2 → m = 1) :=
-  no_circuits_of_linForm_tail_gap gapBelow_10781274 h0 H
+/-- Under `LinFormHyp 10781274 c μ` and `8(c + 17μ + 2) ≤ 2^16`, every 1-circuit has `m = 1`. -/
+theorem one_circuit_eq_one_of_linForm_tail {c μ : ℕ} (h0 : 8 * (c + 17*μ + 2) ≤ 2^16)
+    (H : LinFormHyp 10781274 c μ) {m k l : ℕ} (h : IsOneCircuit m k l) : m = 1 :=
+  one_circuit_eq_one_of_linForm_tail_gap gapBelow_10781274 h0 H h
 
-/-- **T3(d), CONDITIONAL** on `LinFormHyp 10781274 100 14` (i.e. on an irrationality-measure
-bound only for `k ≥ 10781274`; the range `[10^5, 10781274)` is proved; the constants have not
-been checked against Rhin 1987 / Wu–Wang): every positive `T`-cycle point with `≤ 2` odd runs
-(any phase, any period) is `1` or `2`. -/
+/-- Under `LinFormHyp 10781274 c μ` and `8(c + 17μ + 2) ≤ 2^16`, every 2-circuit has `m = 1`. -/
+theorem two_circuit_eq_one_of_linForm_tail {c μ : ℕ} (h0 : 8 * (c + 17*μ + 2) ≤ 2^16)
+    (H : LinFormHyp 10781274 c μ) {m k1 l1 k2 l2 : ℕ} (h : IsTwoCircuit m k1 l1 k2 l2) :
+    m = 1 :=
+  two_circuit_eq_one_of_linForm_tail_gap gapBelow_10781274 h0 H h
+
+/-- Under `LinFormHyp 10781274 100 14`, an irrationality-measure bound for `k ≥ 10781274` only,
+every positive `T`-cycle point (at any phase, for any period) with at most two odd runs is `1` or
+`2`. -/
 theorem few_runs_cycle_trivial_of_linForm_tail (H : LinFormHyp 10781274 100 14) {x L : ℕ}
     (hx : 0 < x) (hL : 0 < L) (hc : T^[L] x = x) (hr : oddRuns L x ≤ 2) : x = 1 ∨ x = 2 :=
   few_runs_cycle_trivial_of_linForm_tail_gap gapBelow_10781274 (by norm_num) H hx hL hc hr
 
-/-- **T3(d), for `C`-cycles, CONDITIONAL** on `LinFormHyp 10781274 100 14`: every nontrivial
-`C`-cycle yields a `T`-cycle point `m ≥ 2^17` whose window has at least 3 odd runs. -/
+/-- Under `LinFormHyp 10781274 100 14`, every nontrivial `C`-cycle yields a `T`-cycle point
+`m ≥ 2^17` whose window has at least three odd runs. -/
 theorem nontrivial_C_cycle_three_runs_of_linForm_tail (H : LinFormHyp 10781274 100 14)
     (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n) (h1 : n ≠ 1) (h2 : n ≠ 2)
     (h4 : n ≠ 4) :
@@ -456,55 +510,26 @@ theorem nontrivial_C_cycle_three_runs_of_linForm_tail (H : LinFormHyp 10781274 1
   nontrivial_C_cycle_three_runs_of_linForm_tail_gap gapBelow_10781274 (by norm_num) H
     n hn ℓ hℓ h h1 h2 h4
 
-/-! ## Sanity checks -/
+/-! ### Examples -/
 
-/-- Small instance of T1: `485/306 > log₂3 > 1054/665` are Farey neighbours; `k = 5, L = 8`. -/
+-- The Farey-neighbour lemma for the pair `485/306 > log₂ 3 > 1054/665`, at `k = 5`, `L = 8`.
 example : 3^5 * 2^485 ≤ 3^306 * 2^8 :=
   farey_bound (p := 485) (q := 306) (p' := 1054) (q' := 665) (by norm_num) (by decide +kernel)
     (by decide +kernel) (by norm_num) (by norm_num) (by norm_num)
 
-/-- Non-vacuity: the hypotheses of `few_runs_cycle_trivial_farey` are met by the trivial cycle
-(the only known instance). -/
+-- The trivial cycle satisfies the hypotheses of `few_runs_cycle_trivial_farey`.
 example : 0 < 1 ∧ 0 < 2 ∧ T^[2] 1 = 1 ∧ oddRuns 2 1 ≤ 2 ∧ oddSteps 2 1 < 10781274 := by decide
 
-/-- Discrimination check: `GapBelow` is not vacuous.  At `k = 5`, `L = 8`:
-`3^5 = 243 < 256 = 2^8` but `2^8 = 256 > 2·(256 − 243) = 26`, so `GapBelow 6 1` fails. -/
+-- `GapBelow 6 1` fails: at `k = 5`, `L = 8`, `2^8 = 256 > 2 · (256 − 243) = 26`.
 example : ¬ GapBelow 6 1 := by
   intro h
   have := h 5 8 (by norm_num) (by norm_num) (by norm_num)
   norm_num at this
 
-/-- Also `¬ GapBelow 6 0` (same witness). -/
+-- `GapBelow 6 0` fails, with the same witness.
 example : ¬ GapBelow 6 0 := by
   intro h
   have := h 5 8 (by norm_num) (by norm_num) (by norm_num)
   norm_num at this
 
 end Collatz
-
-#print axioms Collatz.farey_bound
-#print axioms Collatz.farey_gap
-#print axioms Collatz.gapBelow_of_farey
-#print axioms Collatz.twoCirc_of_gap
-#print axioms Collatz.one_circuit_eq_one_of_gap
-#print axioms Collatz.two_circuit_eq_one_of_gap
-#print axioms Collatz.few_runs_cycle_trivial_of_gap
-#print axioms Collatz.linFormHyp_of_tail_gap
-#print axioms Collatz.twoCircHyp_of_linForm_tail_gap
-#print axioms Collatz.few_runs_cycle_trivial_of_linForm_tail_gap
-#print axioms Collatz.nontrivial_C_cycle_three_runs_of_gap
-#print axioms Collatz.nontrivial_C_cycle_three_runs_of_linForm_tail_gap
-#print axioms Collatz.gapBelow_10781274
-#print axioms Collatz.gap_farey
-#print axioms Collatz.twoCirc_range
-#print axioms Collatz.one_circuit_eq_one_farey
-#print axioms Collatz.two_circuit_eq_one_farey
-#print axioms Collatz.few_runs_cycle_trivial_farey
-#print axioms Collatz.period_ge_of_oddSteps
-#print axioms Collatz.nontrivial_C_cycle_three_runs_farey
-#print axioms Collatz.linFormHyp_range
-#print axioms Collatz.linFormHyp_of_tail
-#print axioms Collatz.twoCircHyp_of_linForm_tail
-#print axioms Collatz.no_circuits_of_linForm_tail
-#print axioms Collatz.few_runs_cycle_trivial_of_linForm_tail
-#print axioms Collatz.nontrivial_C_cycle_three_runs_of_linForm_tail

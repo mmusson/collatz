@@ -29,12 +29,13 @@ The literature is far stronger (verified range `2^68`, Hercher 2023 excludes m-c
 **`FareyBigCore`/`FareyBigCond` note (appended).** The unconditional threshold `225644606` used here (for `≤ 2` odd
 runs, and for the `≥ 18`-run ladder in `MRuns`/`RunsWindow`) is superseded by
 `K1big = 315061788160914540269145378182783685061361111414413 ≈ 3.15·10^50` in
-`FareyBig.lean` (`gapBelow_big`, `few_runs_cycle_trivial_big`,
-`nontrivial_C_cycle_three_runs_big`, `runs_bounds_big`, `state_of_the_art_runs_big`,
-`state_of_the_art_runs_minimalPeriod_big`), via certified interval arithmetic on `3^q/2^p`
+`FareyBig.lean` (`gapBelow_K1big`, `few_runs_cycle_trivial_of_lt_K1big`,
+`nontrivial_C_cycle_three_runs_K1big`, `runs_ge_29_K1big`, `runs_ge_18_K1big`,
+`state_of_the_art_runs_K1big`,
+`state_of_the_art_runs_minimalPeriod_K1big`), via certified interval arithmetic on `3^q/2^p`
 (`FareyBigCore.lean`, generated chain `FareyBigChain.lean`).  For the conditional interfaces,
-`FareyBigCond.lean` proves `few_runs_cycle_trivial_of_irrMeas_big` /
-`state_of_the_art_of_irrMeas_big`: `IrrMeasHyp μ Q0` is needed only with `2 ≤ Q0 ≤ K1big`, i.e.
+`FareyBigCond.lean` proves `few_runs_cycle_trivial_of_irrMeas_K1big` /
+`state_of_the_art_of_irrMeas_K1big`: `IrrMeasHyp μ Q0` is needed only with `2 ≤ Q0 ≤ K1big`, i.e.
 only for `k ≥ K1big`.  (The `ExpGap`/`LMN` interfaces have NOT been re-instantiated; for them
 this is a remark only.)  Still classical;
 
@@ -42,7 +43,7 @@ this is a remark only.)  Still classical;
 `state_of_the_art_runs_log`): for the odd orbit-minimum of a cycle with `k = S_L(m) < K1big`,
 the run lower bound now grows like `log_{8/5}(3k/890)` (`r ≥ 256` or `3·5^r·k < 890·8^r`;
 e.g. `r ≥ 42` for `k ≥ 10^11`, `r ≥ 233` for `k ≥ 10^50`).  The fixed `≥ 29` rung of
-`runs_bounds_big` is recovered, without `2^24 ≤ m`, as the theorem `runs_ge_29_of_log`
+`runs_ge_29_K1big` is recovered, without `2^24 ≤ m`, as the theorem `runs_ge_29_of_log`
 (`RunsLog.lean`, `Summary`).  Classical (a Simons–de Weger-type finite-range instance);
 -/
 

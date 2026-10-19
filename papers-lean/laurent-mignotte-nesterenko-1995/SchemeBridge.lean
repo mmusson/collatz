@@ -1,56 +1,69 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import Transfer
 import RunsBridge
 import Mathlib.Data.Nat.Log
 
 /-!
-# `SchemeHyp ⇒ LinFormHyp` (wall (b) interface), part 2
+# From a Hermite–Padé scheme to a polynomial irrationality measure
 
-* `SchemeHyp a b c0` (**UNPROVED, CONDITIONAL input**, never an axiom): `a < b`, and for every
-  `n` there are three integer triples `u, v, w` with `det3 u v w ≠ 0` such that every
-  `x ∈ {u,v,w}` has `|x₁ + x₂ log 2 + x₃ log 3| ≤ 2^{c0}/2^{bn}` and `|x₂|, |x₃| ≤ 2^{c0+an}`.
-  This is the output shape of Rhin-type Hermite–Padé constructions (coefficients `e^{αm}`,
-  forms `e^{−βm}`, `α < β`, three consecutive forms independent) after reparametrizing
-  `m ≈ bn·log 2/β` with `a/b ≥ α/β`; rounding and the use of three consecutive levels are
-  absorbed into `c0`.  The proof picks `n = ⌈log₂(2^{2c0+3}·2k)⌉`, which is sharp when
-  `b = a + 1`; any scheme with rates `α < β` can be reparametrized to `b = a+1` with
-  `a = ⌈α/(β−α)⌉`, giving `μ = 2a`.  Whether any explicit literature scheme satisfies it is **unverified**
-  here (see `Scratch/scheme_scoping.py` and.
-* `linFormHyp_of_scheme` (**unconditional implication**):
-  `SchemeHyp a b c0 ⇒ LinFormHyp 1 (3 + 2c0 + 2a(2c0+5)) (2a)`.
-* `few_runs_cycle_trivial_of_scheme`, `nontrivial_C_cycle_three_runs_of_scheme`:
-  **CONDITIONAL on `SchemeHyp`** (plus the numeric side condition
-  `8(c + 17μ + 2) ≤ 2^16`): no nontrivial `T`-cycle with `≤ 2` odd runs, for every `k`.
+Effective irrationality measures for `log 3 / log 2`, such as Rhin's, come from Hermite–Padé
+constructions: for every level `n`, three linearly independent integer linear forms in
+`1, log 2, log 3` with exponentially small values and exponentially bounded coefficients. This
+file states that output shape as the hypothesis `SchemeHyp a b c0` and proves, using the
+transference lemma of `Transfer`, that it implies the polynomial measure
+`LinFormHyp 1 (3 + 2c0 + 2a(2c0 + 5)) (2a)` of `LinForm`. Under `SchemeHyp` and a numeric side
+condition, there is therefore no nontrivial `T`-cycle with at most two odd runs.
 
-Remarks (not formalized):
-1. Geometry of numbers: by Minkowski, three independent integer forms in `1, log 2, log 3` with
-   coefficients `≤ 2^{an}` cannot all be smaller than about `2^{-2an}`, so `SchemeHyp` forces
-   `b ≲ 2a` asymptotically; in particular `a ≥ 1`.  Whether any explicit scheme satisfies
-   `SchemeHyp` together with the numeric side condition (`c` below about `8190`) is unknown.
-2. `μ = 2a` comes from the 2×2-minor term in the transference and is about twice the literature
-   exponent; this does not affect the side condition.
-3. The reparametrization to `b = a + 1` is a paper remark, not formalized.
+The hypothesis `SchemeHyp` is not proved here, and this file does not check that any explicit
+scheme in the literature satisfies it. In Rhin-type constructions the coefficients grow like
+`e^{αm}` and the forms decay like `e^{−βm}` with `α < β`, and three consecutive forms are
+independent; reparametrizing `m ≈ bn log 2 / β` with `a/b ≥ α/β` gives `SchemeHyp`, with
+rounding and the use of three consecutive levels absorbed into `c0`. The proof chooses
+`n = ⌈log₂ (2^{2c0+3} · 2k)⌉`, which is sharp when `b = a + 1`. By Minkowski's theorem,
+`SchemeHyp` forces `b ≲ 2a` asymptotically, so in particular `a ≥ 1`. The exponent `μ = 2a`
+comes from the `2 × 2`-minor term in the transference.
 
-Whether the Rhin 1987 / Wu–Wang 2014 schemes satisfy `SchemeHyp` has not been tested here
-(note: Wu–Wang 2014, J. Number Theory, DOI 10.1016/j.jnt.2014.03.007, 'On the irrationality
-measure of log 3', concerns `log 3`, not `log 3/log 2`).  Naive real-segment
-Hermite–Padé integrals diverge (`n ≤ 12`, `α ≈ 7.40 > β ≈ 5.72`), which is not evidence against
-Rhin-type schemes (their convergence relies on arithmetic denominator reduction).
+## Main definitions
 
-Classical (Rhin 1987 / Hata transference).
+- `SchemeHyp a b c0`: `a < b`, and for every `n` there are three integer triples `u, v, w` with
+  `det3 u v w ≠ 0` such that each `x ∈ {u, v, w}` has
+  `|x₁ + x₂ log 2 + x₃ log 3| ≤ 2^{c0} / 2^{bn}` and `|x₂|, |x₃| ≤ 2^{c0 + an}`.
+
+## Main results
+
+- `linFormHyp_of_scheme`: `SchemeHyp a b c0` implies `LinFormHyp 1 (3 + 2c0 + 2a(2c0 + 5)) (2a)`.
+- `few_runs_cycle_trivial_of_scheme`: under `SchemeHyp` and the side condition
+  `8(c + 17μ + 2) ≤ 2^16`, every positive `T`-cycle point with at most two odd runs is `1` or `2`.
+- `nontrivial_C_cycle_three_runs_of_scheme`: the same for `C`-cycles, in the form of at least
+  three odd runs.
+
+## References
+
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, in Séminaire de Théorie
+  des Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
 -/
 
 namespace Collatz.Transfer
+
 open Collatz CollatzProof
 
-/-- **Unproved analytic hypothesis** (CONDITIONAL input, not an axiom): a Rhin-type scheme of
-linearly independent integer linear forms in `1, log 2, log 3`, coefficients `≤ 2^{c0+an}`,
-values `≤ 2^{c0−bn}`, with `a < b`. -/
+/-! ### The scheme hypothesis -/
+
+/-- A Rhin-type scheme: `a < b`, and for every `n` there are three linearly independent integer
+linear forms in `1, log 2, log 3` with coefficients at most `2^{c0+an}` and values at most
+`2^{c0−bn}`. This is a hypothesis; it is not proved here. -/
 def SchemeHyp (a b c0 : ℕ) : Prop :=
   a < b ∧ ∀ n : ℕ, ∃ u v w : Z3, det3 u v w ≠ 0 ∧ ∀ x ∈ [u, v, w],
     |form (Real.log 2) (Real.log 3) x| ≤ (2:ℝ)^c0 / 2^(b*n) ∧
     |(x.2.1:ℝ)| ≤ 2^(c0 + a*n) ∧ |(x.2.2:ℝ)| ≤ 2^(c0 + a*n)
 
-/-- Constant bookkeeping: `2^n ≤ 2·2^{2c0+3}·2k ⇒ 8(2^{c0+an})² ≤ 2^{3+2c0+2a(2c0+5)} k^{2a}`. -/
+/-! ### The implication to `LinFormHyp` -/
+
+/-- If `2^n ≤ 2 · 2^{2c0+3} · 2k`, then `8 (2^{c0+an})² ≤ 2^{3+2c0+2a(2c0+5)} k^{2a}`. -/
 theorem const_bound (a c0 n k : ℕ) (hX : 2^n ≤ 2 * (2^(2*c0+3) * (2*k))) :
     8 * (2^(c0+a*n))^2 ≤ 2^(3 + 2*c0 + 2*a*(2*c0+5)) * k^(2*a) := by
   have e1 : 8 * (2^(c0+a*n))^2 = 2^(2*c0+3) * (2^n)^(2*a) := by
@@ -62,8 +75,8 @@ theorem const_bound (a c0 n k : ℕ) (hX : 2^n ≤ 2 * (2^(2*c0+3) * (2*k))) :
     _ = 2^(3 + 2*c0 + 2*a*(2*c0+5)) * k^(2*a) := by
         rw [mul_pow, ← pow_mul, ← mul_assoc, ← pow_add]; ring_nf
 
-/-- **`SchemeHyp ⇒ LinFormHyp`** (unconditional implication): for all `k ≥ 1`, `3^k < 2^L`,
-`2^L ≤ 2^{3+2c0+2a(2c0+5)} k^{2a} (2^L − 3^k)`, given `SchemeHyp a b c0`. -/
+/-- **From a scheme to a linear-form bound.** If `SchemeHyp a b c0` holds, then for all
+`k ≥ 1` and `3^k < 2^L`, `2^L ≤ 2^{3+2c0+2a(2c0+5)} k^{2a} (2^L − 3^k)`. -/
 theorem linFormHyp_of_scheme {a b c0 : ℕ} (hS : SchemeHyp a b c0) :
     LinFormHyp 1 (3 + 2*c0 + 2*a*(2*c0+5)) (2*a) := by
   intro k L hk h
@@ -114,7 +127,8 @@ theorem linFormHyp_of_scheme {a b c0 : ℕ} (hS : SchemeHyp a b c0) :
         _ ≤ 2^(b*n) := Nat.pow_le_pow_right (by norm_num) hbn
     have hsmall : 8 * H * (M:ℝ) * ε ≤ 1 := by
       have hpos : (0:ℝ) < 2^(b*n) := by positivity
-      have hNR : ((2^(2*c0+3) * M * 2^(a*n) : ℕ) : ℝ) ≤ ((2^(b*n) : ℕ) : ℝ) := by exact_mod_cast hN
+      have hNR : ((2^(2*c0+3) * M * 2^(a*n) : ℕ) : ℝ) ≤ ((2^(b*n) : ℕ) : ℝ) := by
+        exact_mod_cast hN
       push_cast at hNR
       rw [hH, hε, mul_div_assoc', div_le_one hpos]
       calc (8:ℝ) * 2^(c0 + a*n) * (M:ℝ) * 2^c0 = 2^(2*c0+3) * (M:ℝ) * 2^(a*n) := by ring
@@ -152,17 +166,19 @@ theorem linFormHyp_of_scheme {a b c0 : ℕ} (hS : SchemeHyp a b c0) :
         _ ≤ _ := mul_le_mul_of_nonneg_right hcR hD
     exact_mod_cast hfin
 
-/-- **CONDITIONAL on the unproved `SchemeHyp a b c0`**, and on the numeric side condition
-`8(c + 17μ + 2) ≤ 2^16` for `c = 3+2c0+2a(2c0+5)`, `μ = 2a`: every positive `T`-cycle point
-(any phase, any period) whose window has `≤ 2` odd runs is `1` or `2` — for every `k`. -/
+/-! ### Cycles with few odd runs -/
+
+/-- Under `SchemeHyp a b c0` and the numeric side condition `8(c + 17μ + 2) ≤ 2^16` for
+`c = 3 + 2c0 + 2a(2c0 + 5)` and `μ = 2a`, every positive `T`-cycle point (at any phase, for any
+period) whose window has at most two odd runs is `1` or `2`. -/
 theorem few_runs_cycle_trivial_of_scheme {a b c0 : ℕ} (hS : SchemeHyp a b c0)
     (h0 : 8 * ((3 + 2*c0 + 2*a*(2*c0+5)) + 17*(2*a) + 2) ≤ 2^16) {x L : ℕ} (hx : 0 < x)
     (hL : 0 < L) (hc : T^[L] x = x) (hr : oddRuns L x ≤ 2) : x = 1 ∨ x = 2 :=
   few_runs_cycle_trivial_of_linForm (by norm_num) h0 (linFormHyp_of_scheme hS) hx hL hc hr
 
-/-- **For `C`-cycles, CONDITIONAL on `SchemeHyp a b c0`** (and the side condition): a positive
-`C`-cycle point `n ∉ {1,2,4}` yields an odd `T`-cycle point `m`, `2^17 ≤ m ≤ n`, whose window
-has `≥ 3` odd runs. -/
+/-- Under `SchemeHyp a b c0` and the side condition, a positive `C`-cycle point `n ∉ {1, 2, 4}`
+yields an odd `T`-cycle point `m` with `2^17 ≤ m ≤ n` whose window has at least three odd
+runs. -/
 theorem nontrivial_C_cycle_three_runs_of_scheme {a b c0 : ℕ} (hS : SchemeHyp a b c0)
     (h0 : 8 * ((3 + 2*c0 + 2*a*(2*c0+5)) + 17*(2*a) + 2) ≤ 2^16)
     (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n) (h1 : n ≠ 1) (h2 : n ≠ 2)
@@ -171,14 +187,12 @@ theorem nontrivial_C_cycle_three_runs_of_scheme {a b c0 : ℕ} (hS : SchemeHyp a
   nontrivial_C_cycle_three_runs_of_linForm (by norm_num) h0 (linFormHyp_of_scheme hS)
     n hn ℓ hℓ h h1 h2 h4
 
-/-- The side condition is satisfiable for moderate parameters, e.g. `a = 7`, `c0 = 10`
-(`c = 373`, `μ = 14`). It fails for large parameters, e.g. `a = 100`, `c0 = 20`. -/
+/-! ### Examples -/
+
+-- The side condition holds for `a = 7`, `c0 = 10` (so `c = 373`, `μ = 14`).
 example : 8 * ((3 + 2*10 + 2*7*(2*10+5)) + 17*(2*7) + 2) ≤ 2^16 := by norm_num
+
+-- The side condition fails for `a = 100`, `c0 = 20`.
 example : ¬ 8 * ((3 + 2*20 + 2*100*(2*20+5)) + 17*(2*100) + 2) ≤ 2^16 := by norm_num
 
 end Collatz.Transfer
-
-#print axioms Collatz.Transfer.const_bound
-#print axioms Collatz.Transfer.linFormHyp_of_scheme
-#print axioms Collatz.Transfer.few_runs_cycle_trivial_of_scheme
-#print axioms Collatz.Transfer.nontrivial_C_cycle_three_runs_of_scheme

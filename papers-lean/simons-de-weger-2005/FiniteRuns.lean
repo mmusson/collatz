@@ -1,3 +1,8 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import RunsTail
 import BackCong
 import Collatz.Milestones
@@ -6,36 +11,52 @@ import CycleWord
 import Mathlib.Tactic
 
 /-!
-# Finitely many cycles with at most `R` odd runs per minimal `T`-lap (explicit)
+# Finitely many cycles with a bounded number of odd runs
 
-**Status: Unconditional, CLASSICAL.** Finiteness of Collatz `m`-cycles for each fixed `m`
-(cycles with at most `m` odd runs per lap) is classical: Steiner 1977 (`m = 1`) and
-Simons–de Weger 2005 (Acta Arith. 117), both via Baker's theory of linear forms in logarithms.
-What is new here is only the first formalization (kernel-checked) with an explicit bound; it uses
-an elementary effective irrationality measure of `log₂ 3` (the in-house Padé measure
-`linFormHyp_uncond`, `PadeSup`/`FewRunsUncond`/`RunsTail`), as is standard (cf. Rhin 1987), in place of Baker's theory.
-This does not give `FinitelyManyCycles`: a general cycle may have arbitrarily many odd runs,
-while `R` is fixed here.
+For each fixed `R`, only finitely many Collatz cycles have at most `R` odd runs per minimal
+`T`-lap. This finiteness is due to Steiner (`R = 1`) and Simons–de Weger in general, via Baker's
+theory of linear forms in logarithms. In this file we prove it with an explicit bound, using
+instead the elementary effective irrationality measure of `log₂ 3` behind `linFormHyp_uncond`
+(in the spirit of Rhin): the odd orbit minimum `m` of a `T`-cycle with `r` odd runs has
+`S_L(m) < 2^{4r+100}` and `L < 2^{4r+101}`, and points of bounded period form a finite set.
 
-**Citations.** First formalization of Brox / Luca / Simons–de Weger-strength
-finiteness.  Related: Brox 2000 (Acta Arith. 92, 181–188: finitely many cycles with
-`d(C) < 2 log|C|` descents); Luca 2005 (SUT J. Math. 41: a cycle has `≥ C₁ log n` ascents).
+This does not give `FinitelyManyCycles`, since a general cycle may have arbitrarily many odd
+runs. In fact `FinitelyManyCycles` is equivalent to a uniform bound on the number of odd runs per
+lap over all cycles.
 
-* `two_pow_mul_T_iter_le`: `2^j · T^j n ≤ 4^{S_j(n)} · n`.
-* `L_le_two_oddSteps`: a positive `T`-cycle point has `L ≤ 2 S_L(m)`.
-* `exp_tail`: `5(343+341e+R)·8^R < 3·2^e` for `e ≥ 4R+16`.
-* `oddSteps_lt_of_runs`, `period_lt_of_runs`: an odd orbit minimum `m` of a `T`-cycle with
-  `r = oddRuns L m` odd runs has `S_L(m) < 2^{4r+100}` and `L < 2^{4r+101}` (every `k`).
-* `finite_T_cycles_bounded_runs`, `finite_cycleMinima_bounded_runs`: for each `R`, only
-  finitely many cycles (as odd `T`-orbit minima / as elements of `CycleMinima`) have at most
-  `R` odd runs per lap.
-* `ncard_cycleMinima_bounded_runs_le`: their number is at most `2^{2^{4R+101}+1}` (crude).
-* `finitelyManyCycles_iff_runs_bounded`: `FinitelyManyCycles` is EQUIVALENT to a
-  uniform bound on the number of odd runs per lap over all cycles (a reformulation, not a proof).
+## Main definitions
+
+- `perUpTo N`: the points of `T`-period at most `N`.
+
+## Main results
+
+- `two_pow_mul_T_iter_le`: `2^j · T^j n ≤ 4^{S_j(n)} · n`.
+- `L_le_two_oddSteps`: a positive `T`-cycle point has `L ≤ 2 S_L(m)`.
+- `exp_tail`: `5(343 + 341e + R)·8^R < 3·2^e` for `e ≥ 4R + 16`.
+- `oddSteps_lt_of_runs`, `period_lt_of_runs`: the odd orbit minimum `m` of a `T`-cycle with
+  `r = oddRuns L m` odd runs has `S_L(m) < 2^{4r+100}` and `L < 2^{4r+101}`.
+- `finite_T_cycles_bounded_runs`, `finite_cycleMinima_bounded_runs`: for each `R`, only finitely
+  many cycles (as odd `T`-orbit minima, or as elements of `CycleMinima`) have at most `R` odd runs
+  per lap.
+- `ncard_cycleMinima_bounded_runs_le`: their number is at most `2^{2^{4R+101}+1}`.
+- `finitelyManyCycles_iff_runs_bounded`: `FinitelyManyCycles` holds iff the number of odd runs per
+  lap is uniformly bounded over all cycles.
+
+## References
+
+- R. P. Steiner, *A theorem on the Syracuse problem*, in Proc. 7th Manitoba Conference on
+  Numerical Mathematics and Computing (1977), 553–559.
+- J. L. Simons, B. M. M. de Weger, *Theoretical and computational bounds for m-cycles of the
+  3n+1-problem*, Acta Arith. 117 (2005), 51–70.
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, Séminaire de Théorie des
+  Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
+- T. Brox, *Collatz cycles with few descents*, Acta Arith. 92 (2000), 181–188.
 -/
 
 namespace Collatz
 open CollatzProof
+
+/-! ### Growth along an orbit -/
 
 /-- `2^j · T^j(n) ≤ 4^{S_j(n)} · n`: each even step halves, each odd step at most doubles
 (`2·T n = 3n+1 ≤ 4n`). -/
@@ -57,11 +78,14 @@ theorem two_pow_mul_T_iter_le (j n : ℕ) : 2^j * T^[j] n ≤ 4^(oddSteps j n) *
 
 /-- A positive point of a `T`-cycle of length `L` satisfies `L ≤ 2·S_L(m)`: at least half of
 the steps of the lap are odd. -/
-theorem L_le_two_oddSteps {m L : ℕ} (hm : 0 < m) (hc : T^[L] m = m) : L ≤ 2 * oddSteps L m := by
+theorem L_le_two_oddSteps {m L : ℕ} (hm : 0 < m) (hc : T^[L] m = m) :
+    L ≤ 2 * oddSteps L m := by
   have h := two_pow_mul_T_iter_le L m
   rw [hc, show (4:ℕ) = 2^2 by norm_num, ← pow_mul] at h
   have h2 := Nat.le_of_mul_le_mul_right h hm
   exact (Nat.pow_le_pow_iff_right (by norm_num)).1 h2
+
+/-! ### Bounds in terms of the number of odd runs -/
 
 /-- Exponential tail inequality: `5(343+341e+R)·8^R < 3·2^e` whenever `e ≥ 4R+16`. -/
 theorem exp_tail (R e : ℕ) (he : 4*R+16 ≤ e) : 5 * (343 + 341*e + R) * 8^R < 3 * 2^e := by
@@ -78,17 +102,15 @@ theorem exp_tail (R e : ℕ) (he : 4*R+16 ≤ e) : 5 * (343 + 341*e + R) * 8^R <
   | succ e he ih =>
     have h1 : 5 * 341 * 8^R ≤ 5 * (343 + 341*e + R) * 8^R :=
       Nat.mul_le_mul_right _ (Nat.mul_le_mul_left _ (by omega))
-    have e1 : 5 * (343 + 341*(e+1) + R) * 8^R = 5 * (343 + 341*e + R) * 8^R + 5 * 341 * 8^R := by
+    have e1 : 5 * (343 + 341*(e+1) + R) * 8^R =
+        5 * (343 + 341*e + R) * 8^R + 5 * 341 * 8^R := by
       ring
     rw [e1, pow_succ 2 e, ← mul_assoc]
     exact tail_step h1 ih
 
-/-- **Unconditional, CLASSICAL in substance (first formalization; uses an elementary effective
-irrationality measure of `log₂ 3`, as is standard, cf. Rhin 1987).** If `m` is odd and minimal on
-its `T`-orbit, `L > 0` and `T^L m = m`, then the number of odd steps satisfies
-`S_L(m) < 2^{4·oddRuns L m + 100}`. Valid for every `k` (no range restriction). Proof:
-`runs_bound_of_min` with gap exponent `2+341(⌊log₂k⌋+1)` from `linFormHyp_uncond` and `t = r`,
-then `exp_tail`. -/
+/-- If `m` is odd and minimal on its `T`-orbit, `L > 0` and `T^L m = m`, then the number of odd
+steps satisfies `S_L(m) < 2^{4·oddRuns L m + 100}`. The proof applies `runs_bound_of_min` with
+gap exponent `2 + 341(⌊log₂ k⌋ + 1)` from `linFormHyp_uncond` and `t = r`, then `exp_tail`. -/
 theorem oddSteps_lt_of_runs {m L : ℕ} (hodd : m % 2 = 1) (hmin : ∀ j, m ≤ T^[j] m) (hL : 0 < L)
     (hc : T^[L] m = m) : oddSteps L m < 2^(4 * oddRuns L m + 100) := by
   by_contra hK
@@ -140,21 +162,29 @@ theorem period_lt_of_runs {m L : ℕ} (hodd : m % 2 = 1) (hmin : ∀ j, m ≤ T^
   have h2 := oddSteps_lt_of_runs hodd hmin hL hc
   rw [pow_succ]; omega
 
-/-- Monotone form: `oddRuns L m ≤ R` gives `S_L(m) < 2^{4R+100}` and `L < 2^{4R+101}`. -/
-theorem oddSteps_period_lt_of_runs_le {m L R : ℕ} (hodd : m % 2 = 1) (hmin : ∀ j, m ≤ T^[j] m)
+/-- Monotone form: `oddRuns L m ≤ R` gives `S_L(m) < 2^{4R+100}`. -/
+theorem oddSteps_lt_of_runs_le {m L R : ℕ} (hodd : m % 2 = 1) (hmin : ∀ j, m ≤ T^[j] m)
     (hL : 0 < L) (hc : T^[L] m = m) (hR : oddRuns L m ≤ R) :
-    oddSteps L m < 2^(4 * R + 100) ∧ L < 2^(4 * R + 101) :=
-  ⟨lt_of_lt_of_le (oddSteps_lt_of_runs hodd hmin hL hc)
-      (Nat.pow_le_pow_right (by norm_num) (by omega)),
-   lt_of_lt_of_le (period_lt_of_runs hodd hmin hL hc)
-      (Nat.pow_le_pow_right (by norm_num) (by omega))⟩
+    oddSteps L m < 2^(4 * R + 100) :=
+  lt_of_lt_of_le (oddSteps_lt_of_runs hodd hmin hL hc)
+    (Nat.pow_le_pow_right (by norm_num) (by omega))
+
+/-- Monotone form: `oddRuns L m ≤ R` gives `L < 2^{4R+101}`. -/
+theorem period_lt_of_runs_le {m L R : ℕ} (hodd : m % 2 = 1) (hmin : ∀ j, m ≤ T^[j] m)
+    (hL : 0 < L) (hc : T^[L] m = m) (hR : oddRuns L m ≤ R) :
+    L < 2^(4 * R + 101) :=
+  lt_of_lt_of_le (period_lt_of_runs hodd hmin hL hc)
+    (Nat.pow_le_pow_right (by norm_num) (by omega))
+
+/-! ### Finiteness -/
 
 /-- Points of period at most `N`: `{x | ∃ L, 1 ≤ L ≤ N, T^L x = x}`. -/
 def perUpTo (N : ℕ) : Set ℕ := {x | ∃ L, 1 ≤ L ∧ L ≤ N ∧ T^[L] x = x}
 
-/-- Points of `T`-period at most `N` form a finite set of size `≤ 2^{N+1}` (union bound over
-`periodic_ncard_le`). -/
-theorem perUpTo_finite_ncard (N : ℕ) : (perUpTo N).Finite ∧ (perUpTo N).ncard ≤ 2^(N+1) := by
+/-- Points of `T`-period at most `N` form a finite set of size at most `2^{N+1}` (union bound
+over `periodic_ncard_le`); see `perUpTo_finite` and `ncard_perUpTo_le`. -/
+private theorem perUpTo_finite_ncard_aux (N : ℕ) :
+    (perUpTo N).Finite ∧ (perUpTo N).ncard ≤ 2^(N+1) := by
   induction N with
   | zero =>
     have : perUpTo 0 = ∅ := by
@@ -173,7 +203,8 @@ theorem perUpTo_finite_ncard (N : ℕ) : (perUpTo N).Finite ∧ (perUpTo N).ncar
       · rintro (⟨L, h1, h2, h3⟩ | h)
         · exact ⟨L, h1, by omega, h3⟩
         · exact ⟨N+1, by omega, le_rfl, h⟩
-    obtain ⟨hf, hc⟩ := periodic_ncard_le (Nat.succ_pos N)
+    have hf := periodic_finite (Nat.succ_pos N)
+    have hc := periodic_ncard_le (Nat.succ_pos N)
     rw [heq]
     refine ⟨ih.1.union hf, ?_⟩
     calc (perUpTo N ∪ {x | T^[N+1] x = x}).ncard
@@ -181,19 +212,27 @@ theorem perUpTo_finite_ncard (N : ℕ) : (perUpTo N).Finite ∧ (perUpTo N).ncar
       _ ≤ 2^(N+1) + 2^(N+1) := Nat.add_le_add ih.2 hc
       _ = 2^(N+1+1) := by ring
 
+/-- Points of `T`-period at most `N` form a finite set. -/
+theorem perUpTo_finite (N : ℕ) : (perUpTo N).Finite := (perUpTo_finite_ncard_aux N).1
+
+/-- There are at most `2^{N+1}` points of `T`-period at most `N`. -/
+theorem ncard_perUpTo_le (N : ℕ) : (perUpTo N).ncard ≤ 2^(N+1) := (perUpTo_finite_ncard_aux N).2
+
 /-- Odd orbit minima of `T`-cycles with at most `R` odd runs have period `≤ 2^{4R+101}`. -/
 theorem T_cycles_bounded_runs_subset (R : ℕ) :
     {m : ℕ | m % 2 = 1 ∧ (∀ j, m ≤ T^[j] m) ∧ ∃ L, 0 < L ∧ T^[L] m = m ∧ oddRuns L m ≤ R}
       ⊆ perUpTo (2^(4*R+101)) := by
   rintro m ⟨hodd, hmin, L, hL, hc, hR⟩
-  exact ⟨L, hL, (oddSteps_period_lt_of_runs_le hodd hmin hL hc hR).2.le, hc⟩
+  exact ⟨L, hL, (period_lt_of_runs_le hodd hmin hL hc hR).le, hc⟩
 
-/-- **Unconditional, CLASSICAL (Steiner / Simons–de Weger; first formalization, explicit;
-uses an elementary effective irrationality measure of `log₂ 3`, as is standard, cf. Rhin 1987).** For each `R`, the set of odd `m`, minimal on their `T`-orbit, lying on a `T`-cycle
-with at most `R` odd runs per lap, is finite. -/
+/-- **Finiteness of `m`-cycles** (Steiner, Simons–de Weger). For each `R`, the set of odd `m`,
+minimal on their `T`-orbit, lying on a `T`-cycle with at most `R` odd runs per lap, is finite. -/
 theorem finite_T_cycles_bounded_runs (R : ℕ) :
-    {m : ℕ | m % 2 = 1 ∧ (∀ j, m ≤ T^[j] m) ∧ ∃ L, 0 < L ∧ T^[L] m = m ∧ oddRuns L m ≤ R}.Finite :=
-  (perUpTo_finite_ncard _).1.subset (T_cycles_bounded_runs_subset R)
+    {m : ℕ | m % 2 = 1 ∧ (∀ j, m ≤ T^[j] m) ∧
+      ∃ L, 0 < L ∧ T^[L] m = m ∧ oddRuns L m ≤ R}.Finite :=
+  (perUpTo_finite _).subset (T_cycles_bounded_runs_subset R)
+
+/-! ### Cycle minima -/
 
 /-- A cycle minimum (for `C`) is odd, minimal on its `T`-orbit, and `T`-periodic. -/
 theorem cycleMinima_T_props {n : ℕ} (hmem : n ∈ CycleMinima) :
@@ -213,18 +252,16 @@ theorem cycleMinima_T_props {n : ℕ} (hmem : n ∈ CycleMinima) :
 /-- Cycle minima with at most `R` odd runs per (minimal) `T`-lap lie in the `T`-level set. -/
 theorem cycleMinima_bounded_runs_subset (R : ℕ) :
     {n : ℕ | n ∈ CycleMinima ∧ oddRuns (Function.minimalPeriod T n) n ≤ R} ⊆
-      {m : ℕ | m % 2 = 1 ∧ (∀ j, m ≤ T^[j] m) ∧ ∃ L, 0 < L ∧ T^[L] m = m ∧ oddRuns L m ≤ R} := by
+      {m : ℕ | m % 2 = 1 ∧ (∀ j, m ≤ T^[j] m) ∧
+        ∃ L, 0 < L ∧ T^[L] m = m ∧ oddRuns L m ≤ R} := by
   rintro n ⟨hmem, hR⟩
   obtain ⟨hodd, hmin, L, hL, hc⟩ := cycleMinima_T_props hmem
   have hper : n ∈ Function.periodicPts T := ⟨L, hL, hc⟩
   exact ⟨hodd, hmin, _, Function.minimalPeriod_pos_of_mem_periodicPts hper,
     Function.iterate_minimalPeriod, hR⟩
 
-/-- **Weakening of `FinitelyManyCycles` (CLASSICAL; first formalization,
-using an elementary effective irrationality measure of `log₂ 3`, as is standard, cf. Rhin
-1987).** For every `R`, only finitely many Collatz cycles have at most `R` odd runs per minimal
-`T`-lap:
-`{n ∈ CycleMinima | oddRuns (minimalPeriod T n) n ≤ R}` is finite. -/
+/-- For every `R`, only finitely many Collatz cycles have at most `R` odd runs per minimal
+`T`-lap: `{n ∈ CycleMinima | oddRuns (minimalPeriod T n) n ≤ R}` is finite. -/
 theorem finite_cycleMinima_bounded_runs (R : ℕ) :
     {n : ℕ | n ∈ CycleMinima ∧ oddRuns (Function.minimalPeriod T n) n ≤ R}.Finite :=
   (finite_T_cycles_bounded_runs R).subset (cycleMinima_bounded_runs_subset R)
@@ -234,23 +271,25 @@ theorem ncard_cycleMinima_bounded_runs_le (R : ℕ) :
     {n : ℕ | n ∈ CycleMinima ∧ oddRuns (Function.minimalPeriod T n) n ≤ R}.ncard ≤
       2^(2^(4*R+101)+1) :=
   le_trans (Set.ncard_le_ncard ((cycleMinima_bounded_runs_subset R).trans
-      (T_cycles_bounded_runs_subset R)) (perUpTo_finite_ncard _).1)
-    (perUpTo_finite_ncard _).2
+      (T_cycles_bounded_runs_subset R)) (perUpTo_finite _))
+    (ncard_perUpTo_le _)
 
-/-- **Reformulation (not a proof) of `FinitelyManyCycles`.** `FinitelyManyCycles` holds iff there
-is a uniform bound `R` on the number of odd runs per minimal `T`-lap of every cycle. The `←`
-direction is `finite_cycleMinima_bounded_runs`; `→` takes the maximum over a finite set. -/
+/-- `FinitelyManyCycles` holds iff there is a uniform bound `R` on the number of odd runs per
+minimal `T`-lap of every cycle. The `←` direction is `finite_cycleMinima_bounded_runs`; `→` takes
+the maximum over a finite set. -/
 theorem finitelyManyCycles_iff_runs_bounded :
     FinitelyManyCycles ↔
       ∃ R, ∀ n ∈ CycleMinima, oddRuns (Function.minimalPeriod T n) n ≤ R := by
   constructor
   · intro hf
-    obtain ⟨R, hR⟩ := (hf.image (fun n => oddRuns (Function.minimalPeriod T n) n)).bddAbove
-    exact ⟨R, fun n hn => hR ⟨n, hn, rfl⟩⟩
+    obtain ⟨R, hR⟩ := (hf.image (fun n ↦ oddRuns (Function.minimalPeriod T n) n)).bddAbove
+    exact ⟨R, fun n hn ↦ hR ⟨n, hn, rfl⟩⟩
   · rintro ⟨R, hR⟩
-    exact (finite_cycleMinima_bounded_runs R).subset (fun n hn => ⟨hn, hR n hn⟩)
+    exact (finite_cycleMinima_bounded_runs R).subset (fun n hn ↦ ⟨hn, hR n hn⟩)
 
-/-- Sanity (non-vacuity): the trivial cycle `1 → 2 → 1` has one odd run and lies in the set. -/
+/-! ### Examples -/
+
+-- The trivial cycle `1 → 2 → 1` has one odd run and lies in the set.
 example : 1 ∈ {n : ℕ | n ∈ CycleMinima ∧ oddRuns (Function.minimalPeriod T n) n ≤ 1} := by
   refine ⟨one_mem_cycleMinima, ?_⟩
   have hp : Function.minimalPeriod T 1 = 2 := by
@@ -266,10 +305,3 @@ example : 1 ∈ {n : ℕ | n ∈ CycleMinima ∧ oddRuns (Function.minimalPeriod
   rw [hp]; decide
 
 end Collatz
-#print axioms Collatz.oddSteps_lt_of_runs
-#print axioms Collatz.period_lt_of_runs
-#print axioms Collatz.finite_T_cycles_bounded_runs
-#print axioms Collatz.finite_cycleMinima_bounded_runs
-#print axioms Collatz.ncard_cycleMinima_bounded_runs_le
-#print axioms Collatz.finitelyManyCycles_iff_runs_bounded
-#print axioms Collatz.oddSteps_period_lt_of_runs_le

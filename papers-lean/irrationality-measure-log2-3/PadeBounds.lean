@@ -1,33 +1,54 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import PadeArith
 import Mathlib.Algebra.Polynomial.Eval.Degree
 import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 import Mathlib.Tactic
 
 /-!
-# Coefficient bound and integral/finite-sum identity for the 4-root
-Hata-type family
+# Coefficient bounds and the integral identity for the Padé polynomial `V_n`
 
-Unconditional, elementary facts about `V_n = (X-1)^{4n}(2X-3)^{2n}(3X-4)^{3n}(5X-6)^n`
-(`PadeArith.Vp`):
-* `coeff_Vp_abs_le`: `|w_i| ≤ 2^{4n} 5^{2n} 7^{3n} 11^n` (≈ `2^{20.53 n}`) for every `i`.
-  Proof: coefficientwise domination `Dom` is multiplicative; `aX − b` is dominated by
-  `aX + b`; so `V_n` is dominated by `W_n = (X+1)^{4n}(2X+3)^{2n}(3X+4)^{3n}(5X+6)^n`,
-  whose coefficients are nonnegative and hence at most `W_n(1)`.
-* `natDegree_Vp_le`: `natDegree V_n ≤ 10n`.
-* `integral_zpow_sub_one`: `∫_1^s u^{j-1} du = log s` (j = 0) or `(s^j − 1)/j` (j ≠ 0), `s ≥ 1`.
-* `integral_poly_div_pow`: for `p ∈ ℤ[X]`, `natDegree p < N`, `s ≥ 1`:
-  `∫_1^s p(u)/u^{K+1} du = Σ_{i<N} p_i F(i,K,s)`, `F(i,K,s) = log s` if `i = K`, else
-  `(s^{i-K} − 1)/(i − K)`.
-With `p = V_n`, `K = 5n`, `N = 10n+1`, `s ∈ {3/2, 4/3}` this is the identity
-`E_j = w_K log s_j + Σ_{i≠K} w_i (s_j^{i-K}-1)/(i-K)`.  NOT formalized: the sup bound on
-`g(u) = (u-1)^4(2u-3)^2(3u-4)^3(5u-6)/u^5` over `[1, 3/2]`, the assembly of `Q_n, x_n, y_n`,
-and (windowed) non-vanishing for all `n`.  `SimApprox`/`SimApproxW` have NO witness yet.
+In this file we bound the coefficients `w_i` of the polynomial
+`V_n = (X - 1)^{4n} (2X - 3)^{2n} (3X - 4)^{3n} (5X - 6)^n` of `PadeArith`, bound its degree, and
+express integrals `∫_1^s p(u)/u^{K+1} du` of integer polynomials as explicit finite sums. With
+`p = V_n`, `K = 5n` and `s ∈ {3/2, 4/3}` this gives the identity
+`∫_1^s V_n(u) u^{-5n-1} du = w_{5n} log s + Σ_{i ≠ 5n} w_i (s^{i-5n} - 1)/(i - 5n)`.
+
+The coefficient bound uses coefficientwise domination `Dom`: it is multiplicative, `aX - b` is
+dominated by `aX + b`, and the coefficients of a polynomial with nonnegative coefficients are at
+most its value at `1`.
+
+## Main definitions
+
+- `Dom P P'`: `|P_i| ≤ P'_i` for every `i`.
+- `Wp n`: the dominating polynomial `(X + 1)^{4n} (2X + 3)^{2n} (3X + 4)^{3n} (5X + 6)^n`.
+- `Fterm i K s`: `∫_1^s u^{i-K-1} du`, i.e. `log s` if `i = K` and `(s^{i-K} - 1)/(i - K)`
+  otherwise.
+
+## Main results
+
+- `coeff_Vp_abs_le`: `|w_i| ≤ 2^{4n} 5^{2n} 7^{3n} 11^n` for every `i`.
+- `natDegree_Vp_le`: `natDegree V_n ≤ 10n`.
+- `integral_zpow_sub_one`: for `s ≥ 1`, `∫_1^s u^{j-1} du` is `log s` if `j = 0` and
+  `(s^j - 1)/j` otherwise.
+- `integral_poly_div_pow`: for `p ∈ ℤ[X]` with `natDegree p < N` and `s ≥ 1`,
+  `∫_1^s p(u)/u^{K+1} du = Σ_{i<N} p_i F(i, K, s)`.
+
+## References
+
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, Séminaire de Théorie des
+  Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
+- M. Hata, *Rational approximations to π and some other numbers*, Acta Arith. 63 (1993), 335–349.
 -/
 
 open Polynomial
 
 namespace Collatz.PadeArith
 
+/-! ### Coefficientwise domination -/
 
 /-- `P'` dominates `P` coefficientwise in absolute value. -/
 def Dom (P P' : ℤ[X]) : Prop := ∀ i, |P.coeff i| ≤ P'.coeff i
@@ -62,6 +83,8 @@ theorem coeff_le_eval_one {W : ℤ[X]} (h : ∀ i, 0 ≤ W.coeff i) (i : ℕ) : 
   · exact Finset.single_le_sum (fun j _ => h j) (Finset.mem_range.mpr hi)
   · rw [coeff_eq_zero_of_natDegree_lt (by omega)]
     exact Finset.sum_nonneg fun j _ => h j
+
+/-! ### Size of the coefficients of `V_n` -/
 
 /-- Dominating polynomial `W_n = (X+1)^{4n}(2X+3)^{2n}(3X+4)^{3n}(5X+6)^n`. -/
 noncomputable def Wp (n : ℕ) : ℤ[X] :=
@@ -104,8 +127,9 @@ theorem natDegree_Vp_le (n : ℕ) : (Vp n).natDegree ≤ 10*n := by
     (C (3:ℤ) * X - C 4)^(3*n)) (q := (C (5:ℤ) * X - C 6)^n))
   omega
 
+/-! ### The integral identity -/
 
-
+/-- For `s ≥ 1`, `∫_1^s u^{j-1} du` is `log s` if `j = 0` and `(s^j - 1)/j` otherwise. -/
 theorem integral_zpow_sub_one (s : ℝ) (hs : 1 ≤ s) (j : ℤ) :
     ∫ u in (1:ℝ)..s, u ^ (j - 1) = if j = 0 then Real.log s else (s ^ j - 1) / j := by
   split_ifs with hj
@@ -130,6 +154,8 @@ theorem integral_zpow_Fterm (i K : ℕ) (s : ℝ) (hs : 1 ≤ s) :
   · have : ((i:ℤ) - K) ≠ 0 := by omega
     simp only [this, h, ↓reduceIte]; push_cast; rfl
 
+/-- For `p ∈ ℤ[X]` with `natDegree p < N` and `s ≥ 1`,
+`∫_1^s p(u)/u^{K+1} du = Σ_{i<N} p_i · Fterm i K s`. -/
 theorem integral_poly_div_pow (p : Polynomial ℤ) (N K : ℕ) (hN : p.natDegree < N) (s : ℝ)
     (hs : 1 ≤ s) :
     ∫ u in (1:ℝ)..s, (p.map (Int.castRingHom ℝ)).eval u / u ^ (K+1) =
@@ -160,8 +186,3 @@ theorem integral_poly_div_pow (p : Polynomial ℤ) (N K : ℕ) (hN : p.natDegree
     left; simp; linarith [hu.1]
 
 end Collatz.PadeArith
-
-#print axioms Collatz.PadeArith.coeff_Vp_abs_le
-#print axioms Collatz.PadeArith.natDegree_Vp_le
-#print axioms Collatz.PadeArith.integral_zpow_sub_one
-#print axioms Collatz.PadeArith.integral_poly_div_pow

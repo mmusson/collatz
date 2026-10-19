@@ -1,20 +1,41 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import PadeBounds
 
 /-!
-# Arithmetic of the sign-split family `Vq_n = Vp_n (5X-6)`
+# Arithmetic of the Padé polynomial `Vq_n = V_n · (5X - 6)`
 
-`Vq_n = (X-1)^{4n}(2X-3)^{2n}(3X-4)^{3n}(5X-6)^{n+1} ∈ ℤ[X]`, coefficients `u_i`.
-Unconditional, elementary (truncated ℕ subtraction in exponents):
-* `vq_C1`: `3^{3n+1-i} ∣ u_i`; `vq_C2`: `2^{i-8n-1} ∣ u_i`; `vq_C3`: `3^{i-7n-1} ∣ u_i`;
-  `vq_C4`: `2^{7n+1-2i} ∣ u_i` (`PadeArith`/`TypeIITransfer` profiles of `Vp` times the profile of `5X-6`).
-* `integral_term_q`, `integral_term_one_q`: with `K = 5n`,
-  `D'_n = 2^{3n+1} 3^{2n+1} lcm(1..5n+1)`, for `i ≤ 10n+1`, `i ≠ 5n`, `s ∈ {3/2, 4/3}`:
-  `D'_n u_i s^{i-K}/(i-K) ∈ ℤ` and `D'_n u_i/(i-K) ∈ ℤ`.
-* `natDegree_Vq_le`: `natDegree Vq_n ≤ 10n+1`;
-  `coeff_Vq_abs_le`: `|u_i| ≤ 11·2^{4n}5^{2n}7^{3n}11^n`.
-These are the denominator/size facts for the `SignApprox` witness candidate (see
-`SignSplit.lean`, `PadeSign.lean`); the sup bound and the lower bound for `|E1|` are NOT
-formalized, so no `SignApprox` witness exists yet.
+In this file we study the integer polynomial
+`Vq_n(X) = (X - 1)^{4n} (2X - 3)^{2n} (3X - 4)^{3n} (5X - 6)^{n+1}` with coefficients `u_i`,
+obtained from the polynomial `V_n` of `PadeArith` by one more factor `5X - 6`. This is the family
+used for the sign-split transference of `SignSplit`. We prove the `2`- and `3`-adic divisibility
+of the coefficients, the integrality of the coefficients of the associated linear forms with the
+denominator `D'_n = 2^{3n+1} 3^{2n+1} lcm(1, …, 5n + 1)`, and bounds on the degree and on the
+size of the coefficients.
+
+## Main definitions
+
+- `Vq n`: the polynomial `Vq_n`.
+- `Lcm5q n`: `lcm(1, …, 5n + 1)`.
+- `Dq n`: the common denominator `D'_n`.
+
+## Main results
+
+- `vq_C1`, `vq_C2`, `vq_C3`, `vq_C4`: `3^{3n+1-i} ∣ u_i`, `2^{i-8n-1} ∣ u_i`,
+  `3^{i-7n-1} ∣ u_i` and `2^{7n+1-2i} ∣ u_i` (truncated subtraction in `ℕ`).
+- `integral_term_q`, `integral_term_one_q`: for `i ≤ 10n + 1`, `i ≠ 5n` and `s ∈ {3/2, 4/3}`,
+  `D'_n u_i s^{i-5n}/(i - 5n)` and `D'_n u_i/(i - 5n)` are integers.
+- `natDegree_Vq_le`: `natDegree Vq_n ≤ 10n + 1`.
+- `coeff_Vq_abs_le`: `|u_i| ≤ 11 · 2^{4n} 5^{2n} 7^{3n} 11^n`.
+
+## References
+
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, Séminaire de Théorie des
+  Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
+- M. Hata, *Rational approximations to π and some other numbers*, Acta Arith. 63 (1993), 335–349.
 -/
 
 open Polynomial
@@ -22,12 +43,15 @@ open Polynomial
 namespace Collatz.PadeArithQ
 open PadeArith
 
+/-! ### Divisibility of the coefficients -/
+
 /-- `Vq_n = Vp_n (5X-6) = (X-1)^{4n}(2X-3)^{2n}(3X-4)^{3n}(5X-6)^{n+1}`. -/
 noncomputable def Vq (n : ℕ) : ℤ[X] := Vp n * (C 5 * X - C 6)
 
 /-- Product form of `Vq_n`. -/
-theorem Vq_eq (n : ℕ) : Vq n =
-    (X - C 1)^(4*n) * (C 2 * X - C 3)^(2*n) * (C 3 * X - C 4)^(3*n) * (C 5 * X - C 6)^(n+1) := by
+theorem Vq_eq (n : ℕ) :
+    Vq n = (X - C 1)^(4*n) * (C 2 * X - C 3)^(2*n) * (C 3 * X - C 4)^(3*n) *
+      (C 5 * X - C 6)^(n+1) := by
   unfold Vq Vp; ring
 
 /-- `3^{3n+1-i}` divides the `i`-th coefficient of `Vq_n`. -/
@@ -61,10 +85,12 @@ theorem vq_C4 (n : ℕ) : ∀ i, (2:ℤ)^(7*n+1 - 2*i) ∣ (Vq n).coeff i := by
   intro i
   exact hV.mul hH i
 
-/-- `lcm(1,…,5n+1)`. -/
+/-! ### Integrality of the linear forms -/
+
+/-- `lcm(1, …, 5n + 1)`. -/
 def Lcm5q (n : ℕ) : ℕ := (Finset.Icc 1 (5*n+1)).lcm id
 
-/-- `D'_n = 2^{3n+1} 3^{2n+1} lcm(1..5n+1)`. -/
+/-- `D'_n = 2^{3n+1} 3^{2n+1} lcm(1, …, 5n + 1)`. -/
 def Dq (n : ℕ) : ℤ := 2^(3*n+1) * 3^(2*n+1) * (Lcm5q n : ℤ)
 
 theorem dvd_lcm5q {n j : ℕ} (h1 : 1 ≤ j) (h2 : j ≤ 5*n+1) : j ∣ Lcm5q n := by
@@ -180,6 +206,8 @@ theorem integral_term_one_q (n i : ℕ) (hi : i ≤ 10*n+1) (hK : i ≠ 5*n) :
     unfold Dq; rw [hm]; push_cast
     field_simp
 
+/-! ### Degree and coefficient size -/
+
 /-- `natDegree Vq_n ≤ 10n+1`. -/
 theorem natDegree_Vq_le (n : ℕ) : (Vq n).natDegree ≤ 10*n+1 := by
   unfold Vq
@@ -201,13 +229,3 @@ theorem coeff_Vq_abs_le (n i : ℕ) :
   exact le_trans (dom_Vq n i) (coeff_le_eval_one (dom_Vq n).nonneg i)
 
 end Collatz.PadeArithQ
-
-#print axioms Collatz.PadeArithQ.Vq_eq
-#print axioms Collatz.PadeArithQ.vq_C1
-#print axioms Collatz.PadeArithQ.vq_C2
-#print axioms Collatz.PadeArithQ.vq_C3
-#print axioms Collatz.PadeArithQ.vq_C4
-#print axioms Collatz.PadeArithQ.integral_term_q
-#print axioms Collatz.PadeArithQ.integral_term_one_q
-#print axioms Collatz.PadeArithQ.natDegree_Vq_le
-#print axioms Collatz.PadeArithQ.coeff_Vq_abs_le

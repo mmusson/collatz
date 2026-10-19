@@ -1,18 +1,38 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import PadeSign
 
 /-!
-# Generic single-box sup bound for the `Vq` integrand
+# A single-box bound for the integrand of `Vq_n`
 
-If `1 ≤ a` and on `[a,b]` we have `|u-1| ≤ A1`, `|2u-3| ≤ A2`, `|3u-4| ≤ A3`, `|5u-6| ≤ A4`, then
-`|Vq_n(u)/u^{5n+1}| ≤ (A1^4 A2^2 A3^3 A4/a^5)^n (A4/a)` on `[a,b]` (`box_bound`), and the integral
-over `[a,b]` is bounded by `(b-a)` times that (`box_integral_bound`). Preparation for conjunct (ii)
-of `SignApprox`; the box instantiation (≈32 boxes on `[1,4/3]`, ≈8 on `[4/3,3/2]`) is NOT done.
+In this file we bound the integrand `Vq_n(u)/u^{5n+1}` of `PadeArithQ` on an interval `[a, b]`
+with `1 ≤ a` from bounds on its linear factors: if `|u - 1| ≤ A1`, `|2u - 3| ≤ A2`,
+`|3u - 4| ≤ A3` and `|5u - 6| ≤ A4` on `[a, b]`, then
+`|Vq_n(u)/u^{5n+1}| ≤ (A1^4 A2^2 A3^3 A4/a^5)^n (A4/a)` there. Covering an interval by such boxes
+gives the decay bounds of `PadeSup`.
+
+## Main results
+
+- `box_bound`: the pointwise bound on `[a, b]`.
+- `box_integral_bound`: `|∫_a^b Vq_n(u)/u^{5n+1} du|` is at most `(b - a)` times the pointwise
+  bound.
+
+## References
+
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, Séminaire de Théorie des
+  Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
+- M. Hata, *Rational approximations to π and some other numbers*, Acta Arith. 63 (1993), 335–349.
 -/
 
 open Polynomial
 
 namespace Collatz.PadeBox
 open PadeArith PadeArithQ PadeSign
+
+/-! ### Bounds on a single box -/
 
 /-- Single-box pointwise bound on `|Vq_n(u)/u^{5n+1}|`. -/
 theorem box_bound (n : ℕ) (a b A1 A2 A3 A4 : ℝ) (ha : 1 ≤ a)
@@ -35,13 +55,14 @@ theorem box_bound (n : ℕ) (a b A1 A2 A3 A4 : ℝ) (ha : 1 ≤ a)
   have hU : a^(5*n+1) ≤ u^(5*n+1) := pow_le_pow_left₀ ha0.le hu.1 _
   have key := div_le_div₀ (le_trans (by positivity) q3) q3 (by positivity) hU
   refine le_trans key (le_of_eq ?_)
-  have gen : ∀ x1 x2 x3 x4 y : ℝ, y ≠ 0 → x1^(4*n) * x2^(2*n) * x3^(3*n) * x4^(n+1) / y^(5*n+1) =
-      (x1^4*x2^2*x3^3*x4/y^5)^n * (x4/y) := by
+  have gen : ∀ x1 x2 x3 x4 y : ℝ, y ≠ 0 →
+      x1^(4*n) * x2^(2*n) * x3^(3*n) * x4^(n+1) / y^(5*n+1) =
+        (x1^4*x2^2*x3^3*x4/y^5)^n * (x4/y) := by
     intro x1 x2 x3 x4 y hy
     rw [div_pow, mul_pow, mul_pow, mul_pow, ← pow_mul, ← pow_mul, ← pow_mul, ← pow_mul,
       pow_succ x4, pow_succ y]
     field_simp
-  exact gen _ _ _ _ _ ha0.ne' 
+  exact gen _ _ _ _ _ ha0.ne'
 
 /-- Single-box bound on `|∫_a^b Vq_n(u)/u^{5n+1} du|`. -/
 theorem box_integral_bound (n : ℕ) (a b A1 A2 A3 A4 : ℝ) (ha : 1 ≤ a) (hab : a ≤ b)
@@ -60,6 +81,3 @@ theorem box_integral_bound (n : ℕ) (a b A1 A2 A3 A4 : ℝ) (ha : 1 ≤ a) (hab
   linarith
 
 end Collatz.PadeBox
-
-#print axioms Collatz.PadeBox.box_bound
-#print axioms Collatz.PadeBox.box_integral_bound

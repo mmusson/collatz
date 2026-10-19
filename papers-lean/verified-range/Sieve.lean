@@ -1,28 +1,48 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import Descent
 import Mathlib.Tactic
 
 /-!
-# Residue-tree descent sieve (kernel-checkable)
+# The residue-tree descent sieve
 
-A node `(j, r, a, c)` is `Valid` if `T^j (r + 2^j y) = a y + c` for every `y` (Terras'
-affine form on the residue class `r mod 2^j`).  The root `(0, 0, 1, 0)` is valid, and each of the
-two children (`r` or `r + 2^j` mod `2^{j+1}`) is valid with `(a, c)` updated by one `T`-step
-(`valid_child_even`, `valid_child_odd`).  A node with `a < 2^j` and `c < r` descends for the whole
-class (`valid_prune`).  `sv fuel N lo d f bits r a c pw` walks the tree (`pw = 2^j`) to remaining
-depth `d`, first following the `f` forced low bits of `bits`, prunes where possible, and at the
-leaves checks the `N` numbers `r + 2^j y` (`y < N`) individually, starting from `T^j n = a y + c`
-(`leafOK`, using `descends` from `Descent.lean`).
+In this file we define a kernel-checkable sieve proving that every integer in a range has a
+`T`-iterate below itself. It walks the tree of residue classes `r mod 2^j`, using Terras' affine
+form `T^j (r + 2^j y) = a y + c` on each class. A class with `a < 2^j` and `c < r` descends as a
+whole and is pruned; the surviving classes are checked number by number at the leaves.
 
-* `sv_sound`: a successful run proves descent for every `y < N·2^d` with the forced low bits.
-* `descRange_of_roots`: if the sieve succeeds for all `2^f` patterns, `DescRange lo (2^K N)`.
-* `min_orbit_ge_of_descRange`: `DescRange 2 X` ⇒ the minimum `m > 1` of a `T`-orbit is `≥ X`.
+## Main definitions
 
-Classical (the Oliveira e Silva-style class sieve); it gains only a constant factor over direct
-enumeration.  Instances: `Sieve24Part0..7`, `Sieve24` (`X = 2^24`).
+- `Valid j r a c`: the class `r mod 2^j` satisfies `T^j (r + 2^j y) = a y + c` for all `y`.
+- `leafOK`, `leafAll`: the number-by-number check at a leaf.
+- `sv fuel N lo d f bits r a c pw`: the sieve, run to remaining depth `d`, first following the
+  `f` forced low bits of `bits`.
+- `svRange`, `RootsOK`: the sieve over a range of forced-bit patterns.
+
+## Main results
+
+- `valid_root`, `valid_child_even`, `valid_child_odd`: the root is valid, and validity passes to
+  both children.
+- `valid_prune`: a class with `a < 2^j` and `c < r` descends at step `j`.
+- `sv_sound`: a successful run proves descent for every `y < N · 2^d` with the forced low bits.
+- `descRange_of_roots`: if the sieve succeeds for all `2^f` patterns, then `DescRange lo (2^K N)`.
+- `min_orbit_ge_of_descRange`: `DescRange 2 X` implies that the minimum `m > 1` of a `T`-orbit is
+  at least `X`.
+
+## References
+
+- R. Terras, *A stopping time problem on the positive integers*, Acta Arith. 30 (1976), 241–252.
+- T. Oliveira e Silva, *Empirical verification of the 3x+1 and related conjectures*, in
+  J. C. Lagarias (ed.), *The Ultimate Challenge: The 3x+1 Problem*, AMS, 2010.
 -/
 
 namespace Collatz
 open CollatzProof
+
+/-! ### Valid residue classes -/
 
 /-- Node invariant: `T^j (r + 2^j y) = a y + c` for all `y`. -/
 def Valid (j r a c : ℕ) : Prop := ∀ y, T^[j] (r + 2^j * y) = a * y + c
@@ -53,6 +73,8 @@ theorem valid_child_odd {j r a c b : ℕ} (hv : Valid j r a c) (h : (c + a*b) % 
 theorem valid_prune {j r a c : ℕ} (hv : Valid j r a c) (ha : a < 2^j) (hc : c < r) (y : ℕ) :
     T^[j] (r + 2^j*y) < r + 2^j*y := by
   rw [hv]; have := Nat.mul_le_mul_right y ha.le; nlinarith
+
+/-! ### The sieve -/
 
 /-- Leaf check for one `y`: `n = r + pw·y` is below `lo`, or `T^j n = a y + c < n`, or some
 further iterate of `a y + c` drops below `n`. -/
@@ -165,6 +187,8 @@ theorem sv_sound (fuel N lo : ℕ) : ∀ d f bits j r a c, Valid j r a c →
         have := key 1 hb.symm f (bits/2) hf (by simpa [hpw] using h)
         rwa [hb]
 
+/-! ### Ranges of forced-bit patterns -/
+
 /-- Conjunction of the sieve over the forced-bit patterns `bits ∈ [start, start + cnt)`. -/
 def svRange (fuel N lo K f start : ℕ) : ℕ → Bool
   | 0 => true
@@ -220,11 +244,3 @@ theorem min_orbit_ge_of_descRange {X m : ℕ} (hD : DescRange 2 X) (hm : 1 < m)
   exact absurd (hmin j) (by omega)
 
 end Collatz
-
-#print axioms Collatz.valid_child_even
-#print axioms Collatz.valid_child_odd
-#print axioms Collatz.valid_prune
-#print axioms Collatz.leaf_sound
-#print axioms Collatz.sv_sound
-#print axioms Collatz.descRange_of_roots
-#print axioms Collatz.min_orbit_ge_of_descRange

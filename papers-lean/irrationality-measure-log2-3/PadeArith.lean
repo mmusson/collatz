@@ -1,32 +1,59 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import Mathlib.Algebra.Polynomial.Coeff
 import Mathlib.Tactic
 
 /-!
-# Arithmetic of the 4-root Hata-type family
+# Arithmetic of a Hata–Rhin type Padé polynomial
 
-`V_n(X) = (X-1)^{4n} (2X-3)^{2n} (3X-4)^{3n} (5X-6)^n ∈ ℤ[X]`, with coefficients `w_i`.
-Unconditional, elementary:
-* `vp_C1`: `3^{3n-i} ∣ w_i`;  `vp_C2`: `2^{i-8n} ∣ w_i`;  `vp_C3`: `3^{i-7n} ∣ w_i`;
-  `vp_C4`: `2^{7n-2i} ∣ w_i`  (truncated subtraction in ℕ).
-  Proof: per-linear-factor divisibility profiles (`LowDiv`/`HighDiv`) are multiplicative
-  (`LowDiv.mul`, `.pow`, `HighDiv.mul`, `.pow`).
-* `integral_term`: with `K = 5n`, `D_n = 2^{3n} 3^{2n} lcm(1..5n)`, for `i ≤ 10n`, `i ≠ 5n`,
-  `s ∈ {3/2, 4/3}`: `D_n w_i s^{i-K}/(i-K) ∈ ℤ`.  `integral_term_one`: `D_n w_i/(i-K) ∈ ℤ`.
-These are the denominator facts for `E_j = ∫_1^{s_j} V_n(u) u^{-5n-1} du
-= w_K log s_j + Σ_{i≠K} w_i (s_j^{i-K}-1)/(i-K)`; the integral identity, the sup bound and
-the non-vanishing `Δ_n ≠ 0` are NOT formalized.
+In this file we study the integer polynomial
+`V_n(X) = (X - 1)^{4n} (2X - 3)^{2n} (3X - 4)^{3n} (5X - 6)^n` with coefficients `w_i`, which
+generates linear forms in `1`, `log (3/2)` and `log (4/3)` of Hata–Rhin type. We prove the
+`2`- and `3`-adic divisibility of the coefficients and deduce that, with the common denominator
+`D_n = 2^{3n} 3^{2n} lcm(1, …, 5n)`, every coefficient of the linear forms
+`E_s = ∫_1^s V_n(u) u^{-5n-1} du = w_{5n} log s + Σ_{i ≠ 5n} w_i (s^{i-5n} - 1)/(i - 5n)`,
+`s ∈ {3/2, 4/3}`, becomes an integer. The integral representation itself is not used here.
+
+## Main definitions
+
+- `LowDiv c w e P`, `HighDiv c w e P`: the coefficient `P_i` is divisible by `c^{e - w i}`,
+  respectively `c^{w i - e}` (truncated subtraction in `ℕ`).
+- `Vp n`: the polynomial `V_n`.
+- `Lcm5 n`: `lcm(1, …, 5n)`.
+- `Dn n`: the common denominator `D_n`.
+
+## Main results
+
+- `LowDiv.mul`, `LowDiv.pow`, `HighDiv.mul`, `HighDiv.pow`: the divisibility profiles are
+  multiplicative.
+- `vp_C1`, `vp_C2`, `vp_C3`, `vp_C4`: `3^{3n-i} ∣ w_i`, `2^{i-8n} ∣ w_i`, `3^{i-7n} ∣ w_i` and
+  `2^{7n-2i} ∣ w_i`.
+- `integral_term`: `D_n w_i s^{i-5n}/(i - 5n) ∈ ℤ` for `i ≤ 10n`, `i ≠ 5n`, `s ∈ {3/2, 4/3}`.
+- `integral_term_one`: `D_n w_i/(i - 5n) ∈ ℤ` for `i ≤ 10n`, `i ≠ 5n`.
+
+## References
+
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, Séminaire de Théorie des
+  Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
+- M. Hata, *Rational approximations to π and some other numbers*, Acta Arith. 63 (1993), 335–349.
 -/
 
 open Polynomial
 
 namespace Collatz.PadeArith
 
+/-! ### Divisibility profiles of coefficients -/
+
 /-- `c^{e - w i} ∣ P_i` for all `i` (low-degree coefficients carry powers of `c`). -/
 def LowDiv (c : ℤ) (w e : ℕ) (P : ℤ[X]) : Prop := ∀ i, c^(e - w*i) ∣ P.coeff i
 /-- `c^{w i - e} ∣ P_i` for all `i` (high-degree coefficients carry powers of `c`). -/
 def HighDiv (c : ℤ) (w e : ℕ) (P : ℤ[X]) : Prop := ∀ i, c^(w*i - e) ∣ P.coeff i
 
-theorem LowDiv.mul {c : ℤ} {w e₁ e₂ : ℕ} {P R : ℤ[X]} (hP : LowDiv c w e₁ P) (hR : LowDiv c w e₂ R) :
+theorem LowDiv.mul {c : ℤ} {w e₁ e₂ : ℕ} {P R : ℤ[X]} (hP : LowDiv c w e₁ P)
+    (hR : LowDiv c w e₂ R) :
     LowDiv c w (e₁+e₂) (P*R) := by
   intro k
   rw [coeff_mul]
@@ -38,7 +65,8 @@ theorem LowDiv.mul {c : ℤ} {w e₁ e₂ : ℕ} {P R : ℤ[X]} (hP : LowDiv c w
     rw [← hx, mul_add]; omega
   exact h1.trans (by rw [pow_add]; exact mul_dvd_mul (hP _) (hR _))
 
-theorem HighDiv.mul {c : ℤ} {w e₁ e₂ : ℕ} {P R : ℤ[X]} (hP : HighDiv c w e₁ P) (hR : HighDiv c w e₂ R) :
+theorem HighDiv.mul {c : ℤ} {w e₁ e₂ : ℕ} {P R : ℤ[X]} (hP : HighDiv c w e₁ P)
+    (hR : HighDiv c w e₂ R) :
     HighDiv c w (e₁+e₂) (P*R) := by
   intro k
   rw [coeff_mul]
@@ -102,6 +130,8 @@ theorem highDiv_linear {c : ℤ} {w e : ℕ} (a b : ℤ) (h : c^(w-e) ∣ a) :
   · simpa using h
   · simp
 
+/-! ### Divisibility of the coefficients of `V_n` -/
+
 /-- The 4-root Hata-type polynomial `V_n`. -/
 noncomputable def Vp (n : ℕ) : ℤ[X] :=
   (X - C 1)^(4*n) * (C 2 * X - C 3)^(2*n) * (C 3 * X - C 4)^(3*n) * (C 5 * X - C 6)^n
@@ -154,6 +184,7 @@ theorem vp_C4 (n : ℕ) : ∀ i, (2:ℤ)^(7*n - 2*i) ∣ (Vp n).coeff i := by
   have e : 4 * n * 0 + 2 * n * 0 + 3 * n * 2 + n * 1 - 2 * i = 7*n - 2*i := by omega
   rw [e] at h; exact h
 
+/-! ### The common denominator -/
 
 /-- `lcm(1,…,5n)`. -/
 def Lcm5 (n : ℕ) : ℕ := (Finset.Icc 1 (5*n)).lcm id
@@ -272,10 +303,3 @@ theorem integral_term_one (n i : ℕ) (hi : i ≤ 10*n) (hK : i ≠ 5*n) :
     field_simp
 
 end Collatz.PadeArith
-
-#print axioms Collatz.PadeArith.vp_C1
-#print axioms Collatz.PadeArith.vp_C2
-#print axioms Collatz.PadeArith.vp_C3
-#print axioms Collatz.PadeArith.vp_C4
-#print axioms Collatz.PadeArith.integral_term
-#print axioms Collatz.PadeArith.integral_term_one

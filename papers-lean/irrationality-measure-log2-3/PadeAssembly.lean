@@ -1,28 +1,52 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import PadeSign
 import LcmBound
 
 /-!
-# Assembly of the integer forms for the `Vq` Padé family
+# Integer linear forms from the Padé polynomial `Vq_n`
 
-With `u_i = coeff_i(Vq_n)`, `D'_n = Dq n`, `Q_n = D'_n u_{5n}`:
-* `exists_int_sum`/`S43`/`S32`: for `s ∈ {4/3, 3/2}` the rational sum
-  `S_n(s) = Σ_{i<10n+2, i≠5n} D'_n u_i (s^{i-5n}-1)/(i-5n)` is an integer.
-* `Dq_mul_integral_43/32`: `D'_n ∫_1^s Vq_n(u)/u^{5n+1} du = Q_n log s + S_n(s)`.
-* With `P1_n = -S_n(4/3)`, `P2_n = S_n(4/3) - S_n(3/2)`:
-  `form1_eq`: `D'_n E1 = Q_n (2log2 - log3) - P1_n` (`E1 = ∫_1^{4/3}`),
-  `form2_eq`: `D'_n E2 = Q_n (2log3 - 3log2) - P2_n` (`E2 = ∫_{4/3}^{3/2}`).
-* `Qn_abs_le`: `|Q_n| ≤ 2^{9+37n}` (conjunct (i) of `SignApprox` with `a = 74`, `c ≥ 46` for
-  `n = 2m+1`, `Qn_abs_le_odd`), via `D'_n ≤ 2^{3n+1}3^{2n+1}4^{5n+1}` and
-  `|u_i| ≤ 11·2^{4n}5^{2n}7^{3n}11^n`; `264·111270297600^n ≤ 2^9·(2^37)^n`.
-* `form1_nonpos`, `form2_nonneg`: conjunct (iii) for `n = 2m+1`.
-Conjunct (iv) is in `PadeLower.lean`; conjunct (ii) (sup bound) is NOT formalized, so no
-`SignApprox` witness exists yet.
+In this file we turn the integrals of `g(u) = Vq_n(u)/u^{5n+1}` (see `PadeArithQ`) into integer
+linear forms in `log 2` and `log 3`. With `u_i` the coefficients of `Vq_n`, `D'_n = Dq n` and
+`Q_n = D'_n u_{5n}`, the sums `S_n(s) = Σ_{i < 10n+2, i ≠ 5n} D'_n u_i (s^{i-5n} - 1)/(i - 5n)`,
+`s ∈ {4/3, 3/2}`, are integers, and with `P1_n = -S_n(4/3)` and `P2_n = S_n(4/3) - S_n(3/2)`,
+
+  `D'_n ∫_1^{4/3} g = Q_n (2 log 2 - log 3) - P1_n`,
+  `D'_n ∫_{4/3}^{3/2} g = Q_n (2 log 3 - 3 log 2) - P2_n`.
+
+We also bound `|Q_n| ≤ 2^{9 + 37n}` and, for odd `n`, record the signs of the two forms. These are
+the size and sign conditions of `SignSplit.SignApprox` for this family.
+
+## Main definitions
+
+- `Qn n`: `Q_n = D'_n u_{5n}`.
+- `S43 n`, `S32 n`: the integers `S_n(4/3)` and `S_n(3/2)`.
+- `P1n n`, `P2n n`: the integers `P1_n` and `P2_n`.
+
+## Main results
+
+- `exists_int_sum`: `S_n(s)` is an integer for `s ∈ {3/2, 4/3}`.
+- `Dq_mul_integral_43`, `Dq_mul_integral_32`: `D'_n ∫_1^s g = Q_n log s + S_n(s)`.
+- `form1_eq`, `form2_eq`: the two linear forms above.
+- `Qn_abs_le`, `Qn_abs_le_odd`: `|Q_n| ≤ 2^{9 + 37n}` and `|Q_{2m+1}| ≤ 2^{46 + 74m}`.
+- `form1_nonpos`, `form2_nonneg`: for `n = 2m + 1` the first form is `≤ 0` and the second `≥ 0`.
+
+## References
+
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, Séminaire de Théorie des
+  Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
+- M. Hata, *Rational approximations to π and some other numbers*, Acta Arith. 63 (1993), 335–349.
 -/
 
 open Polynomial
 
 namespace Collatz.PadeAssembly
 open PadeArith PadeArithQ PadeSign
+
+/-! ### Integrality of the sums -/
 
 /-- A finite sum of rationals each of which is an integer is an integer. -/
 theorem exists_int_finset_sum {ι : Type*} (t : Finset ι) (f : ι → ℚ)
@@ -66,6 +90,8 @@ theorem S32_spec (n : ℕ) : (S32 n : ℚ) = ∑ i ∈ (Finset.range (10*n+2)).e
       (Dq n:ℚ) * ((Vq n).coeff i:ℚ) * ((3/2:ℚ)^((i:ℤ) - 5*n) - 1) / ((i:ℚ) - 5*n) :=
   (exists_int_sum n (3/2) (Or.inl rfl)).choose_spec
 
+/-! ### The integral identities -/
+
 /-- General identity for a rational `s ≥ 1` and an integer `z` equal to the rational sum. -/
 theorem Dq_mul_integral_aux (n : ℕ) (s : ℚ) (hs : (1:ℝ) ≤ (s:ℝ)) (z : ℤ)
     (hz : (z:ℚ) = ∑ i ∈ (Finset.range (10*n+2)).erase (5*n),
@@ -102,6 +128,7 @@ theorem Dq_mul_integral_32 (n : ℕ) :
   have := Dq_mul_integral_aux n (3/2) (by norm_num) (S32 n) (S32_spec n)
   push_cast at this; exact this
 
+/-! ### The two linear forms -/
 
 /-- `P1_n = -S_n(4/3)`. -/
 noncomputable def P1n (n : ℕ) : ℤ := -S43 n
@@ -149,6 +176,8 @@ theorem form2_eq (n : ℕ) :
   rw [e, mul_sub, Dq_mul_integral_43, Dq_mul_integral_32, log_43, log_32, P2n]
   push_cast; ring
 
+/-! ### Size of `Q_n` -/
+
 theorem Lcm5q_pos (n : ℕ) : 0 < Lcm5q n :=
   Nat.pos_of_ne_zero (LcmBound.Lc_ne_zero (5*n+1))
 
@@ -179,7 +208,7 @@ theorem Qn_abs_le_int (n : ℕ) : |Qn n| ≤ 2^(9 + 37*n) := by
           (by positivity) (by norm_num)
     _ = 2^(9 + 37*n) := by rw [pow_add, pow_mul]
 
-/-- `|Q_n| ≤ 2^{9+37n}` (conjunct (i)). -/
+/-- `|Q_n| ≤ 2^{9+37n}`. -/
 theorem Qn_abs_le (n : ℕ) : |(Qn n:ℝ)| ≤ 2^(9 + 37*n) := by
   have := Qn_abs_le_int n
   exact_mod_cast this
@@ -189,14 +218,16 @@ theorem Qn_abs_le_odd (m : ℕ) : |(Qn (2*m+1):ℝ)| ≤ 2^(46 + 74*m) := by
   have := Qn_abs_le (2*m+1)
   rwa [show 9 + 37*(2*m+1) = 46 + 74*m by ring] at this
 
-/-- Conjunct (iii), first half: `Q(2log2-log3) - P1 ≤ 0` for `n = 2m+1`. -/
+/-! ### Signs of the forms for odd `n` -/
+
+/-- For `n = 2m+1`, `Q_n (2 log 2 - log 3) - P1_n ≤ 0`. -/
 theorem form1_nonpos (m : ℕ) :
     (Qn (2*m+1):ℝ) * (2*Real.log 2 - Real.log 3) - P1n (2*m+1) ≤ 0 := by
   rw [← form1_eq]
   have hD : (0:ℝ) ≤ Dq (2*m+1) := by exact_mod_cast (by linarith [Dq_pos (2*m+1)] : (0:ℤ) ≤ _)
   exact mul_nonpos_of_nonneg_of_nonpos hD (E1_nonpos m)
 
-/-- Conjunct (iii), second half: `0 ≤ Q(2log3-3log2) - P2` for `n = 2m+1`. -/
+/-- For `n = 2m+1`, `0 ≤ Q_n (2 log 3 - 3 log 2) - P2_n`. -/
 theorem form2_nonneg (m : ℕ) :
     0 ≤ (Qn (2*m+1):ℝ) * (2*Real.log 3 - 3*Real.log 2) - P2n (2*m+1) := by
   rw [← form2_eq]
@@ -204,14 +235,3 @@ theorem form2_nonneg (m : ℕ) :
   exact mul_nonneg hD (E2_nonneg m)
 
 end Collatz.PadeAssembly
-
-
-#print axioms Collatz.PadeAssembly.exists_int_sum
-#print axioms Collatz.PadeAssembly.Dq_mul_integral_43
-#print axioms Collatz.PadeAssembly.Dq_mul_integral_32
-#print axioms Collatz.PadeAssembly.form1_eq
-#print axioms Collatz.PadeAssembly.form2_eq
-#print axioms Collatz.PadeAssembly.Qn_abs_le
-#print axioms Collatz.PadeAssembly.Qn_abs_le_odd
-#print axioms Collatz.PadeAssembly.form1_nonpos
-#print axioms Collatz.PadeAssembly.form2_nonneg

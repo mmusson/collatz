@@ -1,36 +1,55 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import LMN
 import RunGrowth
 
 /-!
-# The conditional m-run ladder (Simons–de Weger m-cycle method, finite instance)
+# Lower bounds on the number of odd runs of a cycle
 
-**CLASSICAL.** The Simons–de Weger (2005) m-cycle method, cf. Hercher 2023
-(arXiv:2201.00406), who reach `m ≤ 68` (Simons–de Weger) and `m ≤ 91` (Hercher) using verified
-ranges of `2^60` and more.  Here only `2^24` is verified, so the results are much weaker.
-Nothing here bounds the number of odd runs of a general cycle.
+In this file we run the Simons–de Weger `m`-cycle method with the verified range `2^24`. A Farey
+pair for `log₂ 3` and the cycle run inequality give a lower bound on the number `k` of odd steps
+of a cycle with few odd runs; the run growth bound `runs_bound_of_min` of `RunGrowth` gives an
+upper bound on `k`. Together they show that the odd minimum `m` of a nontrivial cycle has at least
+`18` odd runs or at least `225644606` odd steps, and at least `62` odd runs or at least `190537`
+odd steps, in the window `L` produced by `state_of_the_art`. Per-lap versions, valid for every
+period of `m`, are in `RunsWindow`.
 
-* Lower bound on `k` (Farey): `farey_runs_190537`: with the Farey pair
-  `125743/79335 > log₂3 > 176251/111202` (det 1), no `0 < K < 190537`, `3^K < 2^L`,
-  `X ≥ 2^24`, `r ≤ 61` satisfies `2^L X^r ≤ 3^K (X+1)^r` (kernel certificate at `r = 61`,
-  false at `r = 62`).
-* Upper bound on `k` (`runs_bound_of_min`, `RunGrowth.lean`): `5^r k ≤ 5 (s+t) W r`.
-* `state_of_the_art_runs` (**unconditional, finite-range instance**): the odd cycle minimum `m`
-  from `state_of_the_art` has (`≥ 18` odd runs or `k ≥ 225644606`) and
-  (`≥ 62` odd runs or `k ≥ 190537`), for the window `L` produced by `state_of_the_art`.
-  Per lap: `state_of_the_art_runs_minimalPeriod` (RunsWindow.lean, `Mod3`/`RunsWindow`) proves the same
-  bounds for every period of `m`, in particular `L = Function.minimalPeriod T m`, so no
-  nontrivial cycle has, per lap, `≤ 17` odd runs and `k < 225,644,606` odd steps.
-* `state_of_the_art_runs_of_LMN` (**CONDITIONAL on the unformalized `LMNHyp`**, vacuous if the
-  transcription is false): the same `m` has `≥ 14` odd runs.  Named instances `…_of_Laurent08`
-  `(25.2, 0.21, 20)` and `…_of_LMN95` `(24.34, 0.14, 21)` (see `LMN.lean` for provenance).
+Simons and de Weger reach `m ≤ 68` and Hercher `m ≤ 91` using much larger verified ranges; the
+bounds here are correspondingly weaker. Nothing here bounds the number of odd runs of a general
+cycle.
 
-`oddRuns L m` counts even→odd transitions in the window `L`.  The primary reference for these
-bounds is now `state_of_the_art_runs_minimalPeriod` (RunsWindow.lean, `Mod3`/`RunsWindow`), which states
-them per lap, for `L = Function.minimalPeriod T m`.
+The results `state_of_the_art_runs_of_LMN`, `state_of_the_art_runs_of_Laurent08` and
+`state_of_the_art_runs_of_LMN95` assume the hypothesis `LMNHyp` of `LMN` (an explicit lower bound
+for linear forms in two logarithms), which is not proved here. Under it, the same `m` has at least
+`14` odd runs.
+
+## Main results
+
+- `farey_runs_190537`: with the Farey pair `125743/79335 > log₂ 3 > 176251/111202`, no
+  `0 < K < 190537`, `3^K < 2^L`, `X ≥ 2^24`, `r ≤ 61` satisfies `2^L X^r ≤ 3^K (X+1)^r`.
+- `state_of_the_art_runs`: the odd cycle minimum `m` from `state_of_the_art` has at least `18` odd
+  runs or `k ≥ 225644606`, and at least `62` odd runs or `k ≥ 190537`.
+- `state_of_the_art_runs_of_LMN`: under `LMNHyp`, the same `m` also has at least `14` odd runs.
+
+## References
+
+- J. L. Simons, B. M. M. de Weger, *Theoretical and computational bounds for m-cycles of the
+  3n+1-problem*, Acta Arith. 117 (2005), 51–70.
+- C. Hercher, *There are no Collatz m-cycles with m ≤ 91*, J. Integer Seq. 26 (2023),
+  Art. 23.3.5.
+- M. Laurent, M. Mignotte, Yu. Nesterenko, *Formes linéaires en deux logarithmes et déterminants
+  d'interpolation*, J. Number Theory 55 (1995), 285–321.
+- M. Laurent, *Linear forms in two logarithms and interpolation determinants II*, Acta Arith. 133
+  (2008), 325–348.
 -/
 
 namespace Collatz
 open CollatzProof
+
+/-! ### A Farey certificate -/
 
 /-- Determinant of the Farey pair `125743/79335`, `176251/111202`. -/
 theorem certR_det : 125743 * 111202 = 176251 * 79335 + 1 := by norm_num
@@ -85,6 +104,8 @@ theorem farey_runs_190537 {K L X r : ℕ} (hK0 : 0 < K) (hK : K < 190537) (h3 : 
   rw [hp, hq, hX0] at s3
   exact certR_runs_not_le s3
 
+/-! ### Numerical lemmas -/
+
 /-- `749 (5 + 51 (l+21)²) < 2^l` for `l ≥ 27`. -/
 theorem growth_runs (l : ℕ) (hl : 27 ≤ l) : 749 * (5 + 51 * (l + 21)^2) < 2^l := by
   induction l, hl using Nat.le_induction with
@@ -101,10 +122,12 @@ theorem W_small (r : ℕ) (h1 : 1 ≤ r) (h2 : r ≤ 17) : 175 * W r < 190537 * 
 theorem W_small13 (r : ℕ) (h1 : 1 ≤ r) (h2 : r ≤ 13) : 5 * W r ≤ 749 * 5^r := by
   interval_cases r <;> simp [W]
 
-/-- **Unconditional, finite-range instance of the Simons–de Weger m-cycle theorem
-(classical).** A positive `C`-cycle point `n ∉ {1,2,4}` yields the odd `T`-orbit minimum `m`,
-`2^24 ≤ m ≤ n`, period `L > 0`, `k = S_L(m) ≥ 12276`, with (`oddRuns L m ≥ 18` or
-`k ≥ 225644606`) and (`oddRuns L m ≥ 62` or `k ≥ 190537`). -/
+/-! ### Bounds on the number of odd runs -/
+
+/-- **Simons–de Weger bound with verified range `2^24`.** A positive `C`-cycle point
+`n ∉ {1, 2, 4}` yields the odd `T`-orbit minimum `m` with `2^24 ≤ m ≤ n`, a period `L > 0` and
+`k = S_L(m) ≥ 12276`, such that `oddRuns L m ≥ 18` or `k ≥ 225644606`, and `oddRuns L m ≥ 62` or
+`k ≥ 190537`. -/
 theorem state_of_the_art_runs (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
     (hne : n ≠ 1 ∧ n ≠ 2 ∧ n ≠ 4) :
     ∃ m L, m % 2 = 1 ∧ 2^24 ≤ m ∧ m ≤ n ∧ 0 < L ∧ T^[L] m = m ∧ (∀ j, m ≤ T^[j] m) ∧
@@ -135,9 +158,10 @@ theorem state_of_the_art_runs (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ
   have : 5^r * 190537 ≤ 5^r * k := Nat.mul_le_mul_left _ hk2
   omega
 
-/-- **CONDITIONAL on `LMNHyp`** (an unformalized transcription of LMN 1995 / Laurent 2008;
-vacuous if the transcription is false): the conclusion of `state_of_the_art_runs` plus
-`oddRuns L m ≥ 14`.  Classical method (Simons–de Weger 2005). -/
+/-! ### Bounds assuming a lower bound for linear forms in two logarithms -/
+
+/-- Assume `LMNHyp Cst c0 m0` with `0 ≤ Cst ≤ 51/2`, `c0 ≤ 1` and `0 ≤ m0 ≤ 21`. Then the
+conclusion of `state_of_the_art_runs` holds together with `oddRuns L m ≥ 14`. -/
 theorem state_of_the_art_runs_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : Cst ≤ 51/2)
     (hc0 : c0 ≤ 1) (hm0 : 0 ≤ m0) (hm1 : m0 ≤ 21) (H : LMNHyp Cst c0 m0)
     (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
@@ -177,8 +201,8 @@ theorem state_of_the_art_runs_of_LMN {Cst c0 m0 : ℝ} (hC0 : 0 ≤ Cst) (hC : C
   have : A * (749 * 5^r) = 5^r * (749 * A) := by ring
   omega
 
-/-- Instance, **CONDITIONAL** on `LMNHyp 25.2 0.21 20` (Laurent 2008 Cor. 1, `m = 20`;
-corroborated by a secondary source only, see `LMN.lean`). -/
+/-- `state_of_the_art_runs_of_LMN` under `LMNHyp 25.2 0.21 20`, the constants of Laurent
+(2008, Cor. 1, `m = 20`). -/
 theorem state_of_the_art_runs_of_Laurent08 (H : LMNHyp 25.2 0.21 20)
     (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
     (hne : n ≠ 1 ∧ n ≠ 2 ∧ n ≠ 4) :
@@ -189,8 +213,8 @@ theorem state_of_the_art_runs_of_Laurent08 (H : LMNHyp 25.2 0.21 20)
   state_of_the_art_runs_of_LMN (by norm_num) (by norm_num) (by norm_num) (by norm_num)
     (by norm_num) H n hn ℓ hℓ h hne
 
-/-- Instance, **CONDITIONAL** on `LMNHyp 24.34 0.14 21` (LMN 1995 constants from memory,
-unverified). -/
+/-- `state_of_the_art_runs_of_LMN` under `LMNHyp 24.34 0.14 21`, the constants of
+Laurent–Mignotte–Nesterenko (1995, Cor. 2). -/
 theorem state_of_the_art_runs_of_LMN95 (H : LMNHyp 24.34 0.14 21)
     (n : ℕ) (hn : 0 < n) (ℓ : ℕ) (hℓ : 0 < ℓ) (h : C^[ℓ] n = n)
     (hne : n ≠ 1 ∧ n ≠ 2 ∧ n ≠ 4) :
@@ -202,16 +226,3 @@ theorem state_of_the_art_runs_of_LMN95 (H : LMNHyp 24.34 0.14 21)
     (by norm_num) H n hn ℓ hℓ h hne
 
 end Collatz
-
-#print axioms Collatz.certR_above
-#print axioms Collatz.certR_below
-#print axioms Collatz.certR_runs
-#print axioms Collatz.farey_runs_190537
-#print axioms Collatz.growth_runs
-#print axioms Collatz.W_small
-#print axioms Collatz.W_small13
-#print axioms Collatz.state_of_the_art_runs
-#print axioms Collatz.state_of_the_art_runs_of_LMN
-#print axioms Collatz.state_of_the_art_runs_of_Laurent08
-#print axioms Collatz.state_of_the_art_runs_of_LMN95
-#print axioms Collatz.certR_runs_not_le

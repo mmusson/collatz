@@ -1,33 +1,57 @@
+/-
+Copyright (c) 2026 Michael Musson. All rights reserved.
+Released under Apache 2.0 license as described in the file LICENSE.
+Authors: Michael Musson
+-/
 import TypeIITransfer
 
 /-!
 # Sign-split transference
 
-Write `M1 = 2 log 2 − log 3 = log(4/3)` and `M2 = 2 log 3 − 3 log 2 = log(9/8)`. Then
-`q log 3 − p log 2 = (3q−2p) M1 + (2q−p) M2`, and in the only nontrivial range
-`3q < 2p < 4q` the coefficient `A = 3q−2p` is `≤ −1` and `B = 2q−p` is `≥ 1`.
-`SignApprox a b c d Q P1 P2` (a DEFINITION, i.e. a hypothesis interface, NOT an axiom; since
-`PadeSup`/`FewRunsUncond` it HAS an unconditional witness, `signApprox_Vq` in `FewRunsUncond.lean`) asks for integer forms `E1 = Q M1 − P1 ≤ 0 ≤ E2 = Q M2 − P2`
-with the usual size and decay bounds and a LOWER bound `|E1| ≥ 2^{−(c+bm)}`. If the
-integer `N = A P1 + B P2` is `0`, then `QΛ = A E1 + B E2 ≥ |E1| > 0` because both terms are
-`≥ 0`. So no determinant/`Δ_n ≠ 0`/window non-vanishing is needed: this replaces
-`SimApprox`/`SimApproxW` (`PadeArith`/`TypeIITransfer`/`TypeIIWindow`/`PadeBounds`).
-* `linForm_lower_of_signApprox`: `1 ≤ 2^{2c+5}(2^{c+5}(p+q))^{(a+b)d}|q log 3 − p log 2|`.
-* `irrMeasHyp_of_signApprox`: `2^{2c+5+(c+7)(a+b)d} ≤ Q0^t`, `t ≥ 1`, `Q0 ≥ 3` ⇒
-  `IrrMeasHyp ((a+b)d+1+t) Q0`.
-* `few_runs_cycle_trivial_of_signApprox`: implication from `SignApprox`: positive `T`-cycles
-  with `≤ 2` odd runs are trivial (the classical Steiner 1977 / Simons 2005 statement).
-(`RunsTail` update) The witness is the family `Vq_n` of `PadeArithQ.lean` (odd `n`):
-`signApprox_Vq : SignApprox 74 37 46 2 ...` (`FewRunsUncond.lean`, `PadeSup`/`FewRunsUncond`) proves all conjuncts,
-so the results here are used unconditionally in `few_runs_cycle_trivial_uncond` (`PadeSup`/`FewRunsUncond`) and
-`linFormHyp_uncond` (`RunsTail.lean`, `RunsTail`).
+Write `M1 = 2 log 2 - log 3 = log (4/3)` and `M2 = 2 log 3 - 3 log 2 = log (9/8)`. Then
+`q log 3 - p log 2 = (3q - 2p) M1 + (2q - p) M2`, and in the only nontrivial range
+`3q < 2p < 4q` the coefficient `A = 3q - 2p` is negative and `B = 2q - p` is positive. In this
+file we show that integer linear forms `E1 = Q M1 - P1 ≤ 0 ≤ E2 = Q M2 - P2` with the usual size
+and decay bounds and a lower bound on `|E1|` give a lower bound for `|q log 3 - p log 2|`. If the
+integer `N = A P1 + B P2` vanishes, then `Q (q log 3 - p log 2) = A E1 + B E2 ≥ |E1| > 0`, since
+both terms are nonnegative. Hence no non-vanishing determinant is needed.
+
+The hypothesis `SignApprox` is a definition, not an axiom. It is verified for the Padé family of
+`PadeArithQ` in `FewRunsUncond`.
+
+## Main definitions
+
+- `SignApprox a b c d Q P1 P2`: for every `m`, `|Q_m| ≤ 2^{c + am}`,
+  `|E_j(m)| · 2^{⌊m/d⌋} ≤ 2^c` for `j = 1, 2`, `E1(m) ≤ 0 ≤ E2(m)` and
+  `1 ≤ |E1(m)| · 2^{c + bm}`.
+
+## Main results
+
+- `log_four_thirds_ge`, `log_nine_eighths_ge`: `log (4/3) ≥ 1/4` and `log (9/8) ≥ 1/9`.
+- `linForm_lower_of_signApprox`: under `SignApprox`,
+  `1 ≤ 2^{2c+5} (2^{c+5} (p + q))^{(a+b)d} |q log 3 - p log 2|` for `q ≥ 1`.
+- `irrMeasHyp_of_signApprox`: if moreover `2^{2c+5+(c+7)(a+b)d} ≤ Q0^t`, `t ≥ 1` and `Q0 ≥ 3`,
+  then `IrrMeasHyp ((a+b)d + 1 + t) Q0`.
+- `few_runs_cycle_trivial_of_signApprox`: under `SignApprox` and explicit side conditions, every
+  positive `T`-cycle with at most two odd runs is trivial.
+
+## References
+
+- G. Rhin, *Approximants de Padé et mesures effectives d'irrationalité*, Séminaire de Théorie des
+  Nombres, Paris 1985–86, Progr. Math. 71, Birkhäuser (1987), 155–164.
+- R. P. Steiner, *A theorem on the Syracuse problem*, Proc. 7th Manitoba Conf. Numer. Math.
+  (1977), 553–559.
+- J. L. Simons, *On the nonexistence of 2-cycles for the 3x+1 problem*, Math. Comp. 74 (2005),
+  1565–1572.
 -/
 
 namespace Collatz
 
-/-- Sign-split approximation data for `(log(4/3), log(9/8))` (hypothesis interface; witness
-`signApprox_Vq` in `FewRunsUncond.lean`, `PadeSup`/`FewRunsUncond`): for every index `m`, `|Q_m| ≤ 2^{c+am}`; `|E_j(m)|·2^{⌊m/d⌋} ≤ 2^c` for
-`E1 = Q_m log(4/3) − P1_m`, `E2 = Q_m log(9/8) − P2_m`; `E1 ≤ 0 ≤ E2`; `1 ≤ |E1|·2^{c+bm}`. -/
+/-! ### The sign-split hypothesis -/
+
+/-- Sign-split approximation data for `(log (4/3), log (9/8))`: for every index `m`,
+`|Q_m| ≤ 2^{c+am}`; `|E_j(m)| · 2^{⌊m/d⌋} ≤ 2^c` for `E1 = Q_m log (4/3) − P1_m` and
+`E2 = Q_m log (9/8) − P2_m`; `E1 ≤ 0 ≤ E2`; and `1 ≤ |E1| · 2^{c+bm}`. -/
 def SignApprox (a b c d : ℕ) (Q P1 P2 : ℕ → ℤ) : Prop :=
   ∀ m : ℕ, |(Q m : ℝ)| ≤ 2^(c + a*m) ∧
     |(Q m : ℝ) * (2*Real.log 2 - Real.log 3) - P1 m| * 2^(m/d) ≤ 2^c ∧
@@ -35,6 +59,8 @@ def SignApprox (a b c d : ℕ) (Q P1 P2 : ℕ → ℤ) : Prop :=
     (Q m : ℝ) * (2*Real.log 2 - Real.log 3) - P1 m ≤ 0 ∧
     0 ≤ (Q m : ℝ) * (2*Real.log 3 - 3*Real.log 2) - P2 m ∧
     1 ≤ |(Q m : ℝ) * (2*Real.log 2 - Real.log 3) - P1 m| * 2^(c + b*m)
+
+/-! ### Lower bounds for `M1` and `M2` -/
 
 /-- `log(4/3) ≥ 1/4`. -/
 theorem log_four_thirds_ge : (1:ℝ)/4 ≤ 2*Real.log 2 - Real.log 3 := by
@@ -53,9 +79,10 @@ theorem log_nine_eighths_ge : (1:ℝ)/9 ≤ 2*Real.log 3 - 3*Real.log 2 := by
     push_cast; ring
   rw [e] at h; norm_num at h; linarith
 
-/-- Lower bound for `|q log 3 − p log 2|` from `SignApprox` (unconditional implication;
-instantiated unconditionally via `signApprox_Vq`, `FewRunsUncond.lean`):
-`1 ≤ 2^{2c+5}(2^{c+5}(p+q))^{(a+b)d}|q log 3 − p log 2|` for `q ≥ 1`, `d ≥ 1`. -/
+/-! ### Transference -/
+
+/-- Under `SignApprox`, `1 ≤ 2^{2c+5} (2^{c+5} (p+q))^{(a+b)d} |q log 3 − p log 2|` for `q ≥ 1`
+and `d ≥ 1`. -/
 theorem linForm_lower_of_signApprox {a b c d : ℕ} {Q P1 P2 : ℕ → ℤ} (hd : 1 ≤ d)
     (h : SignApprox a b c d Q P1 P2) (p q : ℕ) (hq : 1 ≤ q) :
     1 ≤ (2:ℝ)^(2*c+5) * ((2:ℝ)^(c+5) * (p+q))^((a+b)*d) *
@@ -199,9 +226,8 @@ theorem linForm_lower_of_signApprox {a b c d : ℕ} {Q P1 P2 : ℕ → ℤ} (hd 
       apply mul_le_mul_of_nonneg_right _ hΛ0
       exact mul_le_mul_of_nonneg_right h2c5 (by positivity)
 
-/-- `SignApprox` gives `IrrMeasHyp ((a+b)d+1+t) Q0` (unconditional implication; with the
-witness `signApprox_Vq` it yields the unconditional `IrrMeasHyp 342 (2^100)`, used in
-`linFormHyp_uncond`, `RunsTail.lean`, `RunsTail`). -/
+/-- Under `SignApprox`, if `2^{2c+5+(c+7)(a+b)d} ≤ Q0^t` with `t ≥ 1` and `Q0 ≥ 3`, then
+`IrrMeasHyp ((a+b)d+1+t) Q0`. -/
 theorem irrMeasHyp_of_signApprox {a b c d t Q0 : ℕ} {Q P1 P2 : ℕ → ℤ} (hd : 1 ≤ d)
     (h : SignApprox a b c d Q P1 P2) (ht : 1 ≤ t) (hQ0 : 3 ≤ Q0)
     (hM : 2^(2*c+5+(c+7)*((a+b)*d)) ≤ Q0^t) : IrrMeasHyp ((a+b)*d+1+t) Q0 := by
@@ -267,9 +293,10 @@ theorem irrMeasHyp_of_signApprox {a b c d t Q0 : ℕ} {Q P1 P2 : ℕ → ℤ} (h
       nlinarith
     nlinarith
 
-/-- **Implication from `SignApprox`** (witness `signApprox_Vq`, `FewRunsUncond.lean`; the
-unconditional instance is `few_runs_cycle_trivial_uncond`): positive `T`-cycles with `≤ 2` odd
-runs are trivial. -/
+/-! ### Cycles with at most two odd runs -/
+
+/-- Under `SignApprox` and the side conditions of `few_runs_cycle_trivial_of_irrMeas_K1big`, every
+positive `T`-cycle with at most two odd runs is trivial. -/
 theorem few_runs_cycle_trivial_of_signApprox {a b c d t Q0 : ℕ} {Q P1 P2 : ℕ → ℤ}
     (hd : 1 ≤ d) (h : SignApprox a b c d Q P1 P2) (ht : 1 ≤ t) (hQ0 : 3 ≤ Q0)
     (hQK : Q0 ≤ K1big) (hM : 2^(2*c+5+(c+7)*((a+b)*d)) ≤ Q0^t)
@@ -277,13 +304,7 @@ theorem few_runs_cycle_trivial_of_signApprox {a b c d t Q0 : ℕ} {Q P1 P2 : ℕ
     {z L : ℕ} (hz : 0 < z) (hL : 0 < L) (hc : CollatzProof.T^[L] z = z)
     (hr : oddRuns L z ≤ 2) : z = 1 ∨ z = 2 := by
   have hμ : (a+b)*d+1+t - 1 = (a+b)*d+t := by omega
-  exact few_runs_cycle_trivial_of_irrMeas_big (by omega) (by omega) hQK
+  exact few_runs_cycle_trivial_of_irrMeas_K1big (by omega) (by omega) hQK
     (by rw [hμ]; exact hside) (irrMeasHyp_of_signApprox hd h ht hQ0 hM) hz hL hc hr
 
 end Collatz
-
-#print axioms Collatz.log_four_thirds_ge
-#print axioms Collatz.log_nine_eighths_ge
-#print axioms Collatz.linForm_lower_of_signApprox
-#print axioms Collatz.irrMeasHyp_of_signApprox
-#print axioms Collatz.few_runs_cycle_trivial_of_signApprox
